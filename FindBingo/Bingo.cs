@@ -1,3 +1,5 @@
+using System.Text;
+
 public static class Bingo
 {
     // search for 7 and 6 letter words
@@ -19,13 +21,45 @@ public static class Bingo
         // may have to change my approach to handle full board bingos (15 length)
         // in that case just search through dictionary values and pick out matches to input string?
 
-        getBingoRecursion(playerLetters.ToCharArray(), 0, playerLetters.Length - 1, bingoWords);
+
+        // get n-length words (where is n is the length of the user input string)
+        getPermutations(playerLetters.ToCharArray(), 0, playerLetters.Length - 1, bingoWords);
+
+        //get smaller words?
+        getSmallerPermutations(playerLetters, bingoWords);
 
         return GetPointValues(bingoWords);
     }
 
 
-    private static void getBingoRecursion(char[] array, int left, int right, List<string> bingos)
+    private static void getSmallerPermutations(string playerLetters, List<string> validWords)
+    {
+        StringBuilder sb = null;
+
+        // remove one letter and get permutations, go smaller
+        for (int i = 0; i < playerLetters.Length - 1; i++)
+        {
+
+            // // remove ith letter from string
+            // for (int j = 0; j < playerLetters.Length - 2; j++)
+            // {
+
+            // }
+
+
+            sb = new StringBuilder(playerLetters);
+            sb.Remove(i, 1);
+            string substring = sb.ToString();
+
+            getPermutations(substring.ToCharArray(), 0, playerLetters.Length - 2, validWords);
+
+            //getSmallerPermutations(substring, validWords);
+        }
+    }
+
+
+
+    private static void getPermutations(char[] array, int left, int right, List<string> bingos)
     {
         // good practice, left side will evaluate first, right statement only needs to be evaluated when left is true
         if (left == right)
@@ -42,7 +76,7 @@ public static class Bingo
             for (int i = left; i <= right; i++)
             {
                 swap(ref array[left], ref array[i]);
-                getBingoRecursion(array, 1 + left, right, bingos);
+                getPermutations(array, 1 + left, right, bingos);
                 swap(ref array[left], ref array[i]);
             }
         }
@@ -152,8 +186,25 @@ public static class Bingo
         "agents",
         "angers",
         "argent",
-        "garnet"
+        "gaster",
+        "grants",
+        "ranges",
+        "retags",
+        "serang",
+        "strang",
+        "antres",
+        "sterna",
+        "angers",
+        "garnet",
+        "gaters",
+        "graste",
+        "greats",
+        "rengas",
+        "sanger",
+        "stager",
+        "targes",
+        "astern",
+        "transe"
     };
-
     
 }

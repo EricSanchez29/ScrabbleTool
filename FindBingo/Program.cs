@@ -4,6 +4,9 @@ Console.WriteLine("");
 //Console.WriteLine("Enter the word");
 
 
+//open file
+// 
+
 var bingos = Bingo.GetBingoList("strange");
 //var bingos = Bingo.GetBingoList("abcd");
 
