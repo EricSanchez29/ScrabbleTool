@@ -7,6 +7,10 @@ public class ScrabbleWordGenerator
     {
         // create dictionary
         officialScrabbleDictionary = new HashSet<string>();
+        _12letterWords = new HashSet<string>();
+        _13letterWords = new HashSet<string>();
+        _14letterWords = new HashSet<string>();
+        _15letterWords = new HashSet<string>();
 
         // open file
         StreamReader stream = new StreamReader(filePath);
@@ -21,7 +25,24 @@ public class ScrabbleWordGenerator
             // process : "WHATCHAMACALLIT a {thingy=n} [n]"
             string[] entry = line.Split(' ');
 
-            officialScrabbleDictionary.Add(entry[0]);
+            switch (entry[0].Length)
+            {
+                case 12:
+                    _12letterWords.Add(entry[0]);
+                    break;
+                case 13:
+                    _13letterWords.Add(entry[0]);
+                    break;
+                case 14:
+                    _14letterWords.Add(entry[0]);
+                    break;
+                case 15:
+                    _15letterWords.Add(entry[0]);
+                    break;
+                default:
+                    officialScrabbleDictionary.Add(entry[0]);
+                    break;
+            }
 
             //arr[entry[0].Length]++;
         }
@@ -38,6 +59,10 @@ public class ScrabbleWordGenerator
     }
 
     HashSet<string> officialScrabbleDictionary;
+    HashSet<string> _12letterWords;
+    HashSet<string> _13letterWords;
+    HashSet<string> _14letterWords;
+    HashSet<string> _15letterWords;
 
     // search for 7 and 6 letter words
     public List<(string, int)> GetBingoList(string playerLetters)
@@ -47,8 +72,8 @@ public class ScrabbleWordGenerator
 
         // check if the string has illegal letter selection 
         // (too many of a single letter than is available in bag)
-        
-        
+
+
 
         // Get all 7 letter words
         // Maybe get 6 or 5 letter ones too
@@ -66,31 +91,67 @@ public class ScrabbleWordGenerator
         // try to "spell out" each entry using the letters available, upper bounded by 15 x 
 
 
-        // get n-length words (where is n is the length of the user input string)
-        getPermutations(playerLetters.ToCharArray(), 0, playerLetters.Length - 1, bingoWords);
+        switch (playerLetters.Length)
+        {
+            case 12:
+                spellWordsOut(playerLetters, _12letterWords, bingoWords);
+                break;
+            case 13:
+                spellWordsOut(playerLetters, _13letterWords, bingoWords);
+                break;
+            case 14:
+                spellWordsOut(playerLetters, _14letterWords, bingoWords);
+                break;
+            case 15:
+                spellWordsOut(playerLetters, _15letterWords, bingoWords);
+                break;
+            default:
+                // get n-length words (where is n is the length of the user input string and is 11 or less)
+                getPermutations(playerLetters.ToCharArray(), 0, playerLetters.Length - 1, bingoWords);
 
-        //get smaller words?
-        getSmallerPermutations(playerLetters, bingoWords);
+                //get smaller words?
+                getSmallerPermutations(playerLetters, bingoWords);
+                break;
+        }
+
+
 
         return GetPointValues(bingoWords);
     }
 
+    private void spellWordsOut(string playerLetters, HashSet<string> dictionary, HashSet<string> validWords)
+    {
+        List<char> chars;
+
+        foreach (var word in dictionary)
+        {
+            // this is the problem, hashset has to have unique elemnts
+
+            chars = [.. playerLetters];
+
+            for (int i = 0; i < playerLetters.Length; i++)
+            {
+                if (chars.Contains(word[i]))
+                {
+                    chars.Remove(word[i]);
+                }
+            }
+
+            if (chars.Count == 0)
+            {
+                validWords.Add(word);
+            }
+        }   
+    }
 
     private void getSmallerPermutations(string playerLetters, HashSet<string> validWords)
     {
-        StringBuilder sb = null;
+        StringBuilder sb;
 
         // remove one letter and get permutations, go smaller
         for (int i = 0; i < playerLetters.Length - 1; i++)
         {
-
             // // remove ith letter from string
-            // for (int j = 0; j < playerLetters.Length - 2; j++)
-            // {
-
-            // }
-
-
             sb = new StringBuilder(playerLetters);
             sb.Remove(i, 1);
             string substring = sb.ToString();
@@ -291,5 +352,36 @@ public class ScrabbleWordGenerator
         "targes",
         "astern",
         "transe"
+    };
+
+    private static Dictionary<char, int> letterDistribution = new Dictionary<char, int>
+    {
+        {' ', 2},
+        {'A', 9},
+        {'B', 2},
+        {'C', 2},
+        {'D', 4},
+        {'E', 12},
+        {'F', 2},
+        {'G', 3},
+        {'H', 2},
+        {'I', 9},
+        {'J', 1},
+        {'K', 1},
+        {'L', 4},
+        {'M', 2},
+        {'N', 6},
+        {'O', 8},
+        {'P', 2},
+        {'Q', 1},
+        {'R', 6},
+        {'S', 4},
+        {'T', 6},
+        {'U', 4},
+        {'V', 2},
+        {'W', 2},
+        {'X', 1},
+        {'Y', 2},
+        {'Z', 1}
     };
 }
