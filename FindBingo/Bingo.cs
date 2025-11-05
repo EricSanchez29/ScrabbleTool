@@ -12,20 +12,52 @@ public static class Bingo
         //
         List<string> bingoWords = new List<string>();
 
-        
-        return null;
+
+        // checking permuation of an input string grows at n!
+        // 7! = 5040 (wow)
+        //
+        // may have to change my approach to handle full board bingos (15 length)
+        // in that case just search through dictionary values and pick out matches to input string?
+
+        getBingoRecursion(playerLetters.ToCharArray(), 0, playerLetters.Length - 1, bingoWords);
+
+        return GetPointValues(bingoWords);
     }
 
-    private static void getBingoRecursion(string subString)
-    {
-        // check if this word works
 
-        
+    private static void getBingoRecursion(char[] array, int left, int right, List<string> bingos)
+    {
+        // good practice, left side will evaluate first, right statement only needs to be evaluated when left is true
+        if (left == right)
+        {
+            string potentialWord = new string(array);
+
+            if (checkDictionary(potentialWord))
+            {
+                bingos.Add(potentialWord);
+            }
+        }
+        else
+        {
+            for (int i = left; i <= right; i++)
+            {
+                swap(ref array[left], ref array[i]);
+                getBingoRecursion(array, 1 + left, right, bingos);
+                swap(ref array[left], ref array[i]);
+            }
+        }
+    }
+
+    private static void swap(ref char a, ref char b)
+    {
+        char temp = a;
+        a = b;
+        b = temp;
     }
 
 
     // for now, don't consider board position and associated bonus points (dl(double letter bonus),tl,dw,tw,etc)
-    public static List<(string,int)> GetValues(List<string> words)
+    public static List<(string,int)> GetPointValues(List<string> words)
     {
         List<(string,int)> bingoPoints = new List<(string,int)>(words.Count);
 
@@ -104,6 +136,8 @@ public static class Bingo
     // (there are many choices for actual dictionary verison American/International/other)
     private static bool checkDictionary(string possibleWord)
     {
+        // for testing
+        //return true;
         return phoneyScrabbleDictionary.Contains(possibleWord);
 
         // making this its own separate function so I don't have to change it later when I query my database
