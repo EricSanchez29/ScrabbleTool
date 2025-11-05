@@ -1,25 +1,69 @@
 using System.Text;
 
-public static class Bingo
+public class ScrabbleWordGenerator
 {
-    // search for 7 and 6 letter words
-    public static List<(string, int)> GetBingoList(string playerLetters)
+    // expect full filePath
+    public ScrabbleWordGenerator(string filePath)
     {
+        // create dictionary
+        officialScrabbleDictionary = new HashSet<string>();
+
+        // open file
+        StreamReader stream = new StreamReader(filePath);
+
+        // used this array to figure out dictionary composition, use this again for other dictionarys
+        //var arr = new int[16];
+
+        // readfile/fill dictionary
+        string line;
+        while ((line = stream.ReadLine()) != null)
+        {
+            // process : "WHATCHAMACALLIT a {thingy=n} [n]"
+            string[] entry = line.Split(' ');
+
+            officialScrabbleDictionary.Add(entry[0]);
+
+            //arr[entry[0].Length]++;
+        }
+
+        // close file
+        stream.Close();
+
+
+        // for (int i = 0; i < 16; i++)
+        // {
+        //     Console.WriteLine(i + " letter words: " + arr[i]);
+        // }
+        // //Console.WriteLine(officialScrabbleDictionary.Count);
+    }
+
+    HashSet<string> officialScrabbleDictionary;
+
+    // search for 7 and 6 letter words
+    public List<(string, int)> GetBingoList(string playerLetters)
+    {
+        playerLetters = convertLowerWordToUpperWord(playerLetters);
+
+
         // check if the string has illegal letter selection 
         // (too many of a single letter than is available in bag)
-
+        
+        
 
         // Get all 7 letter words
         // Maybe get 6 or 5 letter ones too
         //
-        List<string> bingoWords = new List<string>();
+        HashSet<string> bingoWords = new HashSet<string>();
 
 
         // checking permuation of an input string grows at n!
         // 7! = 5040 (wow)
         //
+        // checking all substrings' permutations adds another n!
+
         // may have to change my approach to handle full board bingos (15 length)
         // in that case just search through dictionary values and pick out matches to input string?
+        // try to "spell out" each entry using the letters available, upper bounded by 15 x 
 
 
         // get n-length words (where is n is the length of the user input string)
@@ -32,7 +76,7 @@ public static class Bingo
     }
 
 
-    private static void getSmallerPermutations(string playerLetters, List<string> validWords)
+    private void getSmallerPermutations(string playerLetters, HashSet<string> validWords)
     {
         StringBuilder sb = null;
 
@@ -53,22 +97,23 @@ public static class Bingo
 
             getPermutations(substring.ToCharArray(), 0, playerLetters.Length - 2, validWords);
 
-            //getSmallerPermutations(substring, validWords);
+            getSmallerPermutations(substring, validWords);
         }
     }
 
-
-
-    private static void getPermutations(char[] array, int left, int right, List<string> bingos)
+    private void getPermutations(char[] array, int left, int right, HashSet<string> bingos)
     {
-        // good practice, left side will evaluate first, right statement only needs to be evaluated when left is true
         if (left == right)
         {
             string potentialWord = new string(array);
 
+            // should I do this here?
             if (checkDictionary(potentialWord))
             {
-                bingos.Add(potentialWord);
+                if (!bingos.Contains(potentialWord))
+                {
+                    bingos.Add(potentialWord);
+                }
             }
         }
         else
@@ -91,7 +136,7 @@ public static class Bingo
 
 
     // for now, don't consider board position and associated bonus points (dl(double letter bonus),tl,dw,tw,etc)
-    public static List<(string,int)> GetPointValues(List<string> words)
+    private static List<(string,int)> GetPointValues(HashSet<string> words)
     {
         List<(string,int)> bingoPoints = new List<(string,int)>(words.Count);
 
@@ -103,13 +148,46 @@ public static class Bingo
 
             foreach (char letter in word)
             {
-                wordValue += letterValues[convertUpperToLowerCase(letter)];
+                wordValue += letterValues[letter];
             }
 
             bingoPoints.Add((word,wordValue));
         }
 
         return bingoPoints;
+    }
+
+    private static string convertLowerWordToUpperWord(string lower)
+    {
+        StringBuilder sb = new StringBuilder(lower.Length);
+
+        foreach (char character in lower)
+        {
+            sb.Append(converLowerToUpper(character));
+        }
+
+        return sb.ToString();
+    }
+
+    // need to test
+    private static char converLowerToUpper(char letter)
+    {
+        int asciiValue = (int)letter;
+
+        // is upperCase?
+        if ((letter > 64) && (letter < 91))
+        {
+            return letter;
+        }
+        // is lowerCase
+        else if ((letter > 96) && (letter < 123))
+        {
+            asciiValue = asciiValue - 32;
+
+            return (char)asciiValue;
+        }
+
+        throw new Exception("Bad inputs");
     }
 
     // maybe this should not be a separate function,
@@ -121,7 +199,7 @@ public static class Bingo
         // is upperCase?
         if ((letter > 64) && (letter < 91))
         {
-            asciiValue = asciiValue - 32;
+            asciiValue = asciiValue + 32;
 
             return (char)asciiValue;
         }
@@ -138,46 +216,54 @@ public static class Bingo
     private static Dictionary<char, int> letterValues = new Dictionary<char, int>
     {
         {' ', 0},
-        {'a', 1},
-        {'b', 3},
-        {'c', 3},
-        {'d', 2},
-        {'e', 1},
-        {'f', 4},
-        {'g', 2},
-        {'h', 4},
-        {'i', 1},
-        {'j', 8},
-        {'k', 5},
-        {'l', 1},
-        {'m', 3},
-        {'n', 1},
-        {'o', 1},
-        {'p', 3},
-        {'q', 10},
-        {'r', 1},
-        {'s', 1},
-        {'t', 1},
-        {'u', 1},
-        {'v', 4},
-        {'w', 4},
-        {'x', 8},
-        {'y', 4},
-        {'z', 10}
+        {'A', 1},
+        {'B', 3},
+        {'C', 3},
+        {'D', 2},
+        {'E', 1},
+        {'F', 4},
+        {'G', 2},
+        {'H', 4},
+        {'I', 1},
+        {'J', 8},
+        {'K', 5},
+        {'L', 1},
+        {'M', 3},
+        {'N', 1},
+        {'O', 1},
+        {'P', 3},
+        {'Q', 10},
+        {'R', 1},
+        {'S', 1},
+        {'T', 1},
+        {'U', 1},
+        {'V', 4},
+        {'W', 4},
+        {'X', 8},
+        {'Y', 4},
+        {'Z', 10}
     };
 
     // Check that a possible word actually exists in some official Scrabble Dictionary 
     // (there are many choices for actual dictionary verison American/International/other)
-    private static bool checkDictionary(string possibleWord)
+    private bool checkDictionary(string possibleWord)
     {
         // for testing
         //return true;
-        return phoneyScrabbleDictionary.Contains(possibleWord);
+
+        //convert phoneyDictionaryToUpperCase
+        
+
+        //return phoneyScrabbleDictionary.Contains(possibleWord);
+        return officialScrabbleDictionary.Contains(possibleWord);
 
         // making this its own separate function so I don't have to change it later when I query my database
         // or some external Scrabble Dictionary over https
     }
 
+
+    // have to change code to read uppercase
+    // if I want to use this for testing purposes, convert to uppercase because thats easier to physically retyping this
     private static HashSet<string> phoneyScrabbleDictionary = new HashSet<string>
     {
         "argents",
@@ -206,5 +292,4 @@ public static class Bingo
         "astern",
         "transe"
     };
-    
 }
