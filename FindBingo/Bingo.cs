@@ -22,7 +22,7 @@ public class ScrabbleWordGenerator
         string line;
         while ((line = stream.ReadLine()) != null)
         {
-            // process : "WHATCHAMACALLIT a {thingy=n} [n]"
+            // example line : "WHATCHAMACALLIT a {thingy=n} [n]"
             string[] entry = line.Split(' ');
 
             switch (entry[0].Length)
@@ -72,11 +72,11 @@ public class ScrabbleWordGenerator
 
         // check if the string has illegal letter selection 
         // (too many of a single letter than is available in bag)
+        if (!checkTileDistribution(playerLetters))
+        {
+            Console.WriteLine("Illegal Scrabble tile combination, see tile distribution");
+        }
 
-
-
-        // Get all 7 letter words
-        // Maybe get 6 or 5 letter ones too
         //
         HashSet<string> bingoWords = new HashSet<string>();
 
@@ -125,8 +125,6 @@ public class ScrabbleWordGenerator
 
         foreach (var word in dictionary)
         {
-            // this is the problem, hashset has to have unique elemnts
-
             chars = [.. playerLetters];
 
             for (int i = 0; i < playerLetters.Length; i++)
@@ -141,7 +139,7 @@ public class ScrabbleWordGenerator
             {
                 validWords.Add(word);
             }
-        }   
+        }
     }
 
     private void getSmallerPermutations(string playerLetters, HashSet<string> validWords)
@@ -197,9 +195,9 @@ public class ScrabbleWordGenerator
 
 
     // for now, don't consider board position and associated bonus points (dl(double letter bonus),tl,dw,tw,etc)
-    private static List<(string,int)> GetPointValues(HashSet<string> words)
+    private static List<(string, int)> GetPointValues(HashSet<string> words)
     {
-        List<(string,int)> bingoPoints = new List<(string,int)>(words.Count);
+        List<(string, int)> bingoPoints = new List<(string, int)>(words.Count);
 
         int wordValue;
 
@@ -212,7 +210,7 @@ public class ScrabbleWordGenerator
                 wordValue += letterValues[letter];
             }
 
-            bingoPoints.Add((word,wordValue));
+            bingoPoints.Add((word, wordValue));
         }
 
         return bingoPoints;
@@ -312,14 +310,9 @@ public class ScrabbleWordGenerator
         // for testing
         //return true;
 
-        //convert phoneyDictionaryToUpperCase
-        
-
         //return phoneyScrabbleDictionary.Contains(possibleWord);
         return officialScrabbleDictionary.Contains(possibleWord);
 
-        // making this its own separate function so I don't have to change it later when I query my database
-        // or some external Scrabble Dictionary over https
     }
 
 
@@ -354,34 +347,77 @@ public class ScrabbleWordGenerator
         "transe"
     };
 
-    private static Dictionary<char, int> letterDistribution = new Dictionary<char, int>
+    private static bool checkTileDistribution(string playerInput)
     {
-        {' ', 2},
-        {'A', 9},
-        {'B', 2},
-        {'C', 2},
-        {'D', 4},
-        {'E', 12},
-        {'F', 2},
-        {'G', 3},
-        {'H', 2},
-        {'I', 9},
-        {'J', 1},
-        {'K', 1},
-        {'L', 4},
-        {'M', 2},
-        {'N', 6},
-        {'O', 8},
-        {'P', 2},
-        {'Q', 1},
-        {'R', 6},
-        {'S', 4},
-        {'T', 6},
-        {'U', 4},
-        {'V', 2},
-        {'W', 2},
-        {'X', 1},
-        {'Y', 2},
-        {'Z', 1}
+        var array = new int[27];
+
+        for (int i = 0; i == playerInput.Length; i++)
+        {
+            int characterAscii = (int)converLowerToUpper(playerInput[i]);
+
+            if (characterAscii == 32)
+            {
+                array[0]++;
+            }
+            else if ((characterAscii >= 65) && (characterAscii <= 90))
+            {
+                array[characterAscii - 64]++;
+            }
+            else
+            {
+                Console.WriteLine("Unexpected character encountered. Input string must contain valid Scrabble tile characters (A-Z, a-z, or ' ' (blank tile))");
+            }
+        }
+
+        // should i do something about blanks here
+        //int blankOffset = array[0];
+
+        // check distribution of Scrabble
+        for (int j = 1; j < 27; j++)
+        {
+            if (array[j] > letterDistList[j])
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static List<int> letterDistList = new List<int>
+    {
+        2, 9, 2, 2, 4, 12, 2, 3, 2, 9, 1, 1, 4, 2, 6, 8, 2, 1, 6, 4, 6, 4, 2, 2, 1, 2, 1
     };
+
+    // keep to read letter values, this is easier on the eyes but is overkill programatically
+    // private static Dictionary<char, int> letterDistribution = new Dictionary<char, int>
+    // {
+    //     {' ', 2},
+    //     {'A', 9},
+    //     {'B', 2},
+    //     {'C', 2},
+    //     {'D', 4},
+    //     {'E', 12},
+    //     {'F', 2},
+    //     {'G', 3},
+    //     {'H', 2},
+    //     {'I', 9},
+    //     {'J', 1},
+    //     {'K', 1},
+    //     {'L', 4},
+    //     {'M', 2},
+    //     {'N', 6},
+    //     {'O', 8},
+    //     {'P', 2},
+    //     {'Q', 1},
+    //     {'R', 6},
+    //     {'S', 4},
+    //     {'T', 6},
+    //     {'U', 4},
+    //     {'V', 2},
+    //     {'W', 2},
+    //     {'X', 1},
+    //     {'Y', 2},
+    //     {'Z', 1}
+    // };
 }
