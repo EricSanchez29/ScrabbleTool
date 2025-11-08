@@ -22,12 +22,12 @@ bool shutdown = false;
 while (!shutdown)
 {
     Console.WriteLine("");
-    Console.WriteLine("Enter the word");
+    Console.WriteLine("Enter your Scrabble tiles");
     Console.WriteLine("");
 
     string input = Console.ReadLine();
 
-    if (input == "..")
+    if ((input == null) || (input == ".."))
     {
         shutdown = true;
     }
