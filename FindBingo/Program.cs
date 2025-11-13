@@ -36,10 +36,10 @@ while (!shutdown)
     {
         var bingos = generator.GetBingoList(input);
 
-        Console.WriteLine(bingos.Count);
+        
 
         // order bingo with some lambda function
-        var sortedWords = bingos.OrderByDescending(t => t.Item2);//.ToList();
+        var sortedWords = bingos.OrderBy(t => t.Item2);//.ToList();
 
         // maybe limit the number of entries within the generator itself
         int counter = 0;
@@ -51,9 +51,11 @@ while (!shutdown)
 
             if (counter == 100)
             {
-                return;
+                break;
             }
-        } 
+        }
+
+        Console.WriteLine("Total words: " + bingos.Count);
     }
 }
 

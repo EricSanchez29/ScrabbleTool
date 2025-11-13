@@ -422,4 +422,13 @@ public class ScrabbleWordGenerator
     //     {'Z', 1}
     // };
 
+
+    public bool CheckDictionary(string scabbleWord)
+    {
+        return officialScrabbleDictionary.Contains(scabbleWord) ||
+        _12letterWords.Contains(scabbleWord) ||
+        _13letterWords.Contains(scabbleWord) ||
+        _14letterWords.Contains(scabbleWord) ||
+        _15letterWords.Contains(scabbleWord);
+    }
 }

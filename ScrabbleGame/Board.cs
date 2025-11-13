@@ -22,35 +22,32 @@ public class ScrabbleBoard
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="word"> "" </param>
+    /// <param name="word"> valid scrabble word </param>
     /// <param name="coordinate"> A1 - O15 </param>
-    /// <param name="direction"> across or down</param>
+    /// <param name="direction"> across (true) or down (false) </param>
     /// <returns></returns>
-    public void AddWord(string word, string coordinate, string direction = "across")
+    public void AddWord(string word, string coordinate, bool direction = true)
     {
         // convert from Scrabble coordinate system to array coordinates
         var startingPosition = getBoardPosition(coordinate);
 
-        if (direction == "down")
+        if (!direction)
         {
             for (int i = 0; i < word.Length; i++)
             {
-
-
                 // check if position is already taken
                 if (' ' != board[startingPosition.x, startingPosition.y])
                 {
                     Console.WriteLine("Invalid play, board position already occupied");
                     return;
                 }
-
 
                 board[startingPosition.x, startingPosition.y] = word[i];
 
                 startingPosition.y++;
             }
         }
-        else if (direction == "across")
+        else
         {
             for (int i = 0; i < word.Length; i++)
             {
@@ -61,46 +58,11 @@ public class ScrabbleBoard
                     return;
                 }
 
-
                 board[startingPosition.x, startingPosition.y] = word[i];
 
                 startingPosition.x++;
             }
         }
-        else
-        {
-            Console.WriteLine();
-        }
-
-
-
-       
-
-        // // check if any potential position already has a tile
-        // if (direction == "down")
-        // {
-        //     for (int i = 0; i < word.Length; i++)
-        //     {
-        //         // check if position is already taken
-        //         if (' ' != board[startingPosition.Item1, startingPosition.Item2 - i])
-        //         {
-        //             Console.WriteLine("Invalid play, board position already occupied");
-        //             return;
-        //         }
-
-        //         board
-        //     }
-        // }
-        // else if (direction == "across")
-        // {
-
-        // }
-        // else
-        // {
-        //     Console.WriteLine("Invalid direction");
-        // }
-
-
     }
 
     public void DisplayBoard()
