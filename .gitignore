@@ -1,3 +1,6 @@
 *.dll
 *.exe
 *.pdb
+#bin/Debug/net9.0
+bin/
+obj/

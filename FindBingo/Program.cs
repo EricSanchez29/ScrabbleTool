@@ -13,6 +13,7 @@ string filePath = Path.GetFullPath(file);
 var generator = new ScrabbleWordGenerator(filePath);
 
 
+
 Console.WriteLine("ScrabbleTool: First atttempt");
 Console.WriteLine("");
 Console.WriteLine("");
