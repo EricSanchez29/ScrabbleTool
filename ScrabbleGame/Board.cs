@@ -1,12 +1,12 @@
 using System.Text;
 using System.Xml.Schema;
 
-public class ScrabbleBoard
+public class ScrabbleBoard : IPLayer, IDisplay
 {
     public ScrabbleBoard()
     {
-        board = getBoard();
-        bag = getScrabbleBag();
+        board = createBoard();
+        bag = createScrabbleBag();
         rando = new Random();
     }
 
@@ -36,7 +36,7 @@ public class ScrabbleBoard
             for (int i = 0; i < word.Length; i++)
             {
                 // check if position is already taken
-                if (' ' != board[startingPosition.x, startingPosition.y])
+                if (!isSpecialTile( board[startingPosition.x, startingPosition.y]))
                 {
                     Console.WriteLine("Invalid play, board position already occupied");
                     return;
@@ -52,7 +52,7 @@ public class ScrabbleBoard
             for (int i = 0; i < word.Length; i++)
             {
                 // check if position is already taken
-                if (' ' != board[startingPosition.x, startingPosition.y])
+                if (!isSpecialTile( board[startingPosition.x, startingPosition.y]))
                 {
                     Console.WriteLine("Invalid play, board position already occupied");
                     return;
@@ -142,7 +142,7 @@ public class ScrabbleBoard
     public List<char> DrawTiles(int tileCount)
     {
         var list = new List<char>(tileCount);
-        
+
         for (int i = tileCount; i > 0; i--)
         {
             // draw random tiles from bag
@@ -154,6 +154,27 @@ public class ScrabbleBoard
         return list;
     }
 
+    public int GetBagCount()
+    {
+        return bag.Count();
+    }
+
+    public char GetTileValue(string coordinate)
+    {
+        var cartesian = getBoardPosition(coordinate);
+        return board[cartesian.x, cartesian.y];
+    }
+
+    private bool isSpecialTile(char tile)
+    {
+        if ((tile == ' ') || (tile == '[') || (tile == '\\') || (tile == ']') || (tile == '^'))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
     private (int x, int y) getBoardPosition(string coordinate)
     {
         // check this and possibly swap string around to find letter
@@ -163,7 +184,7 @@ public class ScrabbleBoard
 
         if ((character >= 65) && (character <= 79))
         {
-            // A -> 0, O-> 14
+            // A -> O, 0 -> 14
             x_coordinate = character - 65;
         }
         else
@@ -229,7 +250,7 @@ public class ScrabbleBoard
         {"O12", '['},
     };
 
-    private char[,] getBoard()
+    private char[,] createBoard()
     {
         int i = 0;
         var tiles = new char[15, 15];
@@ -278,7 +299,7 @@ public class ScrabbleBoard
         return tiles;
     }
 
-    private List<char> getScrabbleBag()
+    private List<char> createScrabbleBag()
     {
         var scrabbleBag = new List<char>();
         var dist = ScrabbleWordGenerator.LetterDistList;
@@ -297,6 +318,5 @@ public class ScrabbleBoard
 
         return scrabbleBag;
     }
-
 }
 

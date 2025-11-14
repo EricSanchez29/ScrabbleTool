@@ -65,7 +65,7 @@ public class ScrabbleWordGenerator
     HashSet<string> _15letterWords;
 
     // search for 7 and 6 letter words
-    public List<(string, int)> GetBingoList(string playerLetters)
+    public List<(string Word, int Score)> GetBingoList(string playerLetters)
     {
         playerLetters = convertLowerWordToUpperWord(playerLetters);
 
@@ -425,10 +425,13 @@ public class ScrabbleWordGenerator
 
     public bool CheckDictionary(string scabbleWord)
     {
-        return officialScrabbleDictionary.Contains(scabbleWord) ||
-        _12letterWords.Contains(scabbleWord) ||
-        _13letterWords.Contains(scabbleWord) ||
-        _14letterWords.Contains(scabbleWord) ||
-        _15letterWords.Contains(scabbleWord);
+        // capitalize word
+        string upperCase = convertLowerWordToUpperWord(scabbleWord);
+
+        return officialScrabbleDictionary.Contains(upperCase) ||
+        _12letterWords.Contains(upperCase) ||
+        _13letterWords.Contains(upperCase) ||
+        _14letterWords.Contains(upperCase) ||
+        _15letterWords.Contains(upperCase);
     }
 }
