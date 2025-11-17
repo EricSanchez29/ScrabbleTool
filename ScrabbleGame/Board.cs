@@ -29,7 +29,7 @@ public class ScrabbleBoard : IPLayer, IDisplay
     public void AddWord(string word, string coordinate, bool direction = true)
     {
         // convert from Scrabble coordinate system to array coordinates
-        var startingPosition = getBoardPosition(coordinate);
+        var startingPosition = GetBoardPosition(coordinate);
 
         if (!direction)
         {
@@ -161,8 +161,18 @@ public class ScrabbleBoard : IPLayer, IDisplay
 
     public char GetTileValue(string coordinate)
     {
-        var cartesian = getBoardPosition(coordinate);
+        var cartesian = GetBoardPosition(coordinate);
         return board[cartesian.x, cartesian.y];
+    }
+
+    public char GetTileValue(int x, int y)
+    {
+        return board[x, y];
+    }
+    public bool IsOpenSpace(int x, int y)
+    {
+        return isSpecialTile(board[x, y]);
+
     }
 
     private bool isSpecialTile(char tile)
@@ -175,7 +185,7 @@ public class ScrabbleBoard : IPLayer, IDisplay
         return false;
     }
 
-    private (int x, int y) getBoardPosition(string coordinate)
+    public (int x, int y) GetBoardPosition(string coordinate)
     {
         // check this and possibly swap string around to find letter
         int character = coordinate[0];
@@ -291,7 +301,7 @@ public class ScrabbleBoard : IPLayer, IDisplay
         // fill TW and TL
         foreach (var tile in bonusTiles)
         {
-            var coordinates = getBoardPosition(tile.Key);
+            var coordinates = GetBoardPosition(tile.Key);
 
             tiles[coordinates.Item1, coordinates.Item2] = tile.Value;
         }
