@@ -272,6 +272,16 @@ public class ScrabbleWordGenerator
         throw new Exception("Bad inputs");
     }
 
+    public int GetTilePointValue(char tile)
+    {
+        if (!letterValues.ContainsKey(tile))
+        {
+            return int.MinValue;
+        }
+
+        return letterValues[tile];
+    }
+    
     // Point value assigned to each letter by the game Scrabble
     private static Dictionary<char, int> letterValues = new Dictionary<char, int>
     {

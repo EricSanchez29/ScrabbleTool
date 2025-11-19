@@ -159,13 +159,13 @@ public class ScrabbleBoard : IPLayer, IDisplay
         return bag.Count();
     }
 
-    public char GetTileValue(string coordinate)
+    public char GetTileChar(string coordinate)
     {
         var cartesian = GetBoardPosition(coordinate);
         return board[cartesian.x, cartesian.y];
     }
 
-    public char GetTileValue(int x, int y)
+    public char GetTileChar(int x, int y)
     {
         return board[x, y];
     }
