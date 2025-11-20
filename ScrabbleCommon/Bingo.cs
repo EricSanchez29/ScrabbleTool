@@ -283,6 +283,8 @@ public class ScrabbleWordGenerator
     }
     
     // Point value assigned to each letter by the game Scrabble
+    // shouldn't this be in the ScrabbleBoard object?
+    // too much of hassel to change right now
     private static Dictionary<char, int> letterValues = new Dictionary<char, int>
     {
         {' ', 0},

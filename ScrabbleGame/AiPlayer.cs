@@ -18,14 +18,15 @@ public class ArtificiallyUnintelligentPlayer
 
     private List<ScrabbleLane> openLanes = new List<ScrabbleLane>();
 
-    private string centerSquare = "G8";
+    private string centerSquare = "H8";
+    private (int X, int Y) centerCoordinate = new(7, 7);
 
     // need to check that the bot has a potential bingo (+50 pts)
     public ScrabbleMove MakeMove(string playerTiles)
     {
         // Case 1: AI making the first move
         // if center is empty, no one has made a legal scrabble move yet
-        if (scrabbleBoard.GetTileChar(centerSquare) == ' ')
+        if (scrabbleBoard.GetTileChar(centerSquare) == '\\')
         {
             // need to update lanes, and moves list
             return makeStartingMove(playerTiles);
@@ -279,6 +280,9 @@ public class ArtificiallyUnintelligentPlayer
                         tripleWord++;
                         score = score + generator.GetTilePointValue(word[i]);
                         break;
+                    case ' ':
+                        score = score + generator.GetTilePointValue(word[i]);
+                        break;
                 }
             }
         }
@@ -432,46 +436,178 @@ public class ArtificiallyUnintelligentPlayer
         return lanes;
     }
 
-
-    // this needs work
-    // doesn't take into account bonus tiles
-    // 
     private ScrabbleMove makeStartingMove(string playerTiles)
     {
-        // get potential bingos
-        var bingoWords = generator.GetBingoList(playerTiles).OrderBy(x => x.Score);
-
-        // choose word with highest bonus points
-        string chosenWord = string.Empty;
-        string startingPosition = string.Empty;
-
-        // only do this if have potential bingos of length 5, 6, or 7
-        //
-        // (tuple can't be null)
-        var longWord = bingoWords.First(x => x.Word.Length > 4).Word;
-        if (longWord == null || longWord == string.Empty)
+        // get potential words
+        var potentialWords = generator.GetBingoList(playerTiles).OrderBy(x => x.Score);
+        if (potentialWords.Count() == 0)
         {
-            // check this
-            bingoWords.OrderBy(x => x.Word.Length);
-            chosenWord = bingoWords.First().Word;
-
-            // for not default choice is the center square
-            startingPosition = centerSquare;
-        }
-        else
-        {
-
+            return new ScrabbleMove
+            {
+                Word = string.Empty,
+            };
         }
 
-        return new ScrabbleMove
+        var potentialMoves = new List<ScrabbleMove>();
+
+        // find points for each word
+        foreach (var word in potentialWords)
         {
-            Points = 0,
-            Word = chosenWord,
-            Direction = true, // doesn't matter because bonus tiles are equivalent here, 
-            // this is the only place on the board with this symmetry
-            // one way is arguably harder to read by a human
-        };
+            // for longer words calculate best move that uses double letter tile
+            if (word.Word.Length > 4)
+            {
+                // find placement where i get the max points (DL with high tile value)
+                var postition = bestInitTilePlacment(word.Word);
+
+                var potentialMove = new ScrabbleMove
+                {
+                    Direction = true,
+                    Word = word.Word,
+                    X_coordinate = postition.x,
+                    Y_coordinate = postition.y,
+                };
+
+                potentialMove.Points = calculateWordScore(potentialMove, word.Word);
+                potentialMoves.Add(potentialMove);
+            }
+            // for shorter words, (n <= 4) default to center square
+            else
+            {
+                var potentialMove = new ScrabbleMove
+                {
+                    Direction = true,
+                    Word = word.Word,
+                    X_coordinate = centerCoordinate.X,
+                    Y_coordinate = centerCoordinate.Y,
+                };
+
+                potentialMove.Points = calculateWordScore(potentialMove, word.Word);
+                potentialMoves.Add(potentialMove);
+            }
+        }
+        // order by calculated score and pick hightest one
+        // I'm ignoring the fact that there could be two words with the same score
+        // - should the secondary
+
+        var list = potentialMoves.OrderByDescending(x => x.Points);
+        return list.First();
     }
+
+    // defaulting to Across for direction of word
+    private (int x, int y) bestInitTilePlacment(string word)
+    {
+        // the best move is the one where the highest value tile is placed on the double letter bonus tile
+        // while still having one letter tile on the center tile (double word)
+        (int x, int y) bestMove = centerCoordinate;
+
+        bool validWordFound = false;
+
+        var wordCopy = new StringBuilder(word);
+
+        while (!validWordFound)
+        {
+            var highValIndex = findHighestTileValue(wordCopy.ToString());
+
+            if (highValIndex + 1 <= word.Length)
+            {
+                // legal move
+                validWordFound = true;
+
+                // calculate new starting position so that the highVal tile is at the (11,7) coordinate
+                bestMove.x = 11 - highValIndex - 1;
+                // this is the wrong calculation but im close
+
+            }
+            else
+            {
+                wordCopy.Replace(word[highValIndex], ' ', highValIndex, 1);
+            }
+        }
+
+        
+
+            // logic is correct but do I really want to rank every letter of every word
+            // what if I immediately find the best letter first?
+            // delete this if other method works
+            // 
+            // var orderedWord = orderByDescendingTileIndex(word);
+
+            // for (int i = 0; i < word.Length; i++)
+            // {
+            //     if (orderedWord[i] + 1 <= word.Length)
+            //     {
+            //         // legal move
+            //         bestMove.x = bestMove.x + orderedWord[i];
+            //     }
+
+            //     // illegal move, try next highest value tile
+            // }
+
+            return bestMove;
+    }
+
+    private int findHighestTileValue(string word)
+    {
+        int bestTileValue = 0;
+        int bestTileIndex = 0;
+
+        // what if the first tile is blank
+        // need to skip tiles sothat I don't
+        for (; bestTileIndex < word.Length; bestTileIndex++)
+        {
+            if (word[bestTileIndex] == ' ')
+            {
+                continue;
+            }
+            else
+            {
+                bestTileValue = generator.GetTilePointValue(word[0]);
+                break;
+            }
+        }
+
+        if (bestTileIndex == word.Length)
+        {
+            Console.WriteLine();
+            throw new Exception("Something went wrong");
+        }
+
+        for (int i = bestTileIndex + 1; i < word.Length; i++)
+        {
+            if (word[i] == ' ')
+            {
+                continue;
+            }
+
+            int val = generator.GetTilePointValue(word[i]);
+            if (val > bestTileValue)
+            {
+                bestTileValue = val;
+                bestTileIndex = i;
+            }
+        }
+
+        return bestTileIndex;
+    }
+
+    //
+    // // example: "3165240"
+    // private string orderByDescendingTileIndex(string word)
+    // {
+    //     var tileValues = new StringBuilder();
+
+    //     for (int i = 0; i < word.Length; i++)
+    //     {
+    //         generator.GetTilePointValue(word[i]);
+    //     }
+
+    //     var sb = new StringBuilder();
+
+
+
+
+    //     return sb.ToString();
+    // }
 
     // this might be difficult or impossible at some point
     // should I really track every open lane?
@@ -493,6 +629,7 @@ public class ArtificiallyUnintelligentPlayer
     // 3. Should I utilize small words in the midgame in order to focus on bonus tiles?
     // - 
 
+    // near the end you should try to take all remaining tiles from opponent, aka prioritize longer words
 
     // Z. (end game) when bag is empty prioritize words that use as many of your letters as possible
 

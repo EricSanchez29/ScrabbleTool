@@ -26,11 +26,20 @@ public class ScrabbleBoard : IPLayer, IDisplay
     /// <param name="coordinate"> A1 - O15 </param>
     /// <param name="direction"> across (true) or down (false) </param>
     /// <returns></returns>
-    public void AddWord(string word, string coordinate, bool direction = true)
+    public void AddWord(string word, string coordinate = " ", bool direction = true, int x = 0, int y = 0)
     {
-        // convert from Scrabble coordinate system to array coordinates
-        var startingPosition = GetBoardPosition(coordinate);
+        (int x, int y) startingPosition = new(0,0);
 
+        if (coordinate == " ")
+        {
+            startingPosition.x = x;
+            startingPosition.y = y;
+        }
+        else
+        {
+            // convert from Scrabble coordinate system to array coordinates
+            startingPosition = GetBoardPosition(coordinate);
+        }
         if (!direction)
         {
             for (int i = 0; i < word.Length; i++)
@@ -207,6 +216,15 @@ public class ScrabbleBoard : IPLayer, IDisplay
         int y_coordinate = Convert.ToInt32(sb.ToString()) - 1;
 
         return new(x_coordinate, y_coordinate);
+    }
+
+    public string GetBoardPositionString(int x, int y)
+    {
+        string alphaNumeric = string.Empty;
+
+
+
+        return alphaNumeric;
     }
 
 

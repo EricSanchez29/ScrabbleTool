@@ -10,15 +10,26 @@ board.DisplayBoard();
 
 ScrabbleWordGenerator wordGenerator = new ScrabbleWordGenerator(dictionaryLocation);
 
-Console.WriteLine();
-Console.WriteLine("Play first? (Y/N)");
+var scrabbleBot = new ArtificiallyUnintelligentPlayer(wordGenerator, board);
+
+var botsMove = scrabbleBot.MakeMove("gtestin");
+
+board.AddWord(botsMove.Word, " ", botsMove.Direction, botsMove.X_coordinate, botsMove.Y_coordinate); 
+board.DisplayBoard();
+
+
+
+
+//Console.WriteLine();
+//Console.WriteLine("Play first? (Y/N)");
 
 //char playFirst = Console.ReadKey().KeyChar;
 
-bool shutdown = false;
+//bool shutdown = false;
 
 
-while (!shutdown)
+
+/* while (!shutdown)
 {
     Console.WriteLine("");
     Console.WriteLine("Enter your Scrabble tiles");
@@ -82,4 +93,5 @@ while (!shutdown)
         // - check dictionary, place tiles, draw new tiles
 
     }
-}
+
+}*/
