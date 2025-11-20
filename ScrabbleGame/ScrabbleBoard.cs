@@ -276,21 +276,11 @@ public class ScrabbleBoard : IPLayer, IDisplay
         // Fill DW
         for (; i < 15; i++)
         {
-            if (i == 7)
-            {
-                continue;
-            }
-
             tiles[i, i] = '\\';
         }
 
         for (; i > 0; i--)
         {
-            if (i == 8)
-            {
-                continue;
-            }
-
             tiles[i - 1, 15 - i] = '\\';
         }
 
