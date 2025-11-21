@@ -21,7 +21,7 @@ public class ArtificiallyUnintelligentPlayer
     private string centerSquare = "H8";
     private (int X, int Y) centerCoordinate = new(7, 7);
 
-    // need to check that the bot has a potential bingo (+50 pts)
+    // to do: need to check that the bot has a potential bingo (+50 pts)
     public ScrabbleMove MakeMove(string playerTiles)
     {
         // Case 1: AI making the first move
@@ -168,7 +168,7 @@ public class ArtificiallyUnintelligentPlayer
             {
                 if (scrabbleBoard.IsOpenSpace(coord.x, coord.y - i))
                 {
-                    coordinateOffset = coord.y - i + 1;
+                    coordinateOffset = i - 1;
                     break;
                 }
 
@@ -179,7 +179,7 @@ public class ArtificiallyUnintelligentPlayer
             var sb = new StringBuilder(new string(charArray));
 
             // search down until empty
-            for (int i = 0; i < 7; i++)
+            for (int i = 1; i < 7; i++)
             {
                 if (scrabbleBoard.IsOpenSpace(coord.x, coord.y + i))
                 {
@@ -189,6 +189,7 @@ public class ArtificiallyUnintelligentPlayer
                 sb.Append(scrabbleBoard.GetTileChar(coord.x, coord.y + i));
             }
 
+            // don't need to trim anything on the end because I'm not adding blank space
             word = sb.ToString().TrimStart('\0');
 
             x_coordinate = coord.x;
@@ -208,7 +209,7 @@ public class ArtificiallyUnintelligentPlayer
             {
                 if (scrabbleBoard.IsOpenSpace(coord.x - i, coord.y))
                 {
-                    coordinateOffset = coord.x - i + 1;
+                    coordinateOffset = i - 1;
                     break;
                 }
 
@@ -229,6 +230,7 @@ public class ArtificiallyUnintelligentPlayer
                 sb.Append(scrabbleBoard.GetTileChar(coord.x + i, coord.y));
             }
 
+            // don't need to trim anything on the end because I'm not adding blank space
             word = sb.ToString().TrimStart('\0');
 
             x_coordinate = coord.x - coordinateOffset;
@@ -239,6 +241,8 @@ public class ArtificiallyUnintelligentPlayer
         }
     }
 
+    // this only works for words that aren't on the board yet
+    //
     private int calculateWordScore(in ScrabbleBase move, string word)
     {
         int score = 0;
@@ -284,7 +288,7 @@ public class ArtificiallyUnintelligentPlayer
                         score = score + generator.GetTilePointValue(word[i]);
                         break;
                 }
-                }
+            }
         }
         else
         {
@@ -358,6 +362,7 @@ public class ArtificiallyUnintelligentPlayer
 
                 var leftLane = new ScrabbleLane
                 {
+                    Tile = move.Word[i],
                     Direction = true,
                     Length = j - move.X_coordinate,
                     X_coordinate = j,
@@ -378,6 +383,7 @@ public class ArtificiallyUnintelligentPlayer
 
                 var rightLane = new ScrabbleLane
                 {
+                    Tile = move.Word[i],
                     Direction = true,
                     Length = j - move.X_coordinate,
                     X_coordinate = j,
@@ -403,6 +409,7 @@ public class ArtificiallyUnintelligentPlayer
 
                 var upLane = new ScrabbleLane
                 {
+                    Tile = move.Word[i],
                     Direction = false,
                     Length = j - move.Y_coordinate,
                     X_coordinate = move.X_coordinate,
@@ -423,6 +430,7 @@ public class ArtificiallyUnintelligentPlayer
 
                 var downLane = new ScrabbleLane
                 {
+                    Tile = move.Word[i],
                     Direction = true,
                     Length = j - move.Y_coordinate,
                     X_coordinate = move.X_coordinate,
@@ -436,6 +444,15 @@ public class ArtificiallyUnintelligentPlayer
         return lanes;
     }
 
+    // this might be difficult or impossible at some point
+    // should I really track every open lane?
+    // Can I track every open lane through an entire of a Scrabble game?
+    private void updateOpenLanes(ScrabbleMove newMove)
+    {
+
+    }
+
+    // need to create lanes for my own word
     private ScrabbleMove makeStartingMove(string playerTiles)
     {
         // get potential words
@@ -506,7 +523,7 @@ public class ArtificiallyUnintelligentPlayer
 
         while (!validWordFound)
         {
-            var highValIndex = findHighestTileValue(wordCopy.ToString());
+            var highValIndex = findHighestValueTileIndex(wordCopy.ToString());
 
             if (highValIndex + 1 <= word.Length)
             {
@@ -531,29 +548,11 @@ public class ArtificiallyUnintelligentPlayer
             }
         }
 
-        
-
-            // logic is correct but do I really want to rank every letter of every word
-            // what if I immediately find the best letter first?
-            // delete this if other method works
-            // 
-            // var orderedWord = orderByDescendingTileIndex(word);
-
-            // for (int i = 0; i < word.Length; i++)
-            // {
-            //     if (orderedWord[i] + 1 <= word.Length)
-            //     {
-            //         // legal move
-            //         bestMove.x = bestMove.x + orderedWord[i];
-            //     }
-
-            //     // illegal move, try next highest value tile
-            // }
-
-            return bestMove;
+        return bestMove;
     }
 
-    private int findHighestTileValue(string word)
+    // find the index of the tile in the word with the largest tile value
+    private int findHighestValueTileIndex(string word)
     {
         int bestTileValue = 0;
         int bestTileIndex = 0;
@@ -595,33 +594,6 @@ public class ArtificiallyUnintelligentPlayer
         }
 
         return bestTileIndex;
-    }
-
-    //
-    // // example: "3165240"
-    // private string orderByDescendingTileIndex(string word)
-    // {
-    //     var tileValues = new StringBuilder();
-
-    //     for (int i = 0; i < word.Length; i++)
-    //     {
-    //         generator.GetTilePointValue(word[i]);
-    //     }
-
-    //     var sb = new StringBuilder();
-
-
-
-
-    //     return sb.ToString();
-    // }
-
-    // this might be difficult or impossible at some point
-    // should I really track every open lane?
-    // Can I track every open lane through an entire of a Scrabble game?
-    private void updateOpenLanes(ScrabbleMove newMove)
-    {
-
     }
 
     // prime objectives
