@@ -189,7 +189,7 @@ public class ArtificiallyUnintelligentPlayer
                 sb.Append(scrabbleBoard.GetTileChar(coord.x, coord.y + i));
             }
 
-            word = sb.ToString();
+            word = sb.ToString().TrimStart('\0');
 
             x_coordinate = coord.x;
 
@@ -219,7 +219,7 @@ public class ArtificiallyUnintelligentPlayer
             var sb = new StringBuilder(new string(charArray));
 
             // search right until empty
-            for (int i = 0; i < 7; i++)
+            for (int i = 1; i < 7; i++)
             {
                 if (scrabbleBoard.IsOpenSpace(coord.x + i, coord.y))
                 {
@@ -229,7 +229,7 @@ public class ArtificiallyUnintelligentPlayer
                 sb.Append(scrabbleBoard.GetTileChar(coord.x + i, coord.y));
             }
 
-            word = sb.ToString();
+            word = sb.ToString().TrimStart('\0');
 
             x_coordinate = coord.x - coordinateOffset;
 

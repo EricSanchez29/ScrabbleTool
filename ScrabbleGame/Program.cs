@@ -12,8 +12,11 @@ ScrabbleWordGenerator wordGenerator = new ScrabbleWordGenerator(dictionaryLocati
 
 var scrabbleBot = new ArtificiallyUnintelligentPlayer(wordGenerator, board);
 
-var botsMove = scrabbleBot.MakeMove("gtestin");
+// board.AddWord("CLANKER", "H8");
+// board.DisplayBoard();
 
+//var botsMove = scrabbleBot.MakeMove("gtestin");
+var botsMove = scrabbleBot.MakeMove("fprotu*");
 board.AddWord(botsMove.Word, " ", botsMove.Direction, botsMove.X_coordinate, botsMove.Y_coordinate); 
 board.DisplayBoard();
 
