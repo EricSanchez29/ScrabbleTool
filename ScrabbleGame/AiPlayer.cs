@@ -284,7 +284,7 @@ public class ArtificiallyUnintelligentPlayer
                         score = score + generator.GetTilePointValue(word[i]);
                         break;
                 }
-            }
+                }
         }
         else
         {
@@ -513,10 +513,17 @@ public class ArtificiallyUnintelligentPlayer
                 // legal move
                 validWordFound = true;
 
-                // calculate new starting position so that the highVal tile is at the (11,7) coordinate
-                bestMove.x = 11 - highValIndex - 1;
-                // this is the wrong calculation but im close
+                if (highValIndex <= 2)
+                {
+                    // calculate new starting position so that the highVal tile is at the right coordinate
+                    bestMove.x = bestMove.x - (highValIndex + 4);
+                }
 
+                else if (highValIndex >= 4)
+                {
+                    // calculate new starting position so that the highVal tile is at the right coordinate
+                    bestMove.x = bestMove.x - (highValIndex - 4);
+                }
             }
             else
             {
