@@ -8,6 +8,7 @@ public class ScrabbleBoard : IPLayer, IDisplay
         board = createBoard();
         bag = createScrabbleBag();
         rando = new Random();
+        playerMoves = new List<ScrabbleMove>();
     }
 
     // Scrabble board
@@ -19,6 +20,9 @@ public class ScrabbleBoard : IPLayer, IDisplay
     // Persistent instance of Random
     private Random rando;
 
+    // Player Moves
+    private List<ScrabbleMove> playerMoves;
+
     /// <summary>
     /// 
     /// </summary>
@@ -26,54 +30,64 @@ public class ScrabbleBoard : IPLayer, IDisplay
     /// <param name="coordinate"> A1 - O15 </param>
     /// <param name="direction"> across (true) or down (false) </param>
     /// <returns></returns>
-    public void AddWord(string word, string coordinate = " ", bool direction = true, int x = 0, int y = 0)
+    public void AddWord(string word, string coordinate, bool direction = true)
     {
-        (int x, int y) startingPosition = new(0,0);
+        // convert from Scrabble coordinate system to array coordinates
+        var startingPosition = GetBoardPosition(coordinate);
 
-        if (coordinate == " ")
-        {
-            startingPosition.x = x;
-            startingPosition.y = y;
-        }
-        else
-        {
-            // convert from Scrabble coordinate system to array coordinates
-            startingPosition = GetBoardPosition(coordinate);
-        }
-        if (!direction)
-        {
-            for (int i = 0; i < word.Length; i++)
+        ScrabbleMove move = new ScrabbleMove()
             {
-                // check if position is already taken
-                if (!isSpecialTile( board[startingPosition.x, startingPosition.y]))
-                {
-                    Console.WriteLine("Invalid play, board position already occupied");
-                    return;
-                }
+                Direction = direction,
+                Word = word,
+                X_coordinate = startingPosition.x,
+                Y_coordinate = startingPosition.y,
+            };
 
-                board[startingPosition.x, startingPosition.y] = word[i];
-
-                startingPosition.y++;
-            }
-        }
-        else
-        {
-            for (int i = 0; i < word.Length; i++)
-            {
-                // check if position is already taken
-                if (!isSpecialTile( board[startingPosition.x, startingPosition.y]))
-                {
-                    Console.WriteLine("Invalid play, board position already occupied");
-                    return;
-                }
-
-                board[startingPosition.x, startingPosition.y] = word[i];
-
-                startingPosition.x++;
-            }
-        }
+        AddWord(move);
     }
 
+    public void AddWord(ScrabbleMove move)
+    {
+        if (!move.Direction)
+        {
+            move.Points = GetMoveScore(move, move.Word);
+
+            for (int i = 0; i < move.Word.Length; i++)
+            {
+                // check if position is already taken
+                if (!isSpecialTile(board[move.X_coordinate, move.Y_coordinate]))
+                {
+                    Console.WriteLine("Invalid play, board position already occupied");
+                    return;
+                }
+
+                board[move.X_coordinate, move.Y_coordinate] = move.Word[i];
+
+                move.Y_coordinate++;
+            }
+        }
+        else
+        {
+            move.Points = GetMoveScore(move, move.Word);
+
+            for (int i = 0; i < move.Word.Length; i++)
+            {
+                // check if position is already taken
+                if (!isSpecialTile(board[move.X_coordinate, move.Y_coordinate]))
+                {
+                    Console.WriteLine("Invalid play, board position already occupied");
+                    return;
+                }
+
+                board[move.X_coordinate, move.Y_coordinate] = move.Word[i];
+
+                move.X_coordinate++;
+            }
+
+        }
+
+        playerMoves.Add(move);
+    }
     public void DisplayBoard()
     {
         Console.WriteLine(" ");
@@ -227,6 +241,105 @@ public class ScrabbleBoard : IPLayer, IDisplay
         return alphaNumeric;
     }
 
+    public int GetMoveScore(in ScrabbleBase move, string word)
+    {
+        int score = 0;
+
+        // DoubleWord or TripleWord, need to consider theses values after everything else 
+
+        int doubleWord = 0;
+        int tripleWord = 0;
+
+        // should I have less duplicate code, 
+        // does it really matter once its converted into CLI?
+        if (move.Direction)
+        {
+            // direction ==  true: across
+            for (int i = 0; i < word.Length; i++)
+            {
+                // DL('[') , DW('\'), TL(']'), TW('^')
+
+                char character = GetTileChar(move.X_coordinate + i, move.Y_coordinate);
+                // could probably put this switch in a function
+                // if I want to cut down on file size
+                switch (character)
+                {
+                    case '[':
+                        int newCharVal = ScrabbleWordGenerator.GetTilePointValue(word[i]);
+                        newCharVal = newCharVal * 2;
+                        score = score + newCharVal;
+                        break;
+                    case '\\':
+                        doubleWord++;
+                        score = score + ScrabbleWordGenerator.GetTilePointValue(word[i]);
+                        break;
+                    case ']':
+                        int newCharVal3 = ScrabbleWordGenerator.GetTilePointValue(word[i]);
+                        newCharVal3 = newCharVal3 * 3;
+                        score = score + newCharVal3;
+                        break;
+                    case '^':
+                        tripleWord++;
+                        score = score + ScrabbleWordGenerator.GetTilePointValue(word[i]);
+                        break;
+                    case ' ':
+                        score = score + ScrabbleWordGenerator.GetTilePointValue(word[i]);
+                        break;
+                }
+            }
+        }
+        else
+        {
+            // 
+            // direction ==  false: down
+            for (int i = 0; i < word.Length; i++)
+            {
+                // DL('[') , DW('\'), TL(']'), TW('^')
+
+                char character = GetTileChar(move.X_coordinate, move.Y_coordinate + 1);
+
+                switch (character)
+                {
+                    case '[':
+                        int newCharVal = ScrabbleWordGenerator.GetTilePointValue(word[i]);
+                        newCharVal = newCharVal * 2;
+                        score = score + newCharVal;
+                        break;
+                    case '\\':
+                        doubleWord++;
+                        score = score + ScrabbleWordGenerator.GetTilePointValue(word[i]);
+                        break;
+                    case ']':
+                        int newCharVal3 = ScrabbleWordGenerator.GetTilePointValue(word[i]);
+                        newCharVal3 = newCharVal3 * 3;
+                        score = score + newCharVal3;
+                        break;
+                    case '^':
+                        tripleWord++;
+                        score = score + ScrabbleWordGenerator.GetTilePointValue(word[i]);
+                        break;
+                }
+            }
+        }
+
+        // multiply (double/triple)
+        for (int i = doubleWord; i > 0; i--)
+        {
+            score = score * 2;
+        }
+
+        for (int i = tripleWord; i > 0; i--)
+        {
+            score = score * 2;
+        }
+
+        return score;
+
+
+    }
+
+
+    //private void recordScrabbleMove(ScrabbleMove )
 
     //A-Z and DL('[') , DW('\'), TL(']'), TW('^')
 
@@ -335,6 +448,12 @@ public class ScrabbleBoard : IPLayer, IDisplay
         }
 
         return scrabbleBag;
+    }
+
+
+    public ScrabbleMove GetLastMove()
+    {
+        return playerMoves.Last();
     }
 }
 
