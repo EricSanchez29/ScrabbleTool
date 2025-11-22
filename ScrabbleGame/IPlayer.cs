@@ -9,4 +9,6 @@ public interface IPLayer
     public (int x, int y) GetBoardPosition(string coordinate);
     public int GetMoveScore(in ScrabbleBase move, string word);
     public ScrabbleMove GetLastMove();
+    // or should this function be part of addword (return string instead of void)
+    public string DrawTiles(int numberOfTiles);
 }

@@ -1,8 +1,8 @@
 using System.Text;
 
-public class ArtificiallyUnintelligentPlayer
+public class ScrabbleBot
 {
-    public ArtificiallyUnintelligentPlayer(ScrabbleWordGenerator wordGenerator, IPLayer player)
+    public ScrabbleBot(ScrabbleWordGenerator wordGenerator, IPLayer player)
     {
         generator = wordGenerator;
         scrabbleBoard = player;
@@ -34,23 +34,12 @@ public class ArtificiallyUnintelligentPlayer
 
         if (openLanes == null)
         {
-
-
-
             // Case 2: Opponent made the first move, AI goes 2nd
-            // find opponent first move
-            findPlayersFirstMove(out string word, out int x, out int y, out bool direction);
+            // get opponent's first move
 
-            var oppFirstMove = new ScrabbleMove
-            {
-                Word = word,
-                X_coordinate = x,
-                Y_coordinate = y,
-                Direction = direction
-            };
+            var oppFirstMove = scrabbleBoard.GetLastMove();
 
-            oppFirstMove.Points = scrabbleBoard.GetMoveScore(oppFirstMove, oppFirstMove.Word);
-
+            // do I need to keep track of moves?
             opponentMoves.Add(oppFirstMove);
 
             // create lanes for empty list
@@ -98,20 +87,20 @@ public class ArtificiallyUnintelligentPlayer
         }
         else
         {
- 
 
-        //TO DO 
 
-        // Case 3: this is the AI's 2nd move or later
+            //TO DO 
 
-        // to do
+            // Case 3: this is the AI's 2nd move or later
 
-        // Look for previously open lanes that are now blocked
-        // look through existing lanes
-        // pick words for each lane (or just top lanes if too big)
-        // choose word/lane with highest bonus points/overall score
-        // update lanes list (remove at least one lane also might block other lanes with new word)
-                   return null;
+            // to do
+
+            // Look for previously open lanes that are now blocked
+            // look through existing lanes
+            // pick words for each lane (or just top lanes if too big)
+            // choose word/lane with highest bonus points/overall score
+            // update lanes list (remove at least one lane also might block other lanes with new word)
+            return null;
         }
 
         /*
@@ -160,97 +149,9 @@ public class ArtificiallyUnintelligentPlayer
 
     }
 
-    // [true = across, false = down]
-    private void findPlayersFirstMove(out string word, out int x_coordinate, out int y_coordinate, out bool direction)
-    {
-        var coord = scrabbleBoard.GetBoardPosition(centerSquare);
-
-        int coordinateOffset = 0;
-
-        // up/down
-        if (scrabbleBoard.IsOpenSpace(coord.x - 1, coord.y) && scrabbleBoard.IsOpenSpace(coord.x + 1, coord.y))
-        {
-            char[] charArray = new char[7];
-
-            // search up until empty
-            for (int i = 0; i < 7; i++)
-            {
-                if (scrabbleBoard.IsOpenSpace(coord.x, coord.y - i))
-                {
-                    coordinateOffset = i - 1;
-                    break;
-                }
-
-                charArray[i] = scrabbleBoard.GetTileChar(coord.x, coord.y - i);
-            }
-
-            Array.Reverse(charArray);
-            var sb = new StringBuilder(new string(charArray));
-
-            // search down until empty
-            for (int i = 1; i < 7; i++)
-            {
-                if (scrabbleBoard.IsOpenSpace(coord.x, coord.y + i))
-                {
-                    break;
-                }
-
-                sb.Append(scrabbleBoard.GetTileChar(coord.x, coord.y + i));
-            }
-
-            // don't need to trim anything on the end because I'm not adding blank space
-            word = sb.ToString().TrimStart('\0');
-
-            x_coordinate = coord.x;
-
-            y_coordinate = coord.y - coordinateOffset;
-
-            direction = false;
-
-        }
-        // left/right
-        else
-        {
-            char[] charArray = new char[7];
-
-            // search left until empty
-            for (int i = 0; i < 7; i++)
-            {
-                if (scrabbleBoard.IsOpenSpace(coord.x - i, coord.y))
-                {
-                    coordinateOffset = i - 1;
-                    break;
-                }
-
-                charArray[i] = scrabbleBoard.GetTileChar(coord.x, coord.y - i);
-            }
-
-            Array.Reverse(charArray);
-            var sb = new StringBuilder(new string(charArray));
-
-            // search right until empty
-            for (int i = 1; i < 7; i++)
-            {
-                if (scrabbleBoard.IsOpenSpace(coord.x + i, coord.y))
-                {
-                    break;
-                }
-
-                sb.Append(scrabbleBoard.GetTileChar(coord.x + i, coord.y));
-            }
-
-            // don't need to trim anything on the end because I'm not adding blank space
-            word = sb.ToString().TrimStart('\0');
-
-            x_coordinate = coord.x - coordinateOffset;
-
-            y_coordinate = coord.y;
-
-            direction = true;
-        }
-    }
-
     // spaces for words, includes letter of a word already on the board
+    // need properly orient lanes with new reverse property
+    // check this function but also change code that uses lanes
     private List<ScrabbleLane> getLanesFromWord(in ScrabbleMove move)
     {
         var lanes = new List<ScrabbleLane>();
@@ -279,6 +180,7 @@ public class ArtificiallyUnintelligentPlayer
                     Length = j - move.X_coordinate,
                     X_coordinate = j,
                     Y_coordinate = move.Y_coordinate,
+                    Reverse = true
                 };
 
                 lanes.Add(leftLane);
@@ -300,6 +202,7 @@ public class ArtificiallyUnintelligentPlayer
                     Length = j - move.X_coordinate,
                     X_coordinate = j,
                     Y_coordinate = move.Y_coordinate,
+                    Reverse = false
                 };
 
                 lanes.Add(rightLane);
@@ -326,6 +229,7 @@ public class ArtificiallyUnintelligentPlayer
                     Length = j - move.Y_coordinate,
                     X_coordinate = move.X_coordinate,
                     Y_coordinate = j,
+                    Reverse = true
                 };
 
                 lanes.Add(upLane);
@@ -347,6 +251,7 @@ public class ArtificiallyUnintelligentPlayer
                     Length = j - move.Y_coordinate,
                     X_coordinate = move.X_coordinate,
                     Y_coordinate = j,
+                    Reverse = true
                 };
 
                 lanes.Add(upLane);
@@ -361,7 +266,7 @@ public class ArtificiallyUnintelligentPlayer
     // Can I track every open lane through an entire of a Scrabble game?
     private void updateOpenLanes(ScrabbleMove newMove)
     {
-
+        
     }
 
     // need to create lanes for my own word

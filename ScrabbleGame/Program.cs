@@ -10,18 +10,19 @@ board.DisplayBoard();
 
 ScrabbleWordGenerator wordGenerator = new ScrabbleWordGenerator(dictionaryLocation);
 
-var scrabbleBot = new ArtificiallyUnintelligentPlayer(wordGenerator, board);
+var scrabbleBot = new ScrabbleBot(wordGenerator, board);
 
-// board.AddWord("CLANKER", "H8");
-// board.DisplayBoard();
+board.AddWord("CLANKER", "H8");
+board.DisplayBoard();
 
-//var botsMove = scrabbleBot.MakeMove("gtestin");
-var botsMove = scrabbleBot.MakeMove("fprotu*");
-board.AddWord(botsMove.Word, " ", botsMove.Direction, botsMove.X_coordinate, botsMove.Y_coordinate); 
+var botsMove = scrabbleBot.MakeMove("gtestin");
+//var botsMove = scrabbleBot.MakeMove("utanhre");
+board.AddWord(botsMove); 
 board.DisplayBoard();
 
 
 
+// Need to organize "game" code better, above code is mostly for testing bot
 
 //Console.WriteLine();
 //Console.WriteLine("Play first? (Y/N)");

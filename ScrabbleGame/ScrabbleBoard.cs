@@ -36,12 +36,12 @@ public class ScrabbleBoard : IPLayer, IDisplay
         var startingPosition = GetBoardPosition(coordinate);
 
         ScrabbleMove move = new ScrabbleMove()
-            {
-                Direction = direction,
-                Word = word,
-                X_coordinate = startingPosition.x,
-                Y_coordinate = startingPosition.y,
-            };
+        {
+            Direction = direction,
+            Word = word,
+            X_coordinate = startingPosition.x,
+            Y_coordinate = startingPosition.y,
+        };
 
         AddWord(move);
     }
@@ -90,6 +90,7 @@ public class ScrabbleBoard : IPLayer, IDisplay
     }
     public void DisplayBoard()
     {
+        Console.WriteLine();
         Console.WriteLine(" ");
         Console.Write(" ");
         Console.Write(" ");
@@ -454,6 +455,21 @@ public class ScrabbleBoard : IPLayer, IDisplay
     public ScrabbleMove GetLastMove()
     {
         return playerMoves.Last();
+    }
+
+    private bool isValidMove(ScrabbleMove move)
+    {
+        // is the orignal coordinate out of bounds?
+
+        // Does the word go out of bounds?
+
+        // Is there an unhandled character? (I may already handle this elsewhere but maybe move here)
+
+        // Is this a legal scrabble move?
+        // - Input word is a valid word in my dictionary
+        // - Check adjacent tiles for additional words (are they valid?)
+        //
+        return false;
     }
 }
 
