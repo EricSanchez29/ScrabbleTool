@@ -16,7 +16,7 @@ public class ArtificiallyUnintelligentPlayer
 
     private List<ScrabbleMove> aiMoves = new List<ScrabbleMove>();
 
-    private List<ScrabbleLane> openLanes = new List<ScrabbleLane>();
+    private List<ScrabbleLane> openLanes = null;
 
     private string centerSquare = "H8";
     private (int X, int Y) centerCoordinate = new(7, 7);
@@ -32,65 +32,73 @@ public class ArtificiallyUnintelligentPlayer
             return makeStartingMove(playerTiles);
         }
 
-        // Case 2: Opponent made the first move, AI goes 2nd
-        // find opponent first move
-        findPlayersFirstMove(out string word, out int x, out int y, out bool direction);
-
-        var oppFirstMove = new ScrabbleMove
+        if (openLanes == null)
         {
-            Word = word,
-            X_coordinate = x,
-            Y_coordinate = y,
-            Direction = direction
-        };
 
-        oppFirstMove.Points = calculateWordScore(oppFirstMove, oppFirstMove.Word);
 
-        opponentMoves.Add(oppFirstMove);
 
-        // create lanes for empty list
-        openLanes = getLanesFromWord(oppFirstMove);
+            // Case 2: Opponent made the first move, AI goes 2nd
+            // find opponent first move
+            findPlayersFirstMove(out string word, out int x, out int y, out bool direction);
 
-        var topScoringMoves = new List<ScrabbleMove>();
-
-        // pick words for each lane (or just top lanes if too big)
-        foreach (var lane in openLanes)
-        {
-            var possibleWords = new List<ScrabbleMove>();
-
-            // get words from lane letter/space and playertiles
-            var bingoList = generator.GetBingoList(playerTiles + lane.Tile.ToString());
-
-            // remove words that are too long for this lane
-            // maybe i could get fancier with bigger words that include more tiles already on the board
-            // for example (lane  with a/lenght=5 could not fit word angle) but if there is a d at the end could have "angled"
-            bingoList.RemoveAll(x => x.Word.Length >= lane.Length);
-
-            // get the score for each word
-            foreach (var bingo in bingoList)
+            var oppFirstMove = new ScrabbleMove
             {
-                possibleWords.Add(new ScrabbleMove(lane)
+                Word = word,
+                X_coordinate = x,
+                Y_coordinate = y,
+                Direction = direction
+            };
+
+            oppFirstMove.Points = scrabbleBoard.GetMoveScore(oppFirstMove, oppFirstMove.Word);
+
+            opponentMoves.Add(oppFirstMove);
+
+            // create lanes for empty list
+            openLanes = getLanesFromWord(oppFirstMove);
+
+            var topScoringMoves = new List<ScrabbleMove>();
+
+            // pick words for each lane (or just top lanes if too big)
+            foreach (var lane in openLanes)
+            {
+                var possibleWords = new List<ScrabbleMove>();
+
+                // get words from lane letter/space and playertiles
+                var bingoList = generator.GetBingoList(playerTiles + lane.Tile.ToString());
+
+                // remove words that are too long for this lane
+                // maybe i could get fancier with bigger words that include more tiles already on the board
+                // for example (lane  with a/lenght=5 could not fit word angle) but if there is a d at the end could have "angled"
+                bingoList.RemoveAll(x => x.Word.Length >= lane.Length);
+
+                // get the score for each word
+                foreach (var bingo in bingoList)
                 {
-                    Points = calculateWordScore(lane, bingo.Word),
-                    Word = bingo.Word,
-                });
+                    possibleWords.Add(new ScrabbleMove(lane)
+                    {
+                        Points = scrabbleBoard.GetMoveScore(lane, bingo.Word),
+                        Word = bingo.Word,
+                    });
+                }
+
+                // pick the top 5 (maybe make this smaller) scoring words
+                topScoringMoves.AddRange((List<ScrabbleMove>)possibleWords.OrderByDescending(x => x.Points).Take(5));
             }
 
-            // pick the top 5 (maybe make this smaller) scoring words
-            topScoringMoves.AddRange((List<ScrabbleMove>)possibleWords.OrderByDescending(x => x.Points).Take(5));
+            // choose word/lane with highest bonus points/overall score
+            var topScoringMove = topScoringMoves.OrderByDescending(x => x.Points).First();
+
+            aiMoves.Add(topScoringMove);
+
+            // update lanes list (remove at least one lane also might block other lanes with new word)
+
+
+            return topScoringMove;
+
         }
-
-        // choose word/lane with highest bonus points/overall score
-        var topScoringMove = topScoringMoves.OrderByDescending(x => x.Points).First();
-
-        aiMoves.Add(topScoringMove);
-
-        // update lanes list (remove at least one lane also might block other lanes with new word)
-
-
-        return topScoringMove;
-
-
+        else
+        {
+ 
 
         //TO DO 
 
@@ -103,7 +111,8 @@ public class ArtificiallyUnintelligentPlayer
         // pick words for each lane (or just top lanes if too big)
         // choose word/lane with highest bonus points/overall score
         // update lanes list (remove at least one lane also might block other lanes with new word)
-
+                   return null;
+        }
 
         /*
         // define quadrants and sample board
@@ -239,103 +248,6 @@ public class ArtificiallyUnintelligentPlayer
 
             direction = true;
         }
-    }
-
-    // this only works for words that aren't on the board yet
-    //
-    private int calculateWordScore(in ScrabbleBase move, string word)
-    {
-        int score = 0;
-
-        // DoubleWord or TripleWord, need to consider theses values after everything else 
-
-        int doubleWord = 0;
-        int tripleWord = 0;
-
-        // should I have less duplicate code, 
-        // does it really matter once its converted into CLI?
-        if (move.Direction)
-        {
-            // direction ==  true: across
-            for (int i = 0; i < word.Length; i++)
-            {
-                // DL('[') , DW('\'), TL(']'), TW('^')
-
-                char character = scrabbleBoard.GetTileChar(move.X_coordinate + i, move.Y_coordinate);
-                // could probably put this switch in a function
-                // if I want to cut down on file size
-                switch (character)
-                {
-                    case '[':
-                        int newCharVal = generator.GetTilePointValue(word[i]);
-                        newCharVal = newCharVal * 2;
-                        score = score + newCharVal;
-                        break;
-                    case '\\':
-                        doubleWord++;
-                        score = score + generator.GetTilePointValue(word[i]);
-                        break;
-                    case ']':
-                        int newCharVal3 = generator.GetTilePointValue(word[i]);
-                        newCharVal3 = newCharVal3 * 3;
-                        score = score + newCharVal3;
-                        break;
-                    case '^':
-                        tripleWord++;
-                        score = score + generator.GetTilePointValue(word[i]);
-                        break;
-                    case ' ':
-                        score = score + generator.GetTilePointValue(word[i]);
-                        break;
-                }
-            }
-        }
-        else
-        {
-            // 
-            // direction ==  false: down
-            for (int i = 0; i < word.Length; i++)
-            {
-                // DL('[') , DW('\'), TL(']'), TW('^')
-
-                char character = scrabbleBoard.GetTileChar(move.X_coordinate, move.Y_coordinate + 1);
-
-                switch (character)
-                {
-                    case '[':
-                        int newCharVal = generator.GetTilePointValue(word[i]);
-                        newCharVal = newCharVal * 2;
-                        score = score + newCharVal;
-                        break;
-                    case '\\':
-                        doubleWord++;
-                        score = score + generator.GetTilePointValue(word[i]);
-                        break;
-                    case ']':
-                        int newCharVal3 = generator.GetTilePointValue(word[i]);
-                        newCharVal3 = newCharVal3 * 3;
-                        score = score + newCharVal3;
-                        break;
-                    case '^':
-                        tripleWord++;
-                        score = score + generator.GetTilePointValue(word[i]);
-                        break;
-                }
-            }
-        }
-
-        // multiply (double/triple)
-        for (int i = doubleWord; i > 0; i--)
-        {
-            score = score * 2;
-        }
-
-        for (int i = tripleWord; i > 0; i--)
-        {
-            score = score * 2;
-        }
-
-        return score;
     }
 
     // spaces for words, includes letter of a word already on the board
@@ -484,7 +396,7 @@ public class ArtificiallyUnintelligentPlayer
                     Y_coordinate = postition.y,
                 };
 
-                potentialMove.Points = calculateWordScore(potentialMove, word.Word);
+                potentialMove.Points = scrabbleBoard.GetMoveScore(potentialMove, word.Word);
                 potentialMoves.Add(potentialMove);
             }
             // for shorter words, (n <= 4) default to center square
@@ -498,7 +410,7 @@ public class ArtificiallyUnintelligentPlayer
                     Y_coordinate = centerCoordinate.Y,
                 };
 
-                potentialMove.Points = calculateWordScore(potentialMove, word.Word);
+                potentialMove.Points = scrabbleBoard.GetMoveScore(potentialMove, word.Word);
                 potentialMoves.Add(potentialMove);
             }
         }
@@ -567,7 +479,7 @@ public class ArtificiallyUnintelligentPlayer
             }
             else
             {
-                bestTileValue = generator.GetTilePointValue(word[0]);
+                bestTileValue = ScrabbleWordGenerator.GetTilePointValue(word[0]);
                 break;
             }
         }
@@ -585,7 +497,7 @@ public class ArtificiallyUnintelligentPlayer
                 continue;
             }
 
-            int val = generator.GetTilePointValue(word[i]);
+            int val = ScrabbleWordGenerator.GetTilePointValue(word[i]);
             if (val > bestTileValue)
             {
                 bestTileValue = val;

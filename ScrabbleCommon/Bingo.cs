@@ -272,7 +272,7 @@ public class ScrabbleWordGenerator
         throw new Exception("Bad inputs");
     }
 
-    public int GetTilePointValue(char tile)
+    public static int GetTilePointValue(char tile)
     {
         if (!letterValues.ContainsKey(tile))
         {
