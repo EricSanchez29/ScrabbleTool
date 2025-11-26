@@ -50,38 +50,42 @@ public class ScrabbleBoard : IPLayer, IDisplay
     {
         if (!move.Direction)
         {
-            move.Points = GetMoveScore(move, move.Word);
+            move.Score = GetMoveScore(move, move.Word);
+
+            int y_offset = move.Y_coordinate;
 
             for (int i = 0; i < move.Word.Length; i++)
             {
                 // check if position is already taken
-                if (!isSpecialTile(board[move.X_coordinate, move.Y_coordinate]))
+                if (!isSpecialTile(board[move.X_coordinate, y_offset]))
                 {
                     Console.WriteLine("Invalid play, board position already occupied");
                     return;
                 }
 
-                board[move.X_coordinate, move.Y_coordinate] = move.Word[i];
+                board[move.X_coordinate, y_offset] = move.Word[i];
 
-                move.Y_coordinate++;
+                y_offset++;
             }
         }
         else
         {
-            move.Points = GetMoveScore(move, move.Word);
+            move.Score = GetMoveScore(move, move.Word);
+
+            int x_offset = move.X_coordinate;
 
             for (int i = 0; i < move.Word.Length; i++)
             {
                 // check if position is already taken
-                if (!isSpecialTile(board[move.X_coordinate, move.Y_coordinate]))
+                if (!isSpecialTile(board[x_offset, move.Y_coordinate]))
                 {
                     Console.WriteLine("Invalid play, board position already occupied");
                     return;
                 }
 
-                board[move.X_coordinate, move.Y_coordinate] = move.Word[i];
+                board[x_offset, move.Y_coordinate] = move.Word[i];
 
-                move.X_coordinate++;
+                x_offset++;
             }
 
         }
@@ -163,19 +167,19 @@ public class ScrabbleBoard : IPLayer, IDisplay
         }
     }
 
-    public List<char> DrawTiles(int tileCount)
+    public string DrawTiles(int tileCount)
     {
-        var list = new List<char>(tileCount);
+        var list = new StringBuilder(tileCount);
 
         for (int i = tileCount; i > 0; i--)
         {
             // draw random tiles from bag
             var randomNumber = rando.Next(0, bag.Count - 1);
-            list.Add(bag[randomNumber]);
+            list.Append(bag[randomNumber]);
             bag.RemoveRange(randomNumber, 1);
         }
 
-        return list;
+        return list.ToString();
     }
 
     public int GetBagCount()

@@ -16,7 +16,7 @@ public class ScrabbleBot
 
     private List<ScrabbleMove> aiMoves = new List<ScrabbleMove>();
 
-    private List<ScrabbleLane> openLanes = null;
+    private List<ScrabbleLane>? openLanes = null;
 
     private string centerSquare = "H8";
     private (int X, int Y) centerCoordinate = new(7, 7);
@@ -32,11 +32,10 @@ public class ScrabbleBot
             return makeStartingMove(playerTiles);
         }
 
+        // Case 2: Opponent made the first move, AI goes 2nd
         if (openLanes == null)
         {
-            // Case 2: Opponent made the first move, AI goes 2nd
             // get opponent's first move
-
             var oppFirstMove = scrabbleBoard.GetLastMove();
 
             // do I need to keep track of moves?
@@ -47,39 +46,80 @@ public class ScrabbleBot
 
             var topScoringMoves = new List<ScrabbleMove>();
 
-            // pick words for each lane (or just top lanes if too big)
+            var potentialMoves = new List<ScrabblePotentialMove>();
+
             foreach (var lane in openLanes)
             {
-                var possibleWords = new List<ScrabbleMove>();
+                var words = generator.GetBingoList(playerTiles + lane.Tile);
 
-                // get words from lane letter/space and playertiles
-                var bingoList = generator.GetBingoList(playerTiles + lane.Tile.ToString());
-
-                // remove words that are too long for this lane
-                // maybe i could get fancier with bigger words that include more tiles already on the board
-                // for example (lane  with a/lenght=5 could not fit word angle) but if there is a d at the end could have "angled"
-                bingoList.RemoveAll(x => x.Word.Length >= lane.Length);
-
-                // get the score for each word
-                foreach (var bingo in bingoList)
+                // every single word is considered for this lane
+                foreach (var word in words)
                 {
-                    possibleWords.Add(new ScrabbleMove(lane)
+                    // only consider words that contain the letter in the lane
+                    if (!word.Word.Contains(lane.Tile))
                     {
-                        Points = scrabbleBoard.GetMoveScore(lane, bingo.Word),
-                        Word = bingo.Word,
-                    });
-                }
+                        continue;
+                    }
 
-                // pick the top 5 (maybe make this smaller) scoring words
-                topScoringMoves.AddRange((List<ScrabbleMove>)possibleWords.OrderByDescending(x => x.Points).Take(5));
+                    // find best position for word 
+                    var bestMove = getBestMove(lane, word.Word);
+
+                    if (bestMove.Score == 0)
+                    {
+                        continue;
+                    }
+
+                    potentialMoves.Add(new ScrabblePotentialMove(bestMove, lane));
+                }
             }
 
+            // sort potential moves by score
+
+            // choose highest scoring potential move
+
+            // remove lane from list
+
+            // return move
+
+
+
+            // // if there are two moves
+
+            // // pick words for each lane (or just top lanes if too big)
+            // foreach (var lane in openLanes)
+            // {
+            //     var possibleWords = new List<ScrabbleMove>();
+
+            //     // get words from lane letter/space and playertiles
+            //     var bingoList = generator.GetBingoList(playerTiles + lane.Tile.ToString());
+
+            //     // remove words that are too long for this lane
+            //     // maybe i could get fancier with bigger words that include more tiles already on the board
+            //     // for example (lane  with a/lenght=5 could not fit word angle) but if there is a d at the end could have "angled"
+            //     bingoList.RemoveAll(x => x.Word.Length >= lane.Length);
+
+            //     // find words that st
+
+            //     // get the score for each word
+            //     foreach (var bingo in bingoList)
+            //     {
+            //         possibleWords.Add(new ScrabbleMove(lane)
+            //         {
+            //             Points = scrabbleBoard.GetMoveScore(lane, bingo.Word),
+            //             Word = bingo.Word,
+            //         });
+            //     }
+
+            //     // pick the top 5 (maybe make this smaller) scoring words
+            //     topScoringMoves.AddRange((List<ScrabbleMove>)possibleWords.OrderByDescending(x => x.Points).Take(5));
+            // }
+
             // choose word/lane with highest bonus points/overall score
-            var topScoringMove = topScoringMoves.OrderByDescending(x => x.Points).First();
+            var topScoringMove = topScoringMoves.OrderByDescending(x => x.Score).First();
 
             aiMoves.Add(topScoringMove);
 
-            // update lanes list (remove at least one lane also might block other lanes with new word)
+            // update lanes list (remove one lane also might block other lanes with new word)
 
 
             return topScoringMove;
@@ -158,10 +198,12 @@ public class ScrabbleBot
 
         for (int i = 0; i < move.Word.Length; i++)
         {
-            // word direction is across
-            if (move.Direction)
+            // word direction is down
+            if (!move.Direction)
             {
                 int j;
+                ScrabbleLane? leftLane = null;
+                ScrabbleLane? rightLane = null;
 
                 // search in the right direction
                 for (j = move.X_coordinate + 1; j < 15; j++)
@@ -173,46 +215,71 @@ public class ScrabbleBot
                     }
                 }
 
-                var leftLane = new ScrabbleLane
+                rightLane = new ScrabbleLane
                 {
                     Tile = move.Word[i],
+                    TilePosition = 0,
                     Direction = true,
                     Length = j - move.X_coordinate,
-                    X_coordinate = j,
-                    Y_coordinate = move.Y_coordinate,
-                    Reverse = true
+                    X_coordinate = move.X_coordinate,
+                    Y_coordinate = move.Y_coordinate + i,
                 };
 
-                lanes.Add(leftLane);
-
                 // search in the left direction
-                for (j = move.X_coordinate - 1; j > 0; j--)
+                for (j = move.X_coordinate - 1; j >= 0; j--)
                 {
                     if (!scrabbleBoard.IsOpenSpace(j, move.Y_coordinate))
                     {
-                        j++;
                         break;
                     }
                 }
 
-                var rightLane = new ScrabbleLane
+                j++;
+
+                leftLane = new ScrabbleLane
                 {
                     Tile = move.Word[i],
+                    TilePosition = move.X_coordinate,
                     Direction = true,
-                    Length = j - move.X_coordinate,
+                    Length = move.X_coordinate - j,
                     X_coordinate = j,
-                    Y_coordinate = move.Y_coordinate,
-                    Reverse = false
+                    Y_coordinate = move.Y_coordinate + i,
                 };
 
-                lanes.Add(rightLane);
+                // if lanes are found on both ends make them into one big lane
+                if ((leftLane != null) && (rightLane != null))
+                {
+                    lanes.Add(new ScrabbleLane
+                    {
+                        Tile = move.Word[i],
+                        TilePosition = leftLane.Length - 1,
+                        Direction = true,
+                        Length = leftLane.Length + rightLane.Length - 1,
+                        X_coordinate = leftLane.X_coordinate,
+                        Y_coordinate = leftLane.Y_coordinate,
+                    });
+                }
+                else
+                {
+                    if (leftLane != null)
+                    {
+                        lanes.Add(leftLane);
+                    }
+
+                    if (rightLane != null)
+                    {
+                        lanes.Add(rightLane);
+                    }
+                }
             }
-            // word direction is down
+            // word direction is across
             else
             {
                 int j;
+                ScrabbleLane? upLane = null;
+                ScrabbleLane? downLane = null;
 
-                // search in the up direction
+                // search in the down direction
                 for (j = move.Y_coordinate + 1; j < 15; j++)
                 {
                     if (!scrabbleBoard.IsOpenSpace(move.X_coordinate, j))
@@ -222,39 +289,64 @@ public class ScrabbleBot
                     }
                 }
 
-                var upLane = new ScrabbleLane
+                downLane = new ScrabbleLane
                 {
                     Tile = move.Word[i],
+                    TilePosition = 0,
                     Direction = false,
                     Length = j - move.Y_coordinate,
-                    X_coordinate = move.X_coordinate,
-                    Y_coordinate = j,
-                    Reverse = true
+                    X_coordinate = move.X_coordinate + i,
+                    Y_coordinate = move.Y_coordinate,
                 };
 
-                lanes.Add(upLane);
-
-                // search in the down direction
-                for (j = move.Y_coordinate - 1; j > 0; j--)
+                // search in the up direction
+                for (j = move.Y_coordinate - 1; j >= 0; j--)
                 {
                     if (!scrabbleBoard.IsOpenSpace(move.X_coordinate, j))
                     {
-                        j++;
                         break;
                     }
                 }
 
-                var downLane = new ScrabbleLane
+                // since I want to use index j as a position I need to undo the last decrement
+                // which allowed the for loop to exit (either -1 position or the first non open space)
+                j++;
+
+                upLane = new ScrabbleLane
                 {
                     Tile = move.Word[i],
-                    Direction = true,
-                    Length = j - move.Y_coordinate,
-                    X_coordinate = move.X_coordinate,
+                    TilePosition = 0, // fix this
+                    Direction = false,
+                    Length = move.Y_coordinate - j + 1,
+                    X_coordinate = move.X_coordinate + i,
                     Y_coordinate = j,
-                    Reverse = true
                 };
 
-                lanes.Add(upLane);
+                // if lanes are found on both ends make them into one big lane
+                if ((upLane != null) && (downLane != null))
+                {
+                    lanes.Add(new ScrabbleLane
+                    {
+                        Tile = move.Word[i],
+                        TilePosition = upLane.Length - 1,
+                        Direction = false,
+                        Length = upLane.Length + downLane.Length - 1,
+                        X_coordinate = upLane.X_coordinate,
+                        Y_coordinate = upLane.Y_coordinate,
+                    });
+                }
+                else
+                {
+                    if (upLane != null)
+                    {
+                        lanes.Add(upLane);
+                    }
+
+                    if (downLane != null)
+                    {
+                        lanes.Add(downLane);
+                    }
+                }
             }
         }
 
@@ -266,7 +358,90 @@ public class ScrabbleBot
     // Can I track every open lane through an entire of a Scrabble game?
     private void updateOpenLanes(ScrabbleMove newMove)
     {
-        
+
+    }
+
+    // assumes that the lane character is included within the word
+    // need to find the starting position of the word that lines up with
+    // the lane character that is already on the board
+    private ScrabbleMove getBestMove(ScrabbleLane lane, string word)
+    {
+        // find the indexes of all the occurences of the lane.tile character in the string
+        List<int> indexes = new List<int>();
+        int currentIndex = 0;
+
+        while (currentIndex < word.Length)
+        {
+            // Find the next occurrence of the substring starting from currentIndex
+            int foundIndex = word.IndexOf(lane.Tile, currentIndex);
+
+            // If an occurrence is found
+            if (foundIndex != -1)
+            {
+                indexes.Add(foundIndex);
+                // Move the search starting position past the found occurrence
+                currentIndex = foundIndex + 1;
+            }
+            else
+            {
+                // No more occurrences found, exit the loop
+                break;
+            }
+        }
+
+        int topScore = 0;
+        ScrabbleBase bestCoordinate = new ScrabbleBase();
+
+        for (int i = 0; i < indexes.Count; i++)
+        {
+            var coordinate = getCoordinateFromWordIndex(indexes[i], lane);
+
+            int wordScore = scrabbleBoard.GetMoveScore(coordinate, word);
+
+            if (wordScore > topScore)
+            {
+                topScore = wordScore;
+                bestCoordinate = coordinate;
+            }
+        }
+
+        return new ScrabbleMove(bestCoordinate)
+        {
+            Word = word,
+            Score = 0,
+        };
+    }
+    
+    private ScrabbleBase getCoordinateFromWordIndex(int index, ScrabbleLane lane)
+    {
+        var pos = new ScrabbleBase();
+
+        if (lane.Direction) // x direction
+        {
+            // calculate scabble lane character position
+            int laneCharacterPosition = lane.X_coordinate + lane.TilePosition;
+
+
+            // how far from the beginning of the word is the index
+            // same as the index value
+
+            // subtract that distance from the lane character position
+
+            pos.X_coordinate = laneCharacterPosition - index;
+            pos.Y_coordinate = lane.Y_coordinate;
+            pos.Direction = lane.Direction;
+
+        }
+        else
+        {
+            int laneCharacterPosition = lane.Y_coordinate + lane.TilePosition;
+
+            pos.Y_coordinate = laneCharacterPosition - index;
+            pos.X_coordinate = lane.X_coordinate;
+            pos.Direction = lane.Direction;
+        }
+
+        return pos;
     }
 
     // need to create lanes for my own word
@@ -301,7 +476,7 @@ public class ScrabbleBot
                     Y_coordinate = postition.y,
                 };
 
-                potentialMove.Points = scrabbleBoard.GetMoveScore(potentialMove, word.Word);
+                potentialMove.Score = scrabbleBoard.GetMoveScore(potentialMove, word.Word);
                 potentialMoves.Add(potentialMove);
             }
             // for shorter words, (n <= 4) default to center square
@@ -315,7 +490,7 @@ public class ScrabbleBot
                     Y_coordinate = centerCoordinate.Y,
                 };
 
-                potentialMove.Points = scrabbleBoard.GetMoveScore(potentialMove, word.Word);
+                potentialMove.Score = scrabbleBoard.GetMoveScore(potentialMove, word.Word);
                 potentialMoves.Add(potentialMove);
             }
         }
@@ -323,7 +498,7 @@ public class ScrabbleBot
         // I'm ignoring the fact that there could be two words with the same score
         // - should the secondary
 
-        var list = potentialMoves.OrderByDescending(x => x.Points);
+        var list = potentialMoves.OrderByDescending(x => x.Score);
         return list.First();
     }
 
@@ -415,7 +590,7 @@ public class ScrabbleBot
 
     // prime objectives
 
-    // A. At any time if a player uses every tile, will get 50pt bonus
+    // Alpha (start game) At any time if a player uses every tile, will get 50pt bonus
 
     // 1. pick words with the most points
 
@@ -427,7 +602,7 @@ public class ScrabbleBot
 
     // near the end you should try to take all remaining tiles from opponent, aka prioritize longer words
 
-    // Z. (end game) when bag is empty prioritize words that use as many of your letters as possible
+    // Omega (end game) when bag is empty prioritize words that use as many of your letters as possible
 
 
 
