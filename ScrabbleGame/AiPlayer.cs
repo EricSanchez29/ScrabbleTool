@@ -44,8 +44,6 @@ public class ScrabbleBot
             // create lanes for empty list
             openLanes = getLanesFromWord(oppFirstMove);
 
-            var topScoringMoves = new List<ScrabbleMove>();
-
             var potentialMoves = new List<ScrabblePotentialMove>();
 
             foreach (var lane in openLanes)
@@ -55,9 +53,17 @@ public class ScrabbleBot
                 // every single word is considered for this lane
                 foreach (var word in words)
                 {
+                    if (word.Word == "INTENTS")
+                    {
+                        int breakpoint = 0;
+                    }
+
                     // only consider words that contain the letter in the lane
                     if (!word.Word.Contains(lane.Tile))
                     {
+                        // for some reason im not reaching this code, 
+                        // how does every word already have the tile character?
+                        // does the permutation algorithm bias towards the last (and maybe first) letter of the input string?
                         continue;
                     }
 
@@ -74,55 +80,16 @@ public class ScrabbleBot
             }
 
             // sort potential moves by score
-
+            var topScoringMoves = potentialMoves.OrderByDescending(x => x.Move.Score);
+            
             // choose highest scoring potential move
+            var topScoringMove = topScoringMoves.First();
 
             // remove lane from list
+            openLanes.Remove(topScoringMove.Lane);
 
             // return move
-
-
-
-            // // if there are two moves
-
-            // // pick words for each lane (or just top lanes if too big)
-            // foreach (var lane in openLanes)
-            // {
-            //     var possibleWords = new List<ScrabbleMove>();
-
-            //     // get words from lane letter/space and playertiles
-            //     var bingoList = generator.GetBingoList(playerTiles + lane.Tile.ToString());
-
-            //     // remove words that are too long for this lane
-            //     // maybe i could get fancier with bigger words that include more tiles already on the board
-            //     // for example (lane  with a/lenght=5 could not fit word angle) but if there is a d at the end could have "angled"
-            //     bingoList.RemoveAll(x => x.Word.Length >= lane.Length);
-
-            //     // find words that st
-
-            //     // get the score for each word
-            //     foreach (var bingo in bingoList)
-            //     {
-            //         possibleWords.Add(new ScrabbleMove(lane)
-            //         {
-            //             Points = scrabbleBoard.GetMoveScore(lane, bingo.Word),
-            //             Word = bingo.Word,
-            //         });
-            //     }
-
-            //     // pick the top 5 (maybe make this smaller) scoring words
-            //     topScoringMoves.AddRange((List<ScrabbleMove>)possibleWords.OrderByDescending(x => x.Points).Take(5));
-            // }
-
-            // choose word/lane with highest bonus points/overall score
-            var topScoringMove = topScoringMoves.OrderByDescending(x => x.Score).First();
-
-            aiMoves.Add(topScoringMove);
-
-            // update lanes list (remove one lane also might block other lanes with new word)
-
-
-            return topScoringMove;
+            return topScoringMove.Move;
 
         }
         else
@@ -408,7 +375,7 @@ public class ScrabbleBot
         return new ScrabbleMove(bestCoordinate)
         {
             Word = word,
-            Score = 0,
+            Score = topScore,
         };
     }
     

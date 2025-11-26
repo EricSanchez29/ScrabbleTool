@@ -46,8 +46,12 @@ public class ScrabbleBoard : IPLayer, IDisplay
         AddWord(move);
     }
 
+    // should another param with player letters, or maybe could track players letters?
+    // also need to add better checks for occupied board space, need to take into account using letter already on board
     public void AddWord(ScrabbleMove move)
     {
+        // isValidMove()
+
         if (!move.Direction)
         {
             move.Score = GetMoveScore(move, move.Word);
@@ -59,8 +63,9 @@ public class ScrabbleBoard : IPLayer, IDisplay
                 // check if position is already taken
                 if (!isSpecialTile(board[move.X_coordinate, y_offset]))
                 {
-                    Console.WriteLine("Invalid play, board position already occupied");
-                    return;
+                    //Console.WriteLine("Invalid play, board position already occupied");
+                    y_offset++;
+                    continue;
                 }
 
                 board[move.X_coordinate, y_offset] = move.Word[i];
@@ -80,7 +85,8 @@ public class ScrabbleBoard : IPLayer, IDisplay
                 if (!isSpecialTile(board[x_offset, move.Y_coordinate]))
                 {
                     Console.WriteLine("Invalid play, board position already occupied");
-                    return;
+                    x_offset++;
+                    continue;
                 }
 
                 board[x_offset, move.Y_coordinate] = move.Word[i];
@@ -287,7 +293,7 @@ public class ScrabbleBoard : IPLayer, IDisplay
                         tripleWord++;
                         score = score + ScrabbleWordGenerator.GetTilePointValue(word[i]);
                         break;
-                    case ' ':
+                    default:
                         score = score + ScrabbleWordGenerator.GetTilePointValue(word[i]);
                         break;
                 }
@@ -301,7 +307,7 @@ public class ScrabbleBoard : IPLayer, IDisplay
             {
                 // DL('[') , DW('\'), TL(']'), TW('^')
 
-                char character = GetTileChar(move.X_coordinate, move.Y_coordinate + 1);
+                char character = GetTileChar(move.X_coordinate, move.Y_coordinate + i);
 
                 switch (character)
                 {
@@ -321,6 +327,9 @@ public class ScrabbleBoard : IPLayer, IDisplay
                         break;
                     case '^':
                         tripleWord++;
+                        score = score + ScrabbleWordGenerator.GetTilePointValue(word[i]);
+                        break;
+                    default:
                         score = score + ScrabbleWordGenerator.GetTilePointValue(word[i]);
                         break;
                 }
