@@ -1,6 +1,6 @@
 public class ScrabbleMove : ScrabbleBase
 {
-    public int Points { get; set; }
+    public int Score { get; set; }
     public required string Word { get; set; }
 
     public ScrabbleMove()

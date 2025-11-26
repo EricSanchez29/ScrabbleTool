@@ -64,7 +64,7 @@ public class ScrabbleWordGenerator
     HashSet<string> _14letterWords;
     HashSet<string> _15letterWords;
 
-    // search for 7 and 6 letter words
+
     public List<(string Word, int Score)> GetBingoList(string playerLetters)
     {
         playerLetters = convertLowerWordToUpperWord(playerLetters);
@@ -119,6 +119,11 @@ public class ScrabbleWordGenerator
         return GetPointValues(bingoWords);
     }
 
+// to do
+    public List<string> GetWords(string playerLetters)
+    {
+        return new List<string>();
+    }
 
     private void spellWordsOut(string playerLetters, HashSet<string> dictionary, HashSet<string> validWords)
     {
@@ -287,7 +292,7 @@ public class ScrabbleWordGenerator
     // too much of hassel to change right now
     private static Dictionary<char, int> letterValues = new Dictionary<char, int>
     {
-        {' ', 0},
+        {'*', 0},
         {'A', 1},
         {'B', 3},
         {'C', 3},
@@ -368,7 +373,7 @@ public class ScrabbleWordGenerator
         {
             int characterAscii = (int)converLowerToUpper(playerInput[i]);
 
-            if (characterAscii == 32)
+            if (characterAscii == 42)
             {
                 array[0]++;
             }
@@ -381,9 +386,6 @@ public class ScrabbleWordGenerator
                 Console.WriteLine("Unexpected character encountered. Input string must contain valid Scrabble tile characters (A-Z, a-z, or ' ' (blank tile))");
             }
         }
-
-        // should i do something about blanks here
-        //int blankOffset = array[0];
 
         // check distribution of Scrabble
         for (int j = 1; j < 27; j++)
