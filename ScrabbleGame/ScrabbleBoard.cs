@@ -1,7 +1,7 @@
 using System.Text;
 using System.Xml.Schema;
 
-public class ScrabbleBoard : IPLayer, IDisplay
+public class ScrabbleBoard : IBoard, IDisplay
 {
     public ScrabbleBoard()
     {
@@ -48,6 +48,7 @@ public class ScrabbleBoard : IPLayer, IDisplay
 
     // should another param with player letters, or maybe could track players letters?
     // also need to add better checks for occupied board space, need to take into account using letter already on board
+    // and also add a bingo check +50 points
     public void AddWord(ScrabbleMove move)
     {
         // isValidMove()
@@ -175,6 +176,11 @@ public class ScrabbleBoard : IPLayer, IDisplay
 
     public string DrawTiles(int tileCount)
     {
+        if ((tileCount >= 8) || (tileCount <= 0))
+        {
+            throw new Exception("Invalid command, can only request between 1 and 7 tiles");
+        }
+
         var list = new StringBuilder(tileCount);
 
         for (int i = tileCount; i > 0; i--)

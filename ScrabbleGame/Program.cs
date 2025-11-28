@@ -5,97 +5,57 @@ string dictionaryLocation = @"C:\WorkSpace\Github\ScrabbleTool\ScrabbleCommon\da
 
 //ScrabbleWordGenerator scrabbleWordGenerator = new ScrabbleWordGenerator(dictionaryLocation);
 
-ScrabbleBoard board = new ScrabbleBoard();
-board.DisplayBoard();
+ScrabbleBoard scrabbleBoard = new ScrabbleBoard();
+scrabbleBoard.DisplayBoard();
 
 ScrabbleWordGenerator wordGenerator = new ScrabbleWordGenerator(dictionaryLocation);
 
-var scrabbleBot = new ScrabbleBot(wordGenerator, board);
+//var scrabbleBot = new ScrabbleBot(wordGenerator, scrabbleBoard);
 
-board.AddWord("CLANKER", "H8");
-board.DisplayBoard();
+// board.AddWord("CLANKER", "H8");
+// board.DisplayBoard();
 
-var botsMove = scrabbleBot.MakeMove("gtestin");
-//var botsMove = scrabbleBot.MakeMove("utanhre");
-board.AddWord(botsMove); 
-board.DisplayBoard();
+// var botsMove = scrabbleBot.MakeMove("gtestin");
+// //var botsMove = scrabbleBot.MakeMove("utanhre");
+// board.AddWord(botsMove); 
+// board.DisplayBoard();
 
+bool shutdown = false;
+IPLayer pLayer1;
+IPLayer pLayer2;
 
+// choose 1st player
+Console.WriteLine();
+Console.WriteLine("Would you like to go first? (Y/N)");
+Console.WriteLine();
 
-// Need to organize "game" code better, above code is mostly for testing bot
+var readkey = Console.ReadLine();
 
-//Console.WriteLine();
-//Console.WriteLine("Play first? (Y/N)");
-
-//char playFirst = Console.ReadKey().KeyChar;
-
-//bool shutdown = false;
-
-
-
-/* while (!shutdown)
+if ((readkey == "Y") || (readkey == "y"))
 {
-    Console.WriteLine("");
-    Console.WriteLine("Enter your Scrabble tiles");
-    Console.WriteLine("");
+    pLayer1 = new HumanPlayer(wordGenerator, scrabbleBoard);
+    pLayer2 = new ScrabbleBot(wordGenerator, scrabbleBoard);
+}
+else
+{
+    pLayer1 = new ScrabbleBot(wordGenerator, scrabbleBoard);
+    pLayer2 = new HumanPlayer(wordGenerator, scrabbleBoard);
+}
 
-    string word = Console.ReadLine();
+pLayer1.DrawTiles();
+pLayer2.DrawTiles();
 
-    // check input string?
-
-    if ((word == null) || (word == ".."))
-    {
-        shutdown = true;
-    }
-    else
-    {
-        // check dictionary
-        if (!wordGenerator.CheckDictionary(word))
-        {
-            Console.WriteLine("");
-            Console.WriteLine("Word not found in dictionary");
-            Console.WriteLine("");
-            continue;
-        }
-
-        Console.WriteLine("");
-        Console.WriteLine("Enter coordinate ('A1' - 'O15')");
-        Console.WriteLine("");
-
-        
-        string coordinate = Console.ReadLine();
-
-        if ((coordinate == null) || (coordinate == ".."))
-        {
-            shutdown = true;
-        }
-
-        Console.WriteLine("");
-        Console.WriteLine("Enter direction ('down' - 'across')");
-        Console.WriteLine("");
-
-        // read key
-        string directionString = Console.ReadLine();
-        bool direction = true; // default is across
-
-        if (directionString == "down")
-        {
-            direction = false;
-        }
-
-        // place tiles on board
-        board.AddWord(word, coordinate, direction);
-
-        // draw new tiles
-        board.DrawTiles(word.Length);
-
-        // display board
-        board.DisplayBoard();
+while (!shutdown)
+{
+    // 1st player makes choice
+    pLayer1.MakeMove();
+    scrabbleBoard.DisplayBoard();
+    pLayer1.DrawTiles();
 
 
-        // autoplayer turn
-        // - check dictionary, place tiles, draw new tiles
-
-    }
-
-}*/
+    // 2nd player makes choice
+    pLayer2.MakeMove();
+    scrabbleBoard.DisplayBoard();
+    pLayer2.DrawTiles();
+    
+}
