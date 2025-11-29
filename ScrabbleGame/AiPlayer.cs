@@ -1,8 +1,8 @@
 using System.Text;
 
-public class ScrabbleBot
+public class ScrabbleBot : IPLayer
 {
-    public ScrabbleBot(ScrabbleWordGenerator wordGenerator, IPLayer player)
+    public ScrabbleBot(ScrabbleWordGenerator wordGenerator, IBoard player)
     {
         generator = wordGenerator;
         scrabbleBoard = player;
@@ -10,16 +10,19 @@ public class ScrabbleBot
 
     private ScrabbleWordGenerator generator;
 
-    private IPLayer scrabbleBoard;
+    private IBoard scrabbleBoard;
 
     private List<ScrabbleMove> opponentMoves = new List<ScrabbleMove>();
 
-    private List<ScrabbleMove> aiMoves = new List<ScrabbleMove>();
+    private List<ScrabbleMove> botMoves = new List<ScrabbleMove>();
 
     private List<ScrabbleLane>? openLanes = null;
 
     private string centerSquare = "H8";
+
     private (int X, int Y) centerCoordinate = new(7, 7);
+
+    private List<char> tileRack = new List<char>(7);
 
     // to do: need to check that the bot has a potential bingo (+50 pts)
     public ScrabbleMove MakeMove(string playerTiles)
@@ -32,83 +35,80 @@ public class ScrabbleBot
             return makeStartingMove(playerTiles);
         }
 
-        // Case 2: Opponent made the first move, AI goes 2nd
+        // get opponent's most recent move
+        var oppLastMove = scrabbleBoard.GetLastMove();
+
         if (openLanes == null)
         {
-            // get opponent's first move
-            var oppFirstMove = scrabbleBoard.GetLastMove();
-
-            // do I need to keep track of moves?
-            opponentMoves.Add(oppFirstMove);
-
+            // Case 2: Opponent made the first move, AI goes 2nd
             // create lanes for empty list
-            openLanes = getLanesFromWord(oppFirstMove);
-
-            var potentialMoves = new List<ScrabblePotentialMove>();
-
-            foreach (var lane in openLanes)
-            {
-                var words = generator.GetBingoList(playerTiles + lane.Tile);
-
-                // every single word is considered for this lane
-                foreach (var word in words)
-                {
-                    if (word.Word == "INTENTS")
-                    {
-                        int breakpoint = 0;
-                    }
-
-                    // only consider words that contain the letter in the lane
-                    if (!word.Word.Contains(lane.Tile))
-                    {
-                        // for some reason im not reaching this code, 
-                        // how does every word already have the tile character?
-                        // does the permutation algorithm bias towards the last (and maybe first) letter of the input string?
-                        continue;
-                    }
-
-                    // find best position for word 
-                    var bestMove = getBestMove(lane, word.Word);
-
-                    if (bestMove.Score == 0)
-                    {
-                        continue;
-                    }
-
-                    potentialMoves.Add(new ScrabblePotentialMove(bestMove, lane));
-                }
-            }
-
-            // sort potential moves by score
-            var topScoringMoves = potentialMoves.OrderByDescending(x => x.Move.Score);
-            
-            // choose highest scoring potential move
-            var topScoringMove = topScoringMoves.First();
-
-            // remove lane from list
-            openLanes.Remove(topScoringMove.Lane);
-
-            // return move
-            return topScoringMove.Move;
-
+            openLanes = getLanesFromWord(oppLastMove);
         }
         else
         {
-
-
-            //TO DO 
-
             // Case 3: this is the AI's 2nd move or later
+            updateOpenLanes(oppLastMove);
+        }        
 
-            // to do
+        // do I need to keep track of moves?
+        opponentMoves.Add(oppLastMove);
 
-            // Look for previously open lanes that are now blocked
-            // look through existing lanes
-            // pick words for each lane (or just top lanes if too big)
-            // choose word/lane with highest bonus points/overall score
-            // update lanes list (remove at least one lane also might block other lanes with new word)
-            return null;
+        var potentialMoves = new List<ScrabblePotentialMove>();
+
+        foreach (var lane in openLanes)
+        {
+            var words = generator.GetBingoList(playerTiles + lane.Tile);
+
+            // every single word is considered for this lane
+            foreach (var word in words)
+            {
+
+                // if (word.Word == "INTENTS")
+                // {
+                //     int breakpoint = 0;
+                // }
+
+                // only consider words that contain the letter in the lane
+                if (!word.Word.Contains(lane.Tile))
+                {
+                    // for some reason im not reaching this code, 
+                    // how does every word already have the tile character?
+                    // does the permutation algorithm bias towards the last (and maybe first) letter of the input string?
+                    continue;
+                }
+
+                // find best position for word 
+                var bestMove = getBestMove(lane, word.Word);
+
+                // validate that the move makes sense
+                if (bestMove.Score == 0) { continue; }
+
+                if (!generator.CheckDictionary(bestMove.Word)) { continue; }
+                
+                if (!scrabbleBoard.IsValidCoordinate(bestMove.X_coordinate, bestMove.Y_coordinate)) { continue; }
+
+                potentialMoves.Add(new ScrabblePotentialMove(bestMove, lane));
+            }
         }
+
+        // sort potential moves by score
+        var topScoringMoves = potentialMoves.OrderByDescending(x => x.Move.Score);
+
+        // choose highest scoring potential move
+        var topScoringMove = topScoringMoves.First();
+
+        // remove tiles bot just used
+        updateTileRack(topScoringMove.Move.Word);
+
+        // remove lane from list
+        openLanes.Remove(topScoringMove.Lane);
+
+        // record bot move
+        botMoves.Add(topScoringMove.Move);
+
+        // return move
+        return topScoringMove.Move;
+    }
 
         /*
         // define quadrants and sample board
@@ -154,7 +154,6 @@ public class ScrabbleBot
             5. Select best option ()
         */
 
-    }
 
     // spaces for words, includes letter of a word already on the board
     // need properly orient lanes with new reverse property
@@ -325,7 +324,7 @@ public class ScrabbleBot
     // Can I track every open lane through an entire of a Scrabble game?
     private void updateOpenLanes(ScrabbleMove newMove)
     {
-
+        // makes sure to validate possible lanes
     }
 
     // assumes that the lane character is included within the word
@@ -553,6 +552,54 @@ public class ScrabbleBot
         }
 
         return bestTileIndex;
+    }
+
+    public void DrawTiles()
+    {
+        string newTiles;
+
+        if (tileRack.FirstOrDefault() == default(char))
+        {
+            newTiles = scrabbleBoard.DrawTiles(7);
+        }
+        else
+        {
+            newTiles = scrabbleBoard.DrawTiles(7 - tileRack.Count);
+        }
+
+        for (int i = 0; i < newTiles.Length; i++)
+        {
+            tileRack.Add(newTiles[i]);
+        }
+    }
+
+    // Right now I'm not including board tiles in the word string
+    private void updateTileRack(string wordTiles)
+    {
+        for (int i = 0; i < wordTiles.Length; i++)
+        {
+            if (tileRack.Find(x => x == wordTiles[i]) == default(char))
+            {
+                //throw new Exception("Word cannot be created using");
+                continue;
+            }
+
+            tileRack.Remove(wordTiles[i]);
+        }
+    }
+
+    public void MakeMove()
+    {
+        StringBuilder sb = new StringBuilder();
+
+        foreach (char tile in tileRack)
+        {
+            sb.Append(tile);
+        }
+
+        var move = MakeMove(sb.ToString());
+
+        scrabbleBoard.AddWord(move);
     }
 
     // prime objectives

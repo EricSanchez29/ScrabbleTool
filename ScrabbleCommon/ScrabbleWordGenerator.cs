@@ -228,14 +228,14 @@ public class ScrabbleWordGenerator
 
         foreach (char character in lower)
         {
-            sb.Append(converLowerToUpper(character));
+            sb.Append(ConverLowerToUpper(character));
         }
 
         return sb.ToString();
     }
 
     // need to test
-    public static char converLowerToUpper(char letter)
+    public static char ConverLowerToUpper(char letter)
     {
         int asciiValue = (int)letter;
 
@@ -371,7 +371,7 @@ public class ScrabbleWordGenerator
 
         for (int i = 0; i == playerInput.Length; i++)
         {
-            int characterAscii = (int)converLowerToUpper(playerInput[i]);
+            int characterAscii = (int)ConverLowerToUpper(playerInput[i]);
 
             if (characterAscii == 42)
             {

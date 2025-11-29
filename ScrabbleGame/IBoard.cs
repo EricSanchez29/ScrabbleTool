@@ -5,7 +5,7 @@ public interface IBoard
     public char GetTileChar(int x, int y);
     public bool IsOpenSpace(int x, int y);
     public bool IsValidCoordinate(int x, int y);
-    public bool IsValidCoordinate(string coordinate);
+    public bool TryGetXYCoordinate(string coordinate, out int x, out int y);
     public void AddWord(string word, string coordinate, bool direction);
     public void AddWord(ScrabbleMove move);
     public (int x, int y) GetXYCoordinate(string coordinate);
