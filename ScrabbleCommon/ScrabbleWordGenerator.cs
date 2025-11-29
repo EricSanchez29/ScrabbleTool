@@ -235,7 +235,7 @@ public class ScrabbleWordGenerator
     }
 
     // need to test
-    private static char converLowerToUpper(char letter)
+    public static char converLowerToUpper(char letter)
     {
         int asciiValue = (int)letter;
 

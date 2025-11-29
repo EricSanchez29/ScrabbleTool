@@ -33,7 +33,7 @@ public class ScrabbleBoard : IBoard, IDisplay
     public void AddWord(string word, string coordinate, bool direction = true)
     {
         // convert from Scrabble coordinate system to array coordinates
-        var startingPosition = GetBoardPosition(coordinate);
+        var startingPosition = GetXYCoordinate(coordinate);
 
         ScrabbleMove move = new ScrabbleMove()
         {
@@ -201,7 +201,7 @@ public class ScrabbleBoard : IBoard, IDisplay
 
     public char GetTileChar(string coordinate)
     {
-        var cartesian = GetBoardPosition(coordinate);
+        var cartesian = GetXYCoordinate(coordinate);
         return board[cartesian.x, cartesian.y];
     }
 
@@ -225,7 +225,7 @@ public class ScrabbleBoard : IBoard, IDisplay
         return false;
     }
 
-    public (int x, int y) GetBoardPosition(string coordinate)
+    public (int x, int y) GetXYCoordinate(string coordinate)
     {
         // check this and possibly swap string around to find letter
         int character = coordinate[0];
@@ -239,6 +239,7 @@ public class ScrabbleBoard : IBoard, IDisplay
         }
         else
         {
+            // what should I do instead of throwing?
             throw new Exception("Invalid board position");
         }
 
@@ -442,7 +443,7 @@ public class ScrabbleBoard : IBoard, IDisplay
         // fill TW and TL
         foreach (var tile in bonusTiles)
         {
-            var coordinates = GetBoardPosition(tile.Key);
+            var coordinates = GetXYCoordinate(tile.Key);
 
             tiles[coordinates.Item1, coordinates.Item2] = tile.Value;
         }
@@ -490,5 +491,55 @@ public class ScrabbleBoard : IBoard, IDisplay
         //
         return false;
     }
+
+    public bool IsValidCoordinate(int x, int y)
+    {
+        if ((x < 0) || (x > 14) || (y < 0) || (y > 14))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    // should I do a TryGetXYCoordinate(string, ref int x, ref int y)
+
+    public bool TryGetXYCoordinate(string coordinate, out int x, out int y)
+    {
+        x = int.MinValue;
+        y = int.MinValue;
+
+        // either expecting a 2 or 3 length string
+        // examples: H8 or C13 
+        if ((coordinate.Length > 3) || (coordinate.Length < 2))
+        {
+            return false;
+        }
+
+        char xCHar = coordinate[0];
+
+        // capitalize letter
+        // will accept h8 or c13 for example
+        char capitalX = ScrabbleWordGenerator.ConverLowerToUpper(xCHar);
+
+        if ((capitalX < 65) || (capitalX > 79))
+        {
+            return false;
+        }
+
+        x = capitalX - 65;
+
+        StringBuilder sb = new StringBuilder(coordinate).Remove(0, 1);
+
+        y = Convert.ToInt32(sb.ToString()) - 1;
+
+        if (y == 0)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
 }
 
