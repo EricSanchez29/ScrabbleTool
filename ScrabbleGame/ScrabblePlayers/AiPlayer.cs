@@ -1,16 +1,14 @@
 using System.Text;
 
-public class ScrabbleBot : IPLayer
+public class ScrabbleBot : PlayerBase, IPLayer
 {
-    public ScrabbleBot(ScrabbleWordGenerator wordGenerator, IBoard player)
+    public ScrabbleBot(ScrabbleWordGenerator wordGenerator, IBoard board) : base(board)
     {
         generator = wordGenerator;
-        scrabbleBoard = player;
+        scrabbleBoard = board;
     }
 
     private ScrabbleWordGenerator generator;
-
-    private IBoard scrabbleBoard;
 
     private List<ScrabbleMove> opponentMoves = new List<ScrabbleMove>();
 
@@ -22,7 +20,6 @@ public class ScrabbleBot : IPLayer
 
     private (int X, int Y) centerCoordinate = new(7, 7);
 
-    private List<char> tileRack = new List<char>(7);
 
     // to do: need to check that the bot has a potential bingo (+50 pts)
     public ScrabbleMove MakeMove(string playerTiles)
@@ -96,9 +93,6 @@ public class ScrabbleBot : IPLayer
 
         // choose highest scoring potential move
         var topScoringMove = topScoringMoves.First();
-
-        // remove tiles bot just used
-        updateTileRack(topScoringMove.Move.Word);
 
         // remove lane from list
         openLanes.Remove(topScoringMove.Lane);
@@ -573,22 +567,7 @@ public class ScrabbleBot : IPLayer
         }
     }
 
-    // Right now I'm not including board tiles in the word string
-    private void updateTileRack(string wordTiles)
-    {
-        for (int i = 0; i < wordTiles.Length; i++)
-        {
-            if (tileRack.Find(x => x == wordTiles[i]) == default(char))
-            {
-                //throw new Exception("Word cannot be created using");
-                continue;
-            }
-
-            tileRack.Remove(wordTiles[i]);
-        }
-    }
-
-    public void MakeMove()
+    public void MakeMove(GameContext context)
     {
         StringBuilder sb = new StringBuilder();
 
@@ -600,6 +579,9 @@ public class ScrabbleBot : IPLayer
         var move = MakeMove(sb.ToString());
 
         scrabbleBoard.AddWord(move);
+
+        // remove tiles bot just used
+        updateTileRack(move.Word);
     }
 
     // prime objectives
@@ -617,7 +599,5 @@ public class ScrabbleBot : IPLayer
     // near the end you should try to take all remaining tiles from opponent, aka prioritize longer words
 
     // Omega (end game) when bag is empty prioritize words that use as many of your letters as possible
-
-
 
 }

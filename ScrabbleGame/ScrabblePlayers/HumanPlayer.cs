@@ -1,4 +1,4 @@
-public class HumanPlayer : IPLayer
+public class HumanPlayer : PlayerBase, IPLayer
 {
     public HumanPlayer(ScrabbleWordGenerator gen, IBoard board)
     {
@@ -10,7 +10,7 @@ public class HumanPlayer : IPLayer
 
     private IBoard scrabbleBoard;
 
-    private List<char> tileRack = new List<char>(7);
+    
 
     public void DrawTiles()
     {
@@ -46,7 +46,7 @@ public class HumanPlayer : IPLayer
         }
     }
 
-    public void MakeMove()
+    public void MakeMove(GameContext context)
     {
         bool retry = true;
         string word = string.Empty;
@@ -137,17 +137,5 @@ public class HumanPlayer : IPLayer
         updateTileRack(word);
     }
 
-    private void updateTileRack(string wordTiles)
-    {
-        for (int i = 0; i < wordTiles.Length; i++)
-        {
-            if (tileRack.Find(x => x == wordTiles[i]) == default(char))
-            {
-                //throw new Exception("Word cannot be created using");
-                continue;
-            }
-
-            tileRack.Remove(wordTiles[i]);
-        }
-    }
+   
 }
