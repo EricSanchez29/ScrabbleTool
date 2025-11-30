@@ -7,8 +7,8 @@ public static class Game
 
         ScrabbleWordGenerator wordGenerator = new ScrabbleWordGenerator(dictionaryLocation);
 
-        IPLayer player1;
-        IPLayer player2;
+        IPlayer player1;
+        IPlayer player2;
 
         // choose 1st player
         Console.WriteLine();
@@ -45,7 +45,7 @@ public static class Game
                 return finalMoveSequence(false, player2.GetRemainingTiles());
             }
 
-            
+
 
             // 2nd player makes choice
             player2.MakeMove(context);
@@ -68,9 +68,10 @@ public static class Game
     // player 1 = false, player 2 = true
     private static bool finalMoveSequence(bool finalMovePlayer, string otherPlayerTiles)
     {
-        // display final game thing
+        // display final game screen
 
         // calculate final scores
+
 
         return false;
     }

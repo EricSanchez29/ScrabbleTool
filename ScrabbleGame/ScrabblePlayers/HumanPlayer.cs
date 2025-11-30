@@ -1,4 +1,4 @@
-public class HumanPlayer : PlayerBase, IPLayer
+public class HumanPlayer : PlayerBase, IPlayer
 {
     public HumanPlayer(ScrabbleWordGenerator gen, IBoard board) : base(board)
     {
@@ -115,18 +115,24 @@ public class HumanPlayer : PlayerBase, IPLayer
             throw new Exception("Invalid input");
         }
 
-        scrabbleBoard.AddWord(new ScrabbleMove()
+        var playerMove = new ScrabbleMove()
         {
             Word = word,
             X_coordinate = x_coordinate,
             Y_coordinate = y_coordinate,
             Direction = direction,
+        };
 
-        });
+        // this line looks weird, change this later by adding more versions of the function
+        playerMove.Score = scrabbleBoard.GetMoveScore(playerMove, word);
+
+        scrabbleBoard.AddWord(playerMove);
 
         updateTileRack(word);
 
         drawTiles();
+
+        score += playerMove.Score;
 
         return isFinalMove();
     }

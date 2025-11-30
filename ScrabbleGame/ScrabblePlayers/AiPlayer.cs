@@ -1,6 +1,6 @@
 using System.Text;
 
-public class ScrabbleBot : PlayerBase, IPLayer
+public class ScrabbleBot : PlayerBase, IPlayer
 {
     public ScrabbleBot(ScrabbleWordGenerator wordGenerator, IBoard board) : base(board)
     {
@@ -575,6 +575,8 @@ public class ScrabbleBot : PlayerBase, IPLayer
         updateTileRack(move.Word);
 
         drawTiles();
+
+        score += move.Score;
 
         return isFinalMove();
     }
