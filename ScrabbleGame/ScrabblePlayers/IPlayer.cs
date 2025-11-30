@@ -1,6 +1,9 @@
 public interface IPLayer
 {
-    public void MakeMove(GameContext context);
+    // bool is signalling the final move of the game
+    public bool MakeMove(GameContext context);
 
     public void DrawInitialTiles();
+
+    public string GetRemainingTiles();
 }

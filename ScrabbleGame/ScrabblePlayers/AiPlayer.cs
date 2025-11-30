@@ -548,18 +548,9 @@ public class ScrabbleBot : PlayerBase, IPLayer
         return bestTileIndex;
     }
 
-    public void DrawTiles()
+    private void drawTiles()
     {
-        string newTiles;
-
-        if (tileRack.FirstOrDefault() == default(char))
-        {
-            newTiles = scrabbleBoard.DrawTiles(7);
-        }
-        else
-        {
-            newTiles = scrabbleBoard.DrawTiles(7 - tileRack.Count);
-        }
+        string newTiles = scrabbleBoard.DrawTiles(7 - tileRack.Count);
 
         for (int i = 0; i < newTiles.Length; i++)
         {
@@ -567,7 +558,7 @@ public class ScrabbleBot : PlayerBase, IPLayer
         }
     }
 
-    public void MakeMove(GameContext context)
+    public bool MakeMove(GameContext context)
     {
         StringBuilder sb = new StringBuilder();
 
@@ -582,6 +573,20 @@ public class ScrabbleBot : PlayerBase, IPLayer
 
         // remove tiles bot just used
         updateTileRack(move.Word);
+
+        drawTiles();
+
+        return isFinalMove();
+    }
+
+    public void DrawInitialTiles()
+    {
+         string newTiles = scrabbleBoard.DrawTiles(7);
+
+        for (int i = 0; i < newTiles.Length; i++)
+        {
+            tileRack.Add(newTiles[i]);
+        }
     }
 
     // prime objectives

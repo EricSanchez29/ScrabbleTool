@@ -1,3 +1,5 @@
+using System.Text;
+
 public class PlayerBase
 {
     public PlayerBase(IBoard board)
@@ -23,14 +25,34 @@ public class PlayerBase
         }
     }
 
-    // to do
+    // player must choose which tiles to switch (input string)
     protected void swapTiles(string unwantedTiles)
     {
-
+        // to do
     }
-    
-    public void DrawInitialTiles()
+
+    protected bool isFinalMove()
     {
-        
+        if ((scrabbleBoard.GetBagCount() == 0) && (tileRack.Count == 0))
+        {
+            // player is making the final move
+            return true;
+        }
+
+        // another way the 
+
+        return false;
+    }
+
+    public string GetRemainingTiles()
+    {
+        StringBuilder sb = new StringBuilder();
+
+        foreach (char tile in tileRack)
+        {
+            sb.Append(tile);
+        }
+
+        return sb.ToString();
     }
 }

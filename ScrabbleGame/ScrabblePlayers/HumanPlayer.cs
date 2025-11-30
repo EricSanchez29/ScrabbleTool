@@ -1,33 +1,23 @@
 public class HumanPlayer : PlayerBase, IPLayer
 {
-    public HumanPlayer(ScrabbleWordGenerator gen, IBoard board)
+    public HumanPlayer(ScrabbleWordGenerator gen, IBoard board) : base(board)
     {
         generator = gen;
-        scrabbleBoard = board;
     }
 
     private ScrabbleWordGenerator generator;
 
-    private IBoard scrabbleBoard;
-
-    
-
-    public void DrawTiles()
+    // need to 
+    private void drawTiles()
     {
-        string newTiles;
+        if (scrabbleBoard.GetBagCount() == 0)
+        {
+            return;
+        }
 
-        if (tileRack.FirstOrDefault() == default(char))
-        {
-            newTiles = scrabbleBoard.DrawTiles(7);
-            Console.WriteLine();
-            Console.WriteLine("Player Tiles: " + newTiles);
-        }
-        else
-        {
-            newTiles = scrabbleBoard.DrawTiles(7 - tileRack.Count);
-            Console.WriteLine();
-            Console.WriteLine("New Tiles: " + newTiles);
-        }
+        string newTiles = scrabbleBoard.DrawTiles(7 - tileRack.Count);
+        Console.WriteLine();
+        Console.WriteLine("New Tiles: " + newTiles);
 
         for (int i = 0; i < newTiles.Length; i++)
         {
@@ -46,7 +36,7 @@ public class HumanPlayer : PlayerBase, IPLayer
         }
     }
 
-    public void MakeMove(GameContext context)
+    public bool MakeMove(GameContext context)
     {
         bool retry = true;
         string word = string.Empty;
@@ -135,7 +125,26 @@ public class HumanPlayer : PlayerBase, IPLayer
         });
 
         updateTileRack(word);
+
+        drawTiles();
+
+        return isFinalMove();
     }
 
-   
+    public void DrawInitialTiles()
+    {
+        if (tileRack.FirstOrDefault() == default(char))
+        {
+            throw new Exception("Rack should not be empty");
+        }
+        
+        string newTiles = scrabbleBoard.DrawTiles(7);
+        Console.WriteLine();
+        Console.WriteLine("Player Tiles: " + newTiles);
+
+        for (int i = 0; i < newTiles.Length; i++)
+        {
+            tileRack.Add(newTiles[i]);
+        }
+    }
 }

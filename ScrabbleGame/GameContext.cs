@@ -16,11 +16,10 @@ public class GameContext
         gameState = true;
     }
 
-
-
     public void EndGame()
     {
-        
+        gameOver = true;
+        gameState = null;
     }
 
     public void RecordException(Exception ex)

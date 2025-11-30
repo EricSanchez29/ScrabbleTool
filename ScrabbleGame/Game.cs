@@ -32,17 +32,46 @@ public static class Game
         player2.DrawInitialTiles();
         var context = new GameContext();
 
+        bool finalMove = false;
+
         while (context.Continue())
         {
             // 1st player makes choice
-            player1.MakeMove(context);
+            finalMove = player1.MakeMove(context);
             scrabbleBoard.DisplayBoard();
+
+            if (finalMove)
+            {
+                return finalMoveSequence(false, player2.GetRemainingTiles());
+            }
+
+            
 
             // 2nd player makes choice
             player2.MakeMove(context);
             scrabbleBoard.DisplayBoard();
+
+            if (finalMove)
+            {
+                return finalMoveSequence(true, player1.GetRemainingTiles());
+            }
+
+            
         }
 
         return context.ShouldWeRestartGame();
+    }
+
+    // bool is shutdown bit? is this weird?
+    //
+    // who made the final move?
+    // player 1 = false, player 2 = true
+    private static bool finalMoveSequence(bool finalMovePlayer, string otherPlayerTiles)
+    {
+        // display final game thing
+
+        // calculate final scores
+
+        return false;
     }
 }

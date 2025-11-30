@@ -502,8 +502,6 @@ public class ScrabbleBoard : IBoard, IDisplay
         return true;
     }
 
-    // should I do a TryGetXYCoordinate(string, ref int x, ref int y)
-
     public bool TryGetXYCoordinate(string coordinate, out int x, out int y)
     {
         x = int.MinValue;
@@ -541,5 +539,12 @@ public class ScrabbleBoard : IBoard, IDisplay
         return true;
     }
 
+    // I could determine the tiles that each player has but why I waste time calculating that?
+    public bool AreThereAnyPossibleMovesLeft(IPLayer player1, IPLayer player2)
+    {
+        
+
+        return true;
+    }
 }
 
