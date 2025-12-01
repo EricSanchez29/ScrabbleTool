@@ -166,18 +166,20 @@ public class ScrabbleWordGenerator
         }
     }
 
-    private void getPermutations(char[] array, int left, int right, HashSet<string> bingos)
+    // would it be more efficient to change this array into a list?
+    private void getPermutations(char[] array, int left, int right, HashSet<string> potentialWords)
     {
         if (left == right)
         {
             string potentialWord = new string(array);
 
             // should I do this here?
+            // aren't I checking a bigger hashset first?
             if (checkDictionary(potentialWord))
             {
-                if (!bingos.Contains(potentialWord))
+                if (!potentialWords.Contains(potentialWord))
                 {
-                    bingos.Add(potentialWord);
+                    potentialWords.Add(potentialWord);
                 }
             }
         }
@@ -186,7 +188,7 @@ public class ScrabbleWordGenerator
             for (int i = left; i <= right; i++)
             {
                 swap(ref array[left], ref array[i]);
-                getPermutations(array, 1 + left, right, bingos);
+                getPermutations(array, 1 + left, right, potentialWords);
                 swap(ref array[left], ref array[i]);
             }
         }
@@ -447,5 +449,114 @@ public class ScrabbleWordGenerator
         _13letterWords.Contains(upperCase) ||
         _14letterWords.Contains(upperCase) ||
         _15letterWords.Contains(upperCase);
+    }
+
+    // right now only using this for a single character lane
+    // might have to redesign lanes to include more than one char, which will necesitate a change here
+    // in char[] must be 7 characters long
+    public HashSet<string> GetPossibleScrabbleWords(in char[] playerTiles, in char laneChar)
+    {
+        HashSet<string> possibleWords = new HashSet<string>();
+
+        var totalTiles = new char[8];
+
+        for (int i = 0; i < 7; i++)
+        {
+            totalTiles[i] = playerTiles[i];
+        }
+
+        totalTiles[7] = laneChar;
+
+
+        if (containsBlanks(totalTiles, out int[] indexes))
+        {
+            // indexes are set to this default value
+            if (indexes[1] == int.MaxValue)
+            {
+                for (int i = 0; i < 26; i++)
+                {
+                    // something is going wrong need to step through this
+                    // value of 'A' = 65, 'Z' = 90
+
+                    int va = 65 + i;
+                    var a = (char)va;
+
+                    // switch out every letter of the alphabet in the blank index spot and call permutations
+                    totalTiles[indexes[0]] = (char)(65 + i);
+
+                    getPermutations(totalTiles, 0, totalTiles.Length - 1, possibleWords);
+
+                    getSmallerPermutations(totalTiles.ToString(), possibleWords);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < 26; i++)
+                {
+                    // value of 'A' = 65, 'Z' = 90
+
+                    // switch out every letter of the alphabet in the blank index spot
+                    totalTiles[indexes[0]] = (char)(65 + i);
+
+                    for (int j = 0; j < 26; j++)
+                    {
+                       
+
+                        // switch out every letter of the alphabet in the blank index spot and call permutations
+                        totalTiles[indexes[1]] = (char)(65 + j);
+
+                        getPermutations(totalTiles, 0, totalTiles.Length - 1, possibleWords);
+
+                        getSmallerPermutations(totalTiles.ToString(), possibleWords);
+                    }
+                }
+            }
+        }
+        else
+        {
+            
+            getPermutations(totalTiles, 0, 7, possibleWords);
+
+            getSmallerPermutations(totalTiles.ToString(), possibleWords);
+        }
+
+        return possibleWords;
+    }
+
+
+    private bool containsBlanks(char[] totalTiles, out int[] indexes)
+    {
+        //I don't want to use linq here because at most there only supposed to be two 
+
+        indexes = new int[2];
+        indexes[0] = int.MaxValue;
+        indexes[1] = int.MaxValue;
+        int indexindex = 0;
+
+        if (totalTiles.Contains('*'))
+        {
+            // is there a more efficient way to do this?
+            // there is 
+            for (int i = 0; i < totalTiles.Length; i++)
+            {
+                if (totalTiles[i] == '*')
+                {
+                    indexes[indexindex] = i;
+                    indexindex++;
+                }
+            }
+        }
+        
+        if (indexindex >= 3)
+        {
+            throw new Exception("unexpected number of blank tiles");
+        }
+
+        if (indexindex > 0)
+        {
+            return true;
+        }
+
+        return false;
     }
 }

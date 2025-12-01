@@ -1,11 +1,20 @@
 public static class Game
 {
+    // should this be static?
     public static bool StartGame(string dictionaryLocation)
     {
         ScrabbleBoard scrabbleBoard = new ScrabbleBoard();
         scrabbleBoard.DisplayBoard();
 
         ScrabbleWordGenerator wordGenerator = new ScrabbleWordGenerator(dictionaryLocation);
+
+
+        //testing
+        var bot = new ScrabbleBot(wordGenerator, scrabbleBoard);
+
+        var testString = "TESTIN*";
+        bot.TestMove(testString.ToCharArray(), 'A');
+
 
         IPlayer player1;
         IPlayer player2;

@@ -21,6 +21,13 @@ public class ScrabbleBot : PlayerBase, IPlayer
     private (int X, int Y) centerCoordinate = new(7, 7);
 
 
+    public void TestMove(char[] playerTile, char laneChar)
+    {
+        var move = generator.GetPossibleScrabbleWords(playerTile, laneChar);
+
+        
+    }
+
     // to do: need to check that the bot has a potential bingo (+50 pts)
     public ScrabbleMove MakeMove(string playerTiles)
     {
@@ -45,7 +52,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
         {
             // Case 3: this is the AI's 2nd move or later
             updateOpenLanes(oppLastMove);
-        }        
+        }
 
         // do I need to keep track of moves?
         opponentMoves.Add(oppLastMove);
@@ -81,7 +88,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
                 if (bestMove.Score == 0) { continue; }
 
                 if (!generator.CheckDictionary(bestMove.Word)) { continue; }
-                
+
                 if (!scrabbleBoard.IsValidCoordinate(bestMove.X_coordinate, bestMove.Y_coordinate)) { continue; }
 
                 potentialMoves.Add(new ScrabblePotentialMove(bestMove, lane));
