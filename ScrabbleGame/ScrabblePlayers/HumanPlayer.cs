@@ -7,7 +7,7 @@ public class HumanPlayer : PlayerBase, IPlayer
 
     private ScrabbleWordGenerator generator;
 
-    // need to 
+    // need to handle empty bag as an indicator of end of game
     private void drawTiles()
     {
         if (scrabbleBoard.GetBagCount() == 0)
@@ -89,7 +89,7 @@ public class HumanPlayer : PlayerBase, IPlayer
 
             if (!valid)
             {
-                Console.WriteLine("Word not found in dictionary.");
+                Console.WriteLine("Invalid coordinate");
                 Console.WriteLine("Retry :");
                 retry = true;
                 continue;
@@ -117,18 +117,18 @@ public class HumanPlayer : PlayerBase, IPlayer
 
         var playerMove = new ScrabbleMove()
         {
-            Word = word,
+            Word = word!,
             X_coordinate = x_coordinate,
             Y_coordinate = y_coordinate,
             Direction = direction,
         };
 
         // this line looks weird, change this later by adding more versions of the function
-        playerMove.Score = scrabbleBoard.GetMoveScore(playerMove, word);
+        playerMove.Score = scrabbleBoard.GetMoveScore(playerMove, word!);
 
         scrabbleBoard.AddWord(playerMove);
 
-        updateTileRack(word);
+        updateTileRack(word!);
 
         drawTiles();
 
@@ -137,20 +137,40 @@ public class HumanPlayer : PlayerBase, IPlayer
         return isFinalMove();
     }
 
-    public void DrawInitialTiles()
+    // this should be implemented in a private function in PlayerBase class
+    // this is because I don't want to have an additional base class interface
+    public void DrawInitialTiles(bool isPlayer1)
     {
-        if (tileRack.FirstOrDefault() == default(char))
+        if (tileRack.FirstOrDefault() != default(char))
         {
-            throw new Exception("Rack should not be empty");
+            throw new Exception("Rack should be empty");
         }
-        
-        string newTiles = scrabbleBoard.DrawTiles(7);
-        Console.WriteLine();
-        Console.WriteLine("Player Tiles: " + newTiles);
+
+        bool invalidRack = true;
+
+        string newTiles = string.Empty; // I think that I shouldn't have to assign this value, but the intellisense thinks otherwise
+
+        while (invalidRack)
+        {
+            newTiles = scrabbleBoard.DrawTiles(7);
+
+            if (isPlayer1)
+            {
+                if (!generator.IsValidTileRack(newTiles))
+                {
+                    invalidRack = false;
+                }
+            }
+        }
 
         for (int i = 0; i < newTiles.Length; i++)
         {
             tileRack.Add(newTiles[i]);
         }
+
+
+
+        Console.WriteLine();
+        Console.WriteLine("Player Tiles: " + newTiles);
     }
 }

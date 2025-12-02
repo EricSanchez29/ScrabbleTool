@@ -467,7 +467,13 @@ public class ScrabbleWordGenerator
 
         totalTiles[7] = laneChar;
 
+        getPossibleScrabbleWordHelper(totalTiles, possibleWords);
+        
+        return possibleWords;
+    }
 
+    private void getPossibleScrabbleWordHelper(char[] totalTiles, HashSet<string> possibleWords)
+    {
         if (containsBlanks(totalTiles, out int[] indexes))
         {
             // indexes are set to this default value
@@ -478,15 +484,17 @@ public class ScrabbleWordGenerator
                     // something is going wrong need to step through this
                     // value of 'A' = 65, 'Z' = 90
 
-                    int va = 65 + i;
-                    var a = (char)va;
+                    // int va = 65 + i;
+                    // var a = (char)va;
 
                     // switch out every letter of the alphabet in the blank index spot and call permutations
                     totalTiles[indexes[0]] = (char)(65 + i);
 
+                    string tiles = new string(totalTiles);
+
                     getPermutations(totalTiles, 0, totalTiles.Length - 1, possibleWords);
 
-                    getSmallerPermutations(totalTiles.ToString(), possibleWords);
+                    getSmallerPermutations(tiles, possibleWords);
                 }
             }
             else
@@ -500,30 +508,49 @@ public class ScrabbleWordGenerator
 
                     for (int j = 0; j < 26; j++)
                     {
-                       
+
 
                         // switch out every letter of the alphabet in the blank index spot and call permutations
                         totalTiles[indexes[1]] = (char)(65 + j);
 
+                        string tiles = new string(totalTiles);
+
                         getPermutations(totalTiles, 0, totalTiles.Length - 1, possibleWords);
 
-                        getSmallerPermutations(totalTiles.ToString(), possibleWords);
+                        getSmallerPermutations(tiles, possibleWords);
                     }
                 }
             }
         }
         else
         {
-            
-            getPermutations(totalTiles, 0, 7, possibleWords);
+            string tiles = new string(totalTiles);
 
-            getSmallerPermutations(totalTiles.ToString(), possibleWords);
+            getPermutations(totalTiles, 0, totalTiles.Length - 1, possibleWords);
+
+            getSmallerPermutations(tiles, possibleWords);
         }
 
-        return possibleWords;
     }
 
+    public bool IsValidTileRack(string tileRack)
+    {
+        HashSet<string> possibleWords = new HashSet<string>();
 
+        var totalTiles = new char[7];
+
+        for (int i = 0; i < 7; i++)
+        {
+            totalTiles[i] = tileRack[i];
+        }
+
+        if (possibleWords.Count == 0)
+        {
+            return false;
+        }
+
+        return true;
+    }
     private bool containsBlanks(char[] totalTiles, out int[] indexes)
     {
         //I don't want to use linq here because at most there only supposed to be two 

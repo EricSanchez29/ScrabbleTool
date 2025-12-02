@@ -9,11 +9,11 @@ public static class Game
         ScrabbleWordGenerator wordGenerator = new ScrabbleWordGenerator(dictionaryLocation);
 
 
-        //testing
-        var bot = new ScrabbleBot(wordGenerator, scrabbleBoard);
+        // //testing
+        // var bot = new ScrabbleBot(wordGenerator, scrabbleBoard);
 
-        var testString = "TESTIN*";
-        bot.TestMove(testString.ToCharArray(), 'A');
+        // var testString = "TESTI**";
+        // bot.TestMove(testString.ToCharArray(), 'A');
 
 
         IPlayer player1;
@@ -54,18 +54,14 @@ public static class Game
                 return finalMoveSequence(false, player2.GetRemainingTiles());
             }
 
-
-
             // 2nd player makes choice
-            player2.MakeMove(context);
+            finalMove = player2.MakeMove(context);
             scrabbleBoard.DisplayBoard();
 
             if (finalMove)
             {
                 return finalMoveSequence(true, player1.GetRemainingTiles());
             }
-
-            
         }
 
         return context.ShouldWeRestartGame();
