@@ -37,8 +37,8 @@ public static class Game
             player2 = new HumanPlayer(wordGenerator, scrabbleBoard);
         }
 
-        player1.DrawInitialTiles();
-        player2.DrawInitialTiles();
+        player1.DrawInitialTiles(true);
+        player2.DrawInitialTiles(false);
         var context = new GameContext();
 
         bool finalMove = false;
