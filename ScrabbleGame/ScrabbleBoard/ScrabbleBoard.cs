@@ -562,13 +562,15 @@ public class ScrabbleBoard : IBoard, IDisplay
                 }
             }
         }
-        // else if no adjacent words can be formed move on
+        // else no adjacent words can be formed, move on
 
 
         scrabbleMetaMove = metaMove;
         return true;
     }
 
+
+    // need to implement this
     private bool tryGetNewAdjacentWords(ScrabbleMove playerMove, out ScrabbleMetaMove metaMove)
     {
         metaMove = new ScrabbleMetaMove(playerMove);
@@ -578,7 +580,7 @@ public class ScrabbleBoard : IBoard, IDisplay
 
         // 
 
-        return false;
+        return;
     }
 
     public bool IsValidCoordinate(int x, int y)

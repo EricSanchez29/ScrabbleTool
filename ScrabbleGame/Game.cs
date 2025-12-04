@@ -48,6 +48,9 @@ public static class Game
             // 1st player makes choice
             finalMove = player1.MakeMove(context);
             scrabbleBoard.DisplayBoard();
+            Console.WriteLine();
+            Console.WriteLine("Player 1 score: " + player1.GetPlayerScore());
+            Console.WriteLine();
 
             if (finalMove)
             {
@@ -57,6 +60,9 @@ public static class Game
             // 2nd player makes choice
             finalMove = player2.MakeMove(context);
             scrabbleBoard.DisplayBoard();
+            Console.WriteLine();
+            Console.WriteLine("Player 2 score: " + player2.GetPlayerScore());
+            Console.WriteLine();
 
             if (finalMove)
             {
@@ -79,5 +85,10 @@ public static class Game
 
 
         return false;
+    }
+
+    private static int calculateFinalScore(IPlayer player1, IPlayer player2)
+    {
+        return 0;
     }
 }
