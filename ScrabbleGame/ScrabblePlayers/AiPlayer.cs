@@ -2,13 +2,10 @@ using System.Text;
 
 public class ScrabbleBot : PlayerBase, IPlayer
 {
-    public ScrabbleBot(ScrabbleWordGenerator wordGenerator, IBoard board) : base(board)
+    public ScrabbleBot(ScrabbleWordGenerator wordGenerator, IBoard board) : base(board, wordGenerator)
     {
-        generator = wordGenerator;
-        scrabbleBoard = board;
     }
 
-    private ScrabbleWordGenerator generator;
 
     private List<ScrabbleMove> opponentMoves = new List<ScrabbleMove>();
 
@@ -100,6 +97,10 @@ public class ScrabbleBot : PlayerBase, IPlayer
 
         // choose highest scoring potential move
         var topScoringMove = topScoringMoves.First();
+
+        Console.WriteLine();
+        Console.WriteLine("+" + topScoringMove.Move.Score + " points");
+        Console.WriteLine();
 
         // remove lane from list
         openLanes.Remove(topScoringMove.Lane);
@@ -588,14 +589,12 @@ public class ScrabbleBot : PlayerBase, IPlayer
         return isFinalMove();
     }
 
-    public void DrawInitialTiles()
+    public void DrawInitialTiles(bool isPlayer1)
     {
-         string newTiles = scrabbleBoard.DrawTiles(7);
-
-        for (int i = 0; i < newTiles.Length; i++)
-        {
-            tileRack.Add(newTiles[i]);
-        }
+        // I have room for some optimization here
+        // I find possible scrabblemoves in this function and then might do the same action immediately after
+        // if the bot goes first.
+        drawInitialTiles(isPlayer1);
     }
 
     // prime objectives

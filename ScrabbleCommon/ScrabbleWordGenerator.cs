@@ -67,7 +67,7 @@ public class ScrabbleWordGenerator
 
     public List<(string Word, int Score)> GetBingoList(string playerLetters)
     {
-        playerLetters = convertLowerWordToUpperWord(playerLetters);
+        playerLetters = ConvertLowerWordToUpperWord(playerLetters);
 
 
         // check if the string has illegal letter selection 
@@ -224,7 +224,7 @@ public class ScrabbleWordGenerator
         return bingoPoints;
     }
 
-    private static string convertLowerWordToUpperWord(string lower)
+    public static string ConvertLowerWordToUpperWord(string lower)
     {
         StringBuilder sb = new StringBuilder(lower.Length);
 
@@ -442,7 +442,7 @@ public class ScrabbleWordGenerator
     public bool CheckDictionary(string scabbleWord)
     {
         // capitalize word
-        string upperCase = convertLowerWordToUpperWord(scabbleWord);
+        string upperCase = ConvertLowerWordToUpperWord(scabbleWord);
 
         return officialScrabbleDictionary.Contains(upperCase) ||
         _12letterWords.Contains(upperCase) ||
@@ -481,7 +481,6 @@ public class ScrabbleWordGenerator
             {
                 for (int i = 0; i < 26; i++)
                 {
-                    // something is going wrong need to step through this
                     // value of 'A' = 65, 'Z' = 90
 
                     // int va = 65 + i;
@@ -508,8 +507,6 @@ public class ScrabbleWordGenerator
 
                     for (int j = 0; j < 26; j++)
                     {
-
-
                         // switch out every letter of the alphabet in the blank index spot and call permutations
                         totalTiles[indexes[1]] = (char)(65 + j);
 
@@ -533,6 +530,7 @@ public class ScrabbleWordGenerator
 
     }
 
+    // test this
     public bool IsValidTileRack(string tileRack)
     {
         HashSet<string> possibleWords = new HashSet<string>();
@@ -543,6 +541,8 @@ public class ScrabbleWordGenerator
         {
             totalTiles[i] = tileRack[i];
         }
+
+        getPossibleScrabbleWordHelper(totalTiles, possibleWords);
 
         if (possibleWords.Count == 0)
         {

@@ -3,13 +3,16 @@ using System.Xml.Schema;
 
 public class ScrabbleBoard : IBoard, IDisplay
 {
-    public ScrabbleBoard()
+    public ScrabbleBoard(ScrabbleWordGenerator gen)
     {
         board = createBoard();
         bag = createScrabbleBag();
         rando = new Random();
         playerMoves = new List<ScrabbleMove>();
+        generator = gen;
     }
+
+    ScrabbleWordGenerator generator;
 
     // Scrabble board
     private char[,] board;
@@ -49,7 +52,9 @@ public class ScrabbleBoard : IBoard, IDisplay
     // should another param with player letters, or maybe could track players letters?
     // also need to add better checks for occupied board space, need to take into account using letter already on board
     // and also add a bingo check +50 points
-    public void AddWord(ScrabbleMove move)
+
+    // return how many letters were not already on the board
+    public string AddWord(ScrabbleMove move)
     {
         // isValidMove()
 
@@ -98,6 +103,8 @@ public class ScrabbleBoard : IBoard, IDisplay
         }
 
         playerMoves.Add(move);
+
+        
     }
     public void DisplayBoard()
     {
@@ -225,6 +232,23 @@ public class ScrabbleBoard : IBoard, IDisplay
         return false;
     }
 
+    private bool isValidTile(char tile)
+    {
+        // *
+        if (tile != 42)
+        {
+            return false;
+        }
+
+        // 'A' to 'Z'
+        if ((tile < 65) && (tile > 90))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
     public (int x, int y) GetXYCoordinate(string coordinate)
     {
         // check this and possibly swap string around to find letter
@@ -250,6 +274,7 @@ public class ScrabbleBoard : IBoard, IDisplay
         return new(x_coordinate, y_coordinate);
     }
 
+    // Do I really need this?
     public string GetBoardPositionString(int x, int y)
     {
         string alphaNumeric = string.Empty;
@@ -477,18 +502,82 @@ public class ScrabbleBoard : IBoard, IDisplay
         return playerMoves.Last();
     }
 
-    private bool isValidMove(ScrabbleMove move)
+    private bool tryIsValidMove(ScrabbleMove move, out ScrabbleMetaMove? scrabbleMetaMove)
     {
         // is the orignal coordinate out of bounds?
+        if (!IsValidCoordinate(move.X_coordinate, move.Y_coordinate))
+        {
+            scrabbleMetaMove = null;
+            return false;
+        }
 
         // Does the word go out of bounds?
+        if (move.Direction)
+        {
+            // across
+            if (!IsValidCoordinate(move.X_coordinate + move.Word.Length - 1, move.Y_coordinate))
+            {
+                scrabbleMetaMove = null;
+                return false;
+            }
+        }
+        else
+        {
+            // down
+            if (!IsValidCoordinate(move.X_coordinate, move.Y_coordinate + move.Word.Length - 1))
+            {
+                scrabbleMetaMove = null;
+                return false;
+            }
+        }
 
         // Is there an unhandled character? (I may already handle this elsewhere but maybe move here)
+        for (int i = 0; i < move.Word.Length; i++)
+        {
+            if (!isValidTile(move.Word[i]))
+            {
+                scrabbleMetaMove = null;
+                return false;
+            }
+        }
 
         // Is this a legal scrabble move?
-        // - Input word is a valid word in my dictionary
+
+        // - Input word is a valid word in my dictionary (is this necessary?)
+        // I should do this outside     
+        if (!generator.CheckDictionary(move.Word))
+        {
+            throw new Exception("Invalid word");
+        }
+
         // - Check adjacent tiles for additional words (are they valid?)
-        //
+        if (tryGetNewAdjacentWords(move, out ScrabbleMetaMove metaMove))
+        {
+            foreach (ScrabbleMove adjMove in metaMove.GetAdditionalMoves())
+            {
+                if (generator.CheckDictionary(adjMove.Word))
+                {
+                    scrabbleMetaMove = null;
+                    return false;
+                }
+            }
+        }
+        // else if no adjacent words can be formed move on
+
+
+        scrabbleMetaMove = metaMove;
+        return true;
+    }
+
+    private bool tryGetNewAdjacentWords(ScrabbleMove playerMove, out ScrabbleMetaMove metaMove)
+    {
+        metaMove = new ScrabbleMetaMove(playerMove);
+
+        // look for lanes coming from playerMove
+        // - only create a lane if adjacent square is not a blank space
+
+        // 
+
         return false;
     }
 
@@ -540,9 +629,9 @@ public class ScrabbleBoard : IBoard, IDisplay
     }
 
     // I could determine the tiles that each player has but why I waste time calculating that?
-    public bool AreThereAnyPossibleMovesLeft(IPLayer player1, IPLayer player2)
+    public bool AreThereAnyPossibleMovesLeft(IPlayer player1, IPlayer player2)
     {
-        
+
 
         return true;
     }
