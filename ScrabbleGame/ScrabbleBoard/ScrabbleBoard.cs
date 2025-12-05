@@ -56,53 +56,73 @@ public class ScrabbleBoard : IBoard, IDisplay
     // return how many letters were not already on the board
     public string AddWord(ScrabbleMove move)
     {
-        // isValidMove()
-
-        if (!move.Direction)
+        if (!tryIsValidMove(move, out ScrabbleMetaMove? metaMove))
         {
-            move.Score = GetMoveScore(move, move.Word);
+            // how could I gracefully handle this?
+            // call tryIsValidMove from IPlayer.MakeMove()
+            // this check would therefore be redundant?
+// change this later
+            throw new Exception("Invalid word");
+        }
 
-            int y_offset = move.Y_coordinate;
-
-            for (int i = 0; i < move.Word.Length; i++)
+        // this move is a one word move, proceed as normal
+        if (metaMove is null)
+        {
+            if (!move.Direction)
             {
-                // check if position is already taken
-                if (!isSpecialTile(board[move.X_coordinate, y_offset]))
+                move.Score = GetMoveScore(move, move.Word);
+
+                int y_offset = move.Y_coordinate;
+
+                for (int i = 0; i < move.Word.Length; i++)
                 {
-                    //Console.WriteLine("Invalid play, board position already occupied");
+                    // check if position is already taken
+                    if (!isSpecialTile(board[move.X_coordinate, y_offset]))
+                    {
+                        //Console.WriteLine("Invalid play, board position already occupied");
+                        y_offset++;
+                        continue;
+                    }
+
+                    board[move.X_coordinate, y_offset] = move.Word[i];
+
                     y_offset++;
-                    continue;
                 }
-
-                board[move.X_coordinate, y_offset] = move.Word[i];
-
-                y_offset++;
             }
-        }
-        else
-        {
-            move.Score = GetMoveScore(move, move.Word);
-
-            int x_offset = move.X_coordinate;
-
-            for (int i = 0; i < move.Word.Length; i++)
+            else
             {
-                // check if position is already taken
-                if (!isSpecialTile(board[x_offset, move.Y_coordinate]))
+                move.Score = GetMoveScore(move, move.Word);
+
+                int x_offset = move.X_coordinate;
+
+                for (int i = 0; i < move.Word.Length; i++)
                 {
-                    Console.WriteLine("Invalid play, board position already occupied");
+                    // check if position is already taken
+                    if (!isSpecialTile(board[x_offset, move.Y_coordinate]))
+                    {
+                        Console.WriteLine("Invalid play, board position already occupied");
+                        x_offset++;
+                        continue;
+                    }
+
+                    board[x_offset, move.Y_coordinate] = move.Word[i];
+
                     x_offset++;
-                    continue;
                 }
 
-                board[x_offset, move.Y_coordinate] = move.Word[i];
-
-                x_offset++;
             }
 
+            playerMoves.Add(move);
+        }
+        else // this move creates additional words besides Move.Word
+        {
+            var additionalMoves = metaMove!.GetAdditionalMoves();
+
+            
         }
 
-        playerMoves.Add(move);
+
+        
 
         
     }
@@ -502,6 +522,7 @@ public class ScrabbleBoard : IBoard, IDisplay
         return playerMoves.Last();
     }
 
+    // scrabbleMetaMove is only not null if this funcition returns true, is there a better way to do this?
     private bool tryIsValidMove(ScrabbleMove move, out ScrabbleMetaMove? scrabbleMetaMove)
     {
         // is the orignal coordinate out of bounds?
@@ -553,26 +574,35 @@ public class ScrabbleBoard : IBoard, IDisplay
         // - Check adjacent tiles for additional words (are they valid?)
         if (tryGetNewAdjacentWords(move, out ScrabbleMetaMove metaMove))
         {
+            // check if these adjacent words are valid scrabble words
             foreach (ScrabbleMove adjMove in metaMove.GetAdditionalMoves())
             {
-                if (generator.CheckDictionary(adjMove.Word))
+                if (!generator.CheckDictionary(adjMove.Word))
                 {
+                    // If any adjacent word is an invalid dictionary word
+                    // then playerMove is an invalid move, return false
                     scrabbleMetaMove = null;
                     return false;
                 }
+
+                // calculate adjacent moves scores, add to metaMove
+                adjMove.Score = GetMoveScore(adjMove as ScrabbleBase, adjMove.Word);
+
+                // will calculate the total score outside of this function, probaby in AddWord()
             }
+
+            scrabbleMetaMove = metaMove;
         }
         // else no adjacent words can be formed, move on
+        else
+        {
+            scrabbleMetaMove = null;
+        }
 
-
-        // calculate adjacent moves scores, add to metaMove
-
-        scrabbleMetaMove = metaMove;
         return true;
     }
 
-
-    // need to implement this
+    // need to thoroughly test both across and down since its confusing to read over
     private bool tryGetNewAdjacentWords(ScrabbleMove playerMove, out ScrabbleMetaMove metaMove)
     {
         metaMove = new ScrabbleMetaMove(playerMove);
@@ -580,6 +610,7 @@ public class ScrabbleBoard : IBoard, IDisplay
         // look for additional words coming from playerMove
         // - only create a lane if adjacent square is not a blank space
 
+        // across
         if (playerMove.Direction)
         {
             // loop above and below the word
@@ -587,7 +618,6 @@ public class ScrabbleBoard : IBoard, IDisplay
             for (int i = 0; i < playerMove.Word.Length; i++)
             {
                 // "walk" down the lane and get every tile already on the board in that lane   
-
                 var potentialWordLoop = new StringBuilder(playerMove.Word[i]);
                 int potentialWordLoopYCoord = playerMove.Y_coordinate;
 
@@ -661,7 +691,9 @@ public class ScrabbleBoard : IBoard, IDisplay
             // word should be on the left (begining) if there are only tiles on the right
             potentialWord.Append(playerMove.Word);
 
-            // look to the right
+            // question: is it word inserting a character into stringbuilder, compared to building a char array backwards and reversing it
+
+            // peak to the right
             if (!IsOpenSpace(playerMove.X_coordinate + 1, playerMove.Y_coordinate))
             {
                 // if not empty keep looking until end of board or until empty
@@ -689,7 +721,7 @@ public class ScrabbleBoard : IBoard, IDisplay
                 });
             }
         }
-        else
+        else // down
         {
             // copied and pasted from above and changed to the perpendicular situation
             // need to verify both are functioning as expected
@@ -706,7 +738,7 @@ public class ScrabbleBoard : IBoard, IDisplay
                 // stop either at the first blank tile or the end of the board
                 for (int j = playerMove.X_coordinate - 1; j >= 0; j--)
                 {
-                    char thisChar = board[j, playerMove.Y_coordinate];
+                    char thisChar = board[j, playerMove.Y_coordinate + i];
 
                     if (isSpecialTile(thisChar))
                     {
@@ -720,7 +752,7 @@ public class ScrabbleBoard : IBoard, IDisplay
                 // look down the lane
                 for (int j = playerMove.X_coordinate + 1; j < 15; j++)
                 {
-                    char thisChar = board[j, playerMove.Y_coordinate];
+                    char thisChar = board[j, playerMove.Y_coordinate + i];
 
                     if (isSpecialTile(thisChar))
                     {
@@ -730,7 +762,7 @@ public class ScrabbleBoard : IBoard, IDisplay
                     potentialWordLoop.Append(thisChar);
                 }
 
-                // if there are empty space above and below, do not add to potentialWordsList
+                // if there are empty spaces to the left and to the right, do not add this loop to potentialWordsList
                 if (potentialWordLoop.Length == 1)
                 {
                     continue;
@@ -773,7 +805,7 @@ public class ScrabbleBoard : IBoard, IDisplay
             // word should be on the left (begining) if there are only tiles on the right
             potentialWord.Append(playerMove.Word);
 
-            // look to the right
+            // peak below
             if (!IsOpenSpace(playerMove.X_coordinate + 1, playerMove.Y_coordinate))
             {
                 // if not empty keep looking until end of board or until empty
@@ -801,8 +833,6 @@ public class ScrabbleBoard : IBoard, IDisplay
                 });
             }
         }
-
-
 
         return metaMove.HasAdditionalMoves();
     }
