@@ -3,10 +3,10 @@ public static class Game
     // should this be static?
     public static bool StartGame(string dictionaryLocation)
     {
-        ScrabbleBoard scrabbleBoard = new ScrabbleBoard();
-        scrabbleBoard.DisplayBoard();
-
         ScrabbleWordGenerator wordGenerator = new ScrabbleWordGenerator(dictionaryLocation);
+
+        ScrabbleBoard scrabbleBoard = new ScrabbleBoard(wordGenerator);
+        scrabbleBoard.DisplayBoard();
 
 
         // //testing

@@ -13,9 +13,19 @@ public class ScrabbleMetaMove
     {
         additionalMoves.Add(move);
     }
-    
+
     public List<ScrabbleMove> GetAdditionalMoves()
     {
         return additionalMoves;
+    }
+    
+    public bool HasAdditionalMoves()
+    {
+        if (additionalMoves.Count > 0)
+        {
+            return true;
+        }
+
+        return false;
     }
 }

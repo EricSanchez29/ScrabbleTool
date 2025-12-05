@@ -565,6 +565,8 @@ public class ScrabbleBoard : IBoard, IDisplay
         // else no adjacent words can be formed, move on
 
 
+        // calculate adjacent moves scores, add to metaMove
+
         scrabbleMetaMove = metaMove;
         return true;
     }
@@ -575,13 +577,237 @@ public class ScrabbleBoard : IBoard, IDisplay
     {
         metaMove = new ScrabbleMetaMove(playerMove);
 
-        // look for lanes coming from playerMove
+        // look for additional words coming from playerMove
         // - only create a lane if adjacent square is not a blank space
 
-        // 
+        if (playerMove.Direction)
+        {
+            // loop above and below the word
+            // shouldn't reach out of bounds on the scrabble board here because I do a check in tryIsValidMove
+            for (int i = 0; i < playerMove.Word.Length; i++)
+            {
+                // "walk" down the lane and get every tile already on the board in that lane   
 
-        return;
+                var potentialWordLoop = new StringBuilder(playerMove.Word[i]);
+                int potentialWordLoopYCoord = playerMove.Y_coordinate;
+
+                // stop either at the first blank tile or the end of the board
+                for (int j = playerMove.Y_coordinate - 1; j >= 0; j--)
+                {
+                    char thisChar = board[playerMove.X_coordinate + i, j];
+
+                    if (isSpecialTile(thisChar))
+                    {
+                        break;
+                    }
+
+                    potentialWordLoop.Insert(0, thisChar);
+                    potentialWordLoopYCoord--;
+                }
+
+                // look down the lane
+                for (int j = playerMove.Y_coordinate + 1; j < 15; j++)
+                {
+                    char thisChar = board[playerMove.X_coordinate + i, j];
+
+                    if (isSpecialTile(thisChar))
+                    {
+                        break;
+                    }
+
+                    potentialWordLoop.Append(thisChar);
+                }
+
+                // if there are empty space above and below, do not add to potentialWordsList
+                if (potentialWordLoop.Length == 1)
+                {
+                    continue;
+                }
+
+                metaMove.AddAddtionalMove(new ScrabbleMove
+                {
+                    Word = potentialWordLoop.ToString(),
+                    Direction = false,
+                    X_coordinate = playerMove.X_coordinate + i,
+                    Y_coordinate = potentialWordLoopYCoord,
+                });
+            }
+
+            var potentialWord = new StringBuilder();
+            int potentialWordXCoord = playerMove.X_coordinate;
+
+            // peak the left side of the move
+            if (!IsOpenSpace(playerMove.X_coordinate - 1, playerMove.Y_coordinate))
+            {
+                // if not empty keep looking until end of board
+                for (int i = playerMove.X_coordinate - 1; i >= 0; i--)
+                {
+                    char currentChar = board[i, playerMove.Y_coordinate];
+
+                    if (isSpecialTile(currentChar))
+                    {
+                        // no more tiles on the board for potentialWord, 
+                        // don't reach end of the board
+                        break;
+                    }
+
+                    potentialWord.Insert(currentChar, 0);
+                    potentialWordXCoord--;
+                }
+            }
+
+            // word should be in the middle when there are tiles to the left and right
+            // word should be on the right (end) if there are only tiles on the left
+            // word should be on the left (begining) if there are only tiles on the right
+            potentialWord.Append(playerMove.Word);
+
+            // look to the right
+            if (!IsOpenSpace(playerMove.X_coordinate + 1, playerMove.Y_coordinate))
+            {
+                // if not empty keep looking until end of board or until empty
+                for (int i = playerMove.X_coordinate + 1; i < 15; i++)
+                {
+                    char currentChar = board[i, playerMove.Y_coordinate];
+
+                    if (isSpecialTile(currentChar))
+                    {
+                        break;
+                    }
+
+                    potentialWord.Append(currentChar);
+                }
+            }
+
+            if (potentialWord.ToString() != playerMove.Word)
+            {
+                metaMove.AddAddtionalMove(new ScrabbleMove
+                {
+                    Word = potentialWord.ToString(),
+                    Direction = true,
+                    Y_coordinate = playerMove.Y_coordinate,
+                    X_coordinate = potentialWordXCoord,
+                });
+            }
+        }
+        else
+        {
+            // copied and pasted from above and changed to the perpendicular situation
+            // need to verify both are functioning as expected
+
+            // loop to the left and right of the word
+            // shouldn't reach out of bounds on the scrabble board here because I do a check in tryIsValidMove
+            for (int i = 0; i < playerMove.Word.Length; i++)
+            {
+                // "walk" down the lane and get every tile already on the board in that lane   
+
+                var potentialWordLoop = new StringBuilder(playerMove.Word[i]);
+                int potentialWordLoopXCoord = playerMove.X_coordinate;
+
+                // stop either at the first blank tile or the end of the board
+                for (int j = playerMove.X_coordinate - 1; j >= 0; j--)
+                {
+                    char thisChar = board[j, playerMove.Y_coordinate];
+
+                    if (isSpecialTile(thisChar))
+                    {
+                        break;
+                    }
+
+                    potentialWordLoop.Insert(0, thisChar);
+                    potentialWordLoopXCoord--;
+                }
+
+                // look down the lane
+                for (int j = playerMove.X_coordinate + 1; j < 15; j++)
+                {
+                    char thisChar = board[j, playerMove.Y_coordinate];
+
+                    if (isSpecialTile(thisChar))
+                    {
+                        break;
+                    }
+
+                    potentialWordLoop.Append(thisChar);
+                }
+
+                // if there are empty space above and below, do not add to potentialWordsList
+                if (potentialWordLoop.Length == 1)
+                {
+                    continue;
+                }
+
+                metaMove.AddAddtionalMove(new ScrabbleMove
+                {
+                    Word = potentialWordLoop.ToString(),
+                    Direction = true,
+                    X_coordinate = potentialWordLoopXCoord,
+                    Y_coordinate = playerMove.Y_coordinate + i,
+                });
+            }
+
+            var potentialWord = new StringBuilder();
+            int potentialWordYCoord = playerMove.Y_coordinate;
+
+            // peak above the move
+            if (!IsOpenSpace(playerMove.X_coordinate, playerMove.Y_coordinate - 1))
+            {
+                // if not empty keep looking until end of board
+                for (int i = playerMove.X_coordinate - 1; i >= 0; i--)
+                {
+                    char currentChar = board[i, playerMove.Y_coordinate];
+
+                    if (isSpecialTile(currentChar))
+                    {
+                        // no more tiles on the board for potentialWord, 
+                        // don't reach end of the board
+                        break;
+                    }
+
+                    potentialWord.Insert(currentChar, 0);
+                    potentialWordYCoord--;
+                }
+            }
+
+            // word should be in the middle when there are tiles to the left and right
+            // word should be on the right (end) if there are only tiles on the left
+            // word should be on the left (begining) if there are only tiles on the right
+            potentialWord.Append(playerMove.Word);
+
+            // look to the right
+            if (!IsOpenSpace(playerMove.X_coordinate + 1, playerMove.Y_coordinate))
+            {
+                // if not empty keep looking until end of board or until empty
+                for (int i = playerMove.X_coordinate + 1; i < 15; i++)
+                {
+                    char currentChar = board[i, playerMove.Y_coordinate];
+
+                    if (isSpecialTile(currentChar))
+                    {
+                        break;
+                    }
+
+                    potentialWord.Append(currentChar);
+                }
+            }
+
+            if (potentialWord.ToString() != playerMove.Word)
+            {
+                metaMove.AddAddtionalMove(new ScrabbleMove
+                {
+                    Word = potentialWord.ToString(),
+                    Direction = false,
+                    X_coordinate = playerMove.X_coordinate,
+                    Y_coordinate = potentialWordYCoord,
+                });
+            }
+        }
+
+
+
+        return metaMove.HasAdditionalMoves();
     }
+
+    //private bool is
 
     public bool IsValidCoordinate(int x, int y)
     {
