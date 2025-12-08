@@ -54,77 +54,108 @@ public class ScrabbleBoard : IBoard, IDisplay
     // and also add a bingo check +50 points
 
     // return how many letters were not already on the board
-    public string AddWord(ScrabbleMove move)
+    public string AddWord(ScrabbleMove playerMove)
     {
-        if (!tryIsValidMove(move, out ScrabbleMetaMove? metaMove))
+        var tilesToRemove = new StringBuilder();
+
+        int totalScore = 0;
+
+        if (!tryIsValidMove(playerMove, out ScrabbleMetaMove? metaMove))
         {
             // how could I gracefully handle this?
             // call tryIsValidMove from IPlayer.MakeMove()
             // this check would therefore be redundant?
-// change this later
+            // change this later
             throw new Exception("Invalid word");
         }
 
-        // this move is a one word move, proceed as normal
-        if (metaMove is null)
+        // Calculate move score
+        // 
+        
+        // calculate scores for additional moves if available
+        if (metaMove is not null) // this move creates additional words besides Move.Word
         {
-            if (!move.Direction)
+            foreach (var additionalMove in metaMove.GetAdditionalMoves())
             {
-                move.Score = GetMoveScore(move, move.Word);
+                var moveScore = GetMoveScore(additionalMove, additionalMove.Word);
 
-                int y_offset = move.Y_coordinate;
-
-                for (int i = 0; i < move.Word.Length; i++)
-                {
-                    // check if position is already taken
-                    if (!isSpecialTile(board[move.X_coordinate, y_offset]))
-                    {
-                        //Console.WriteLine("Invalid play, board position already occupied");
-                        y_offset++;
-                        continue;
-                    }
-
-                    board[move.X_coordinate, y_offset] = move.Word[i];
-
-                    y_offset++;
-                }
+                totalScore += moveScore;
             }
-            else
+        }
+
+
+        // calculate main move score
+        // only manipulate tiles (output string) here
+        if (!playerMove.Direction)
+        {
+            playerMove.Score = GetMoveScore(playerMove, playerMove.Word);
+
+            totalScore += playerMove.Score;
+
+            int y_offset = playerMove.Y_coordinate;
+
+            for (int i = 0; i < playerMove.Word.Length; i++)
             {
-                move.Score = GetMoveScore(move, move.Word);
-
-                int x_offset = move.X_coordinate;
-
-                for (int i = 0; i < move.Word.Length; i++)
+                // check if position is already taken
+                if (!isSpecialTile(board[playerMove.X_coordinate, y_offset]))
                 {
-                    // check if position is already taken
-                    if (!isSpecialTile(board[x_offset, move.Y_coordinate]))
+                    // if this position is already occupied by the same letter than I am not overwriting
+                    // I'm merely using a board letter in my word
+
+                    if (board[playerMove.X_coordinate, y_offset] != playerMove.Word[i])
                     {
+                        // shouldn't reach this if I am correctly checking this in tryIsValidMove()
                         Console.WriteLine("Invalid play, board position already occupied");
-                        x_offset++;
-                        continue;
                     }
+                }
+                else
+                {
+                    board[playerMove.X_coordinate, y_offset] = playerMove.Word[i];
 
-                    board[x_offset, move.Y_coordinate] = move.Word[i];
-
-                    x_offset++;
+                    tilesToRemove.Append(playerMove.Word[i]);
                 }
 
+                y_offset++;
+            }
+        }
+        else
+        {
+            playerMove.Score = GetMoveScore(playerMove, playerMove.Word);
+
+            int x_offset = playerMove.X_coordinate;
+
+            for (int i = 0; i < playerMove.Word.Length; i++)
+            {
+                // check if position is already taken
+                if (!isSpecialTile(board[x_offset, playerMove.Y_coordinate]))
+                {
+                    // if this position is already occupied by the same letter than I am not overwriting
+                    // I'm merely using a board letter in my word
+
+                    if (board[x_offset, playerMove.Y_coordinate] != playerMove.Word[i])
+                    {
+                        // shouldn't reach this if I am correctly checking this in tryIsValidMove()
+                        Console.WriteLine("Invalid play, board position already occupied");
+                    }
+
+                }
+                else
+                {
+                    board[x_offset, playerMove.Y_coordinate] = playerMove.Word[i];
+
+                    tilesToRemove.Append(playerMove.Word[i]);
+                }
+
+                x_offset++;
             }
 
-            playerMoves.Add(move);
-        }
-        else // this move creates additional words besides Move.Word
-        {
-            var additionalMoves = metaMove!.GetAdditionalMoves();
-
-            
         }
 
 
+        // should I store the metaMove instead?
+        playerMoves.Add(playerMove);
         
-
-        
+        return tilesToRemove.ToString();
     }
     public void DisplayBoard()
     {
@@ -562,16 +593,20 @@ public class ScrabbleBoard : IBoard, IDisplay
             }
         }
 
-        // Is this a legal scrabble move?
+        // Is this move going to attempt to overwrite tiles already on the board
 
-        // - Input word is a valid word in my dictionary (is this necessary?)
+// TO DO
+
+
+
+        // Input word is a valid word in my dictionary (is this necessary?)
         // I should do this outside     
         if (!generator.CheckDictionary(move.Word))
         {
             throw new Exception("Invalid word");
         }
 
-        // - Check adjacent tiles for additional words (are they valid?)
+        // Check adjacent tiles for additional words (are they valid?)
         if (tryGetNewAdjacentWords(move, out ScrabbleMetaMove metaMove))
         {
             // check if these adjacent words are valid scrabble words
