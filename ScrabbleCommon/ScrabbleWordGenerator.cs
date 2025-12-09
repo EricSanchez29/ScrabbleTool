@@ -19,7 +19,7 @@ public class ScrabbleWordGenerator
         //var arr = new int[16];
 
         // readfile/fill dictionary
-        string line;
+        string? line;
         while ((line = stream.ReadLine()) != null)
         {
             // example line : "WHATCHAMACALLIT a {thingy=n} [n]"
@@ -288,7 +288,7 @@ public class ScrabbleWordGenerator
 
         return letterValues[tile];
     }
-    
+
     // Point value assigned to each letter by the game Scrabble
     // shouldn't this be in the ScrabbleBoard object?
     // too much of hassel to change right now
@@ -325,6 +325,7 @@ public class ScrabbleWordGenerator
 
     // Check that a possible word actually exists in some official Scrabble Dictionary 
     // (there are many choices for actual dictionary verison American/International/other)
+    // Works for words smaller than 12 letters
     private bool checkDictionary(string possibleWord)
     {
         // for testing
@@ -334,7 +335,6 @@ public class ScrabbleWordGenerator
         return officialScrabbleDictionary.Contains(possibleWord);
 
     }
-
 
     // have to change code to read uppercase
     // if I want to use this for testing purposes, convert to uppercase because thats easier to physically retyping this
@@ -437,7 +437,6 @@ public class ScrabbleWordGenerator
     //     {'Y', 2},
     //     {'Z', 1}
     // };
-
 
     public bool CheckDictionary(string scabbleWord)
     {
@@ -551,6 +550,7 @@ public class ScrabbleWordGenerator
 
         return true;
     }
+    
     private bool containsBlanks(char[] totalTiles, out int[] indexes)
     {
         //I don't want to use linq here because at most there only supposed to be two 

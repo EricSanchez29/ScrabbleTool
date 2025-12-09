@@ -38,8 +38,8 @@ public class HumanPlayer : PlayerBase, IPlayer
     public bool MakeMove(GameContext context)
     {
         bool retry = true;
-        string word = string.Empty;
-        string coordinate = string.Empty;
+        string? word = string.Empty;
+        string? coordinate = string.Empty;
         int x_coordinate = int.MaxValue;
         int y_coordinate = int.MaxValue;
         bool direction = true;
@@ -99,7 +99,7 @@ public class HumanPlayer : PlayerBase, IPlayer
             Console.WriteLine("");
 
             // read key
-            string directionString = Console.ReadLine();
+            string? directionString = Console.ReadLine();
 
             if (directionString == "down" || directionString == "d")
             {
