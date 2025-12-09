@@ -4,6 +4,8 @@ public class ScrabbleMetaMove
 
     private List<ScrabbleMove> additionalMoves = new List<ScrabbleMove>();
 
+    private int _totalScore = 0;
+
     public ScrabbleMetaMove(ScrabbleMove mainMove)
     {
         _mainMove = mainMove;
@@ -18,7 +20,7 @@ public class ScrabbleMetaMove
     {
         return additionalMoves;
     }
-    
+
     public bool HasAdditionalMoves()
     {
         if (additionalMoves.Count > 0)
@@ -27,5 +29,23 @@ public class ScrabbleMetaMove
         }
 
         return false;
+    }
+
+    // I'm to lazy to do this the "correct way"
+    // this works but they could be public properties of metaMove
+    // change when I have time
+    public void SetTotalScore(int totalScore)
+    {
+        _totalScore = totalScore;
+    }
+
+    public int GetTotalScore()
+    {
+        return _totalScore;
+    }
+    
+    public ScrabbleMove GetMainMove()
+    {
+        return _mainMove;
     }
 }

@@ -7,6 +7,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
     }
 
 
+    // change this to metamove
     private List<ScrabbleMove> opponentMoves = new List<ScrabbleMove>();
 
     private List<ScrabbleMove> botMoves = new List<ScrabbleMove>();
@@ -16,14 +17,6 @@ public class ScrabbleBot : PlayerBase, IPlayer
     private string centerSquare = "H8";
 
     private (int X, int Y) centerCoordinate = new(7, 7);
-
-
-    public void TestMove(char[] playerTile, char laneChar)
-    {
-        var move = generator.GetPossibleScrabbleWords(playerTile, laneChar);
-
-        
-    }
 
     // to do: need to check that the bot has a potential bingo (+50 pts)
     public ScrabbleMove MakeMove(string playerTiles)
@@ -43,16 +36,16 @@ public class ScrabbleBot : PlayerBase, IPlayer
         {
             // Case 2: Opponent made the first move, AI goes 2nd
             // create lanes for empty list
-            openLanes = getLanesFromWord(oppLastMove);
+            openLanes = getLanesFromWord(oppLastMove.GetMainMove());
         }
         else
         {
             // Case 3: this is the AI's 2nd move or later
-            updateOpenLanes(oppLastMove);
+            updateOpenLanes(oppLastMove.GetMainMove());
         }
 
         // do I need to keep track of moves?
-        opponentMoves.Add(oppLastMove);
+        opponentMoves.Add(oppLastMove.GetMainMove());
 
         var potentialMoves = new List<ScrabblePotentialMove>();
 
@@ -113,39 +106,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
     }
 
         /*
-        // define quadrants and sample board
-        // List<(int, string)> quadrants =
-        // [
-        //     (countQuadrant(quadrantMap["topLeft"]), "topLeft"),
-        //     (countQuadrant(quadrantMap["topRight"]), "topRight"),
-        //     (countQuadrant(quadrantMap["bottomLeft"]), "bottomLeft"),
-        //     (countQuadrant(quadrantMap["bottomRight"]), "bottomRight"),
-        // ];
-
-        // // pick quadrant
-        // var topPick = quadrants.OrderByDescending(x => x.Item1).First();
-
-        // if (quadrants.FindAll(x => x.Item1 == topPick.Item1).Count > 1)
-        // {
-        //     // check more than one quadrant?
-        // }
-        */
-
-
-        /*
-            Will use one or a combination of methods 
-
-            "Computer vision" method
-            - Define 8x8 segments for each "quadrant" (board is 15x15 so im double counting the center row/column, am i biasing towards the middle) 
-            - Take sample of board (don't query evey coordinate)
-            - Take 2x2 squares and asign total number tiles found
-            so end up with 4 by 4 grid of tile distribution per quadrant
-            - 
-
-
             "Path finder" method
-
-            1. Identify quadrant (or half?) of board that is most empty
 
             2. Look for "hooks" (tiles from previous words) that will open up lanes in quadrant
 
@@ -158,8 +119,9 @@ public class ScrabbleBot : PlayerBase, IPlayer
 
 
     // spaces for words, includes letter of a word already on the board
-    // need properly orient lanes with new reverse property
     // check this function but also change code that uses lanes
+    // 
+    // this function is fundementally ignoring possible adjacent words
     private List<ScrabbleLane> getLanesFromWord(in ScrabbleMove move)
     {
         var lanes = new List<ScrabbleLane>();

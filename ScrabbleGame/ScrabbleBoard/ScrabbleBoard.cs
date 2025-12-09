@@ -8,7 +8,6 @@ public class ScrabbleBoard : IBoard, IDisplay
         board = createBoard();
         bag = createScrabbleBag();
         rando = new Random();
-        playerMoves = new List<ScrabbleMove>();
         generator = gen;
     }
 
@@ -24,7 +23,9 @@ public class ScrabbleBoard : IBoard, IDisplay
     private Random rando;
 
     // Player Moves
-    private List<ScrabbleMove> playerMoves;
+    private List<ScrabbleMove> playerMoves = [];
+    // get rid of one of these later
+    private List<ScrabbleMetaMove> metaMoves = [];
 
     /// <summary>
     /// 
@@ -70,8 +71,7 @@ public class ScrabbleBoard : IBoard, IDisplay
         }
 
         // Calculate move score
-        // 
-        
+
         // calculate scores for additional moves if available
         if (metaMove is not null) // this move creates additional words besides Move.Word
         {
@@ -83,15 +83,15 @@ public class ScrabbleBoard : IBoard, IDisplay
             }
         }
 
-
         // calculate main move score
+        playerMove.Score = GetMoveScore(playerMove, playerMove.Word);
+
+        totalScore += playerMove.Score;
+
+
         // only manipulate tiles (output string) here
         if (!playerMove.Direction)
         {
-            playerMove.Score = GetMoveScore(playerMove, playerMove.Word);
-
-            totalScore += playerMove.Score;
-
             int y_offset = playerMove.Y_coordinate;
 
             for (int i = 0; i < playerMove.Word.Length; i++)
@@ -120,8 +120,6 @@ public class ScrabbleBoard : IBoard, IDisplay
         }
         else
         {
-            playerMove.Score = GetMoveScore(playerMove, playerMove.Word);
-
             int x_offset = playerMove.X_coordinate;
 
             for (int i = 0; i < playerMove.Word.Length; i++)
@@ -151,12 +149,30 @@ public class ScrabbleBoard : IBoard, IDisplay
 
         }
 
+        // check for bingo (+50 points)
+        if (tilesToRemove.Length == 7)
+        {
+            totalScore += 50;
+        }
 
         // should I store the metaMove instead?
         playerMoves.Add(playerMove);
-        
+
+        if (metaMove is null)
+        {
+            metaMove = new ScrabbleMetaMove(playerMove);
+        }
+        else
+        {
+            metaMove.SetTotalScore(totalScore);
+        }
+
+        metaMoves.Add(metaMove);
+
+
         return tilesToRemove.ToString();
     }
+    
     public void DisplayBoard()
     {
         Console.WriteLine();
@@ -176,6 +192,7 @@ public class ScrabbleBoard : IBoard, IDisplay
             //Console.Write(" ");
         }
 
+        // 1 - 15
         for (int j = 0; j < 15; j++)
         {
 
@@ -183,7 +200,7 @@ public class ScrabbleBoard : IBoard, IDisplay
             Console.Write(" ");
             Console.Write(j + 1);
 
-            // whats this for?
+            // So single and double digit numbers take up the same space
             if (j < 9)
             {
                 Console.Write(" ");
@@ -236,6 +253,7 @@ public class ScrabbleBoard : IBoard, IDisplay
     {
         if ((tileCount >= 8) || (tileCount <= 0))
         {
+            // handle this better
             throw new Exception("Invalid command, can only request between 1 and 7 tiles");
         }
 
@@ -323,16 +341,6 @@ public class ScrabbleBoard : IBoard, IDisplay
         int y_coordinate = Convert.ToInt32(sb.ToString()) - 1;
 
         return new(x_coordinate, y_coordinate);
-    }
-
-    // Do I really need this?
-    public string GetBoardPositionString(int x, int y)
-    {
-        string alphaNumeric = string.Empty;
-
-
-
-        return alphaNumeric;
     }
 
     public int GetMoveScore(in ScrabbleBase move, string word)
@@ -435,11 +443,7 @@ public class ScrabbleBoard : IBoard, IDisplay
 
     }
 
-
-    //private void recordScrabbleMove(ScrabbleMove )
-
     //A-Z and DL('[') , DW('\'), TL(']'), TW('^')
-
     private Dictionary<string, char> bonusTiles = new Dictionary<string, char>
     {
         {"A1", '^' },
