@@ -1,7 +1,6 @@
 public interface IPlayer
 {
-    // bool is signalling the final move of the game
-    public bool MakeMove(GameContext context);
+    public void MakeMove(GameContext context);
 
     public void DrawInitialTiles(bool isPlayer1);
 

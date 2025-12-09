@@ -47,7 +47,7 @@ public class ScrabbleBoard : IBoard, IDisplay
             Y_coordinate = startingPosition.y,
         };
 
-        AddWord(move);
+        //AddWord(move);
     }
 
     // should another param with player letters, or maybe could track players letters?
@@ -55,7 +55,7 @@ public class ScrabbleBoard : IBoard, IDisplay
     // and also add a bingo check +50 points
 
     // return how many letters were not already on the board
-    public string AddWord(ScrabbleMove playerMove)
+    public string AddWord(ScrabbleMove playerMove, MoveContext moveContext)
     {
         var tilesToRemove = new StringBuilder();
 
@@ -63,11 +63,7 @@ public class ScrabbleBoard : IBoard, IDisplay
 
         if (!tryIsValidMove(playerMove, out ScrabbleMetaMove? metaMove))
         {
-            // how could I gracefully handle this?
-            // call tryIsValidMove from IPlayer.MakeMove()
-            // this check would therefore be redundant?
-            // change this later
-            throw new Exception("Invalid word");
+            moveContext.SetRetryMove(true);
         }
 
         // Calculate move score
@@ -101,15 +97,16 @@ public class ScrabbleBoard : IBoard, IDisplay
                 {
                     // if this position is already occupied by the same letter than I am not overwriting
                     // I'm merely using a board letter in my word
-
                     if (board[playerMove.X_coordinate, y_offset] != playerMove.Word[i])
                     {
                         // shouldn't reach this if I am correctly checking this in tryIsValidMove()
                         Console.WriteLine("Invalid play, board position already occupied");
+                        moveContext.SetRetryMove(true);
                     }
                 }
                 else
                 {
+                    // will only write to the scrabbleboard with the tiles in my hand
                     board[playerMove.X_coordinate, y_offset] = playerMove.Word[i];
 
                     tilesToRemove.Append(playerMove.Word[i]);
@@ -129,16 +126,17 @@ public class ScrabbleBoard : IBoard, IDisplay
                 {
                     // if this position is already occupied by the same letter than I am not overwriting
                     // I'm merely using a board letter in my word
-
                     if (board[x_offset, playerMove.Y_coordinate] != playerMove.Word[i])
                     {
                         // shouldn't reach this if I am correctly checking this in tryIsValidMove()
                         Console.WriteLine("Invalid play, board position already occupied");
+                        moveContext.SetRetryMove(true);
                     }
 
                 }
                 else
                 {
+                    // will only write to the scrabbleboard with the tiles in my hand
                     board[x_offset, playerMove.Y_coordinate] = playerMove.Word[i];
 
                     tilesToRemove.Append(playerMove.Word[i]);
@@ -155,9 +153,6 @@ public class ScrabbleBoard : IBoard, IDisplay
             totalScore += 50;
         }
 
-        // should I store the metaMove instead?
-        playerMoves.Add(playerMove);
-
         if (metaMove is null)
         {
             metaMove = new ScrabbleMetaMove(playerMove);
@@ -169,6 +164,7 @@ public class ScrabbleBoard : IBoard, IDisplay
 
         metaMoves.Add(metaMove);
 
+        // maybe write to console with total score?
 
         return tilesToRemove.ToString();
     }
@@ -291,7 +287,7 @@ public class ScrabbleBoard : IBoard, IDisplay
 
     }
 
-    private bool isSpecialTile(char tile)
+    public bool isSpecialTile(char tile)
     {
         if ((tile == ' ') || (tile == '[') || (tile == '\\') || (tile == ']') || (tile == '^'))
         {
@@ -301,7 +297,7 @@ public class ScrabbleBoard : IBoard, IDisplay
         return false;
     }
 
-    private bool isValidTile(char tile)
+    public bool isValidTile(char tile)
     {
         // *
         if (tile != 42)
@@ -552,9 +548,9 @@ public class ScrabbleBoard : IBoard, IDisplay
     }
 
 
-    public ScrabbleMove GetLastMove()
+    public ScrabbleMetaMove GetLastMove()
     {
-        return playerMoves.Last();
+        return metaMoves.Last();
     }
 
     // scrabbleMetaMove is only not null if this funcition returns true, is there a better way to do this?
@@ -582,6 +578,8 @@ public class ScrabbleBoard : IBoard, IDisplay
             // down
             if (!IsValidCoordinate(move.X_coordinate, move.Y_coordinate + move.Word.Length - 1))
             {
+                Console.WriteLine();
+                Console.WriteLine("Word is out of bounds");
                 scrabbleMetaMove = null;
                 return false;
             }
@@ -592,6 +590,8 @@ public class ScrabbleBoard : IBoard, IDisplay
         {
             if (!isValidTile(move.Word[i]))
             {
+                Console.WriteLine();
+                Console.WriteLine("Invalid char: " + move.Word[i]);
                 scrabbleMetaMove = null;
                 return false;
             }
@@ -607,7 +607,10 @@ public class ScrabbleBoard : IBoard, IDisplay
         // I should do this outside     
         if (!generator.CheckDictionary(move.Word))
         {
-            throw new Exception("Invalid word");
+            Console.WriteLine();
+            Console.WriteLine(move.Word + " is not a valid word");
+            scrabbleMetaMove = null;
+            return false;
         }
 
         // Check adjacent tiles for additional words (are they valid?)
@@ -620,6 +623,8 @@ public class ScrabbleBoard : IBoard, IDisplay
                 {
                     // If any adjacent word is an invalid dictionary word
                     // then playerMove is an invalid move, return false
+                    Console.WriteLine();
+                    Console.WriteLine("The adjacent word: " + adjMove.Word + " is not a valid word");
                     scrabbleMetaMove = null;
                     return false;
                 }

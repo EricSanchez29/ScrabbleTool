@@ -5,6 +5,9 @@ public class GameContext
     // false == restart game
     // null == shutdown game
 
+    private bool isFinalMove { get; set;}
+
+
     // should I use the shutdown state to signal that the game is over?
     // or 
     private bool gameOver { get; set; }
@@ -14,6 +17,7 @@ public class GameContext
     public GameContext()
     {
         gameState = true;
+        isFinalMove = false;
     }
 
     public void EndGame()
@@ -29,7 +33,17 @@ public class GameContext
         // either create log here or get this exception in the program to log
     }
 
-    public bool Continue()
+    public void SetFinalMove()
+    {
+        isFinalMove = true;
+    }
+
+    public bool GetIsFinalMove()
+    {
+        return isFinalMove;
+    }
+
+    public bool Continue_questionMark()
     {
         if (gameState == true)
         {
@@ -49,7 +63,7 @@ public class GameContext
         gameState = null;
     }
 
-    public bool ShouldWeRestartGame()
+    public bool RestartGame_questionMark()
     {
         if (gameState == false)
         {
@@ -59,7 +73,7 @@ public class GameContext
         return false;
     }
 
-    public bool ShouldWeShutdownGame()
+    public bool ShutdownGame_questionMark()
     {
         if (gameState == null)
         {

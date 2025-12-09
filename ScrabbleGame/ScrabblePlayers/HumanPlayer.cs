@@ -35,18 +35,25 @@ public class HumanPlayer : PlayerBase, IPlayer
         }
     }
 
-    public bool MakeMove(GameContext context)
+    public void MakeMove(GameContext gameContext)
     {
-        bool retry = true;
+        MoveContext moveContext = new MoveContext(true);
+
         string? word = string.Empty;
         string? coordinate = string.Empty;
         int x_coordinate = int.MaxValue;
         int y_coordinate = int.MaxValue;
         bool direction = true;
+        string playerLettersUsed = string.Empty;
 
-        while (retry)
+        var playerMove = new ScrabbleMove()
         {
-            retry = false;
+            Word = string.Empty,
+        };
+
+        while (moveContext.GetRetryMove())
+        {
+            moveContext.SetRetryMove(false);
 
             Console.WriteLine();
             Console.WriteLine("Your turn:");
@@ -59,7 +66,7 @@ public class HumanPlayer : PlayerBase, IPlayer
 
             if ((word is null) || (word is default(string)))
             {
-                retry = true;
+                moveContext.SetRetryMove(true);
                 continue;
             }
 
@@ -67,7 +74,7 @@ public class HumanPlayer : PlayerBase, IPlayer
             {
                 Console.WriteLine("Word not found in dictionary.");
                 Console.WriteLine("Retry :");
-                retry = true;
+                moveContext.SetRetryMove(true);
                 continue;
             }
 
@@ -80,7 +87,7 @@ public class HumanPlayer : PlayerBase, IPlayer
 
             if ((coordinate is null) || (coordinate is default(string)))
             {
-                retry = true;
+                moveContext.SetRetryMove(true);
                 continue;
             }
 
@@ -90,7 +97,7 @@ public class HumanPlayer : PlayerBase, IPlayer
             {
                 Console.WriteLine("Invalid coordinate");
                 Console.WriteLine("Retry :");
-                retry = true;
+                moveContext.SetRetryMove(true);
                 continue;
             }
 
@@ -105,31 +112,42 @@ public class HumanPlayer : PlayerBase, IPlayer
             {
                 direction = false;
             }
+
+            // change this later maybe?
+            // let program.cs handle this?
+            if ((x_coordinate == int.MaxValue) || (y_coordinate == int.MaxValue) || (word == string.Empty))
+            {
+                throw new Exception("Invalid input");
+            }
+
+            playerMove = new ScrabbleMove()
+            {
+                Word = ScrabbleWordGenerator.ConvertLowerWordToUpperWord(word!),
+                X_coordinate = x_coordinate,
+                Y_coordinate = y_coordinate,
+                Direction = direction,
+            };
+
+            // this line looks weird, change this later by adding more versions of the function
+            playerMove.Score = scrabbleBoard.GetMoveScore(playerMove, word!);
+
+            playerLettersUsed = scrabbleBoard.AddWord(playerMove, moveContext);
+
+            if (moveContext.GetRetryMove())
+            {
+                continue;
+            }
         }
 
-        // change this later maybe?
-        // let program.cs handle this?
-        if ((x_coordinate == int.MaxValue) || (y_coordinate == int.MaxValue) || (word == string.Empty))
-        {
-            throw new Exception("Invalid input");
-        }
+        // work on this
+        // 1. AddWord should ref out a MetaMove
+        // 2. Handle Swap (in playBase)
+        // 3. Handle Pass
+        // 4. 
 
-        var playerMove = new ScrabbleMove()
-        {
-            Word = ScrabbleWordGenerator.ConvertLowerWordToUpperWord(word!),
-            X_coordinate = x_coordinate,
-            Y_coordinate = y_coordinate,
-            Direction = direction,
-        };
-
-        // this line looks weird, change this later by adding more versions of the function
-        playerMove.Score = scrabbleBoard.GetMoveScore(playerMove, word!);
-
-        Console.WriteLine();
-        Console.WriteLine("+" + playerMove.Score + " points");
-        Console.WriteLine();
-
-        var playerLettersUsed = scrabbleBoard.AddWord(playerMove);
+        // Console.WriteLine();
+        // Console.WriteLine("+" + playerMove.Score + " points");
+        // Console.WriteLine();
 
         // this is ignorant of tiles on the board, should the scrabble board obj tell you which tiles to remove?
         // ex played "TOWER" with T already on board an on rack, removed the rack tile
@@ -139,7 +157,10 @@ public class HumanPlayer : PlayerBase, IPlayer
 
         score += playerMove.Score;
 
-        return isFinalMove();
+        if(base.isFinalMove())
+        {
+            gameContext.SetFinalMove();
+        }
     }
 
     public void DrawInitialTiles(bool isPlayer1)

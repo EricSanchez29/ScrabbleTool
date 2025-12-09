@@ -375,7 +375,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
     }
 
     // need to create lanes for my own word
-    private ScrabbleMove makeStartingMove(string playerTiles)
+    public ScrabbleMove makeStartingMove(string playerTiles)
     {
         // get potential words
         var potentialWords = generator.GetBingoList(playerTiles).OrderBy(x => x.Score);
@@ -528,7 +528,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
         }
     }
 
-    public bool MakeMove(GameContext context)
+    public void MakeMove(GameContext context)
     {
         StringBuilder sb = new StringBuilder();
 
@@ -539,7 +539,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
 
         var move = MakeMove(sb.ToString());
 
-        scrabbleBoard.AddWord(move);
+        scrabbleBoard.AddWord(move, new MoveContext(false));
 
         // remove tiles bot just used
         updateTileRack(move.Word);
@@ -548,7 +548,17 @@ public class ScrabbleBot : PlayerBase, IPlayer
 
         score += move.Score;
 
-        return isFinalMove();
+        // do other game context stuff
+        //
+        // pass
+        // swap
+        // etc
+
+
+        if (isFinalMove())
+        {
+            context.SetFinalMove();
+        }
     }
 
     public void DrawInitialTiles(bool isPlayer1)
