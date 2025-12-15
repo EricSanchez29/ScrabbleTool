@@ -55,7 +55,7 @@ public class ScrabbleBoard : IBoard, IDisplay
     // and also add a bingo check +50 points
 
     // return how many letters were not already on the board
-    public string AddWord(ScrabbleMove playerMove, MoveContext moveContext)
+    public string AddWord(ScrabbleMove playerMove, MoveContext moveContext, out ScrabbleMetaMove? scrabbleMetaMove)
     {
         var tilesToRemove = new StringBuilder();
 
@@ -64,6 +64,8 @@ public class ScrabbleBoard : IBoard, IDisplay
         if (!tryIsValidMove(playerMove, out ScrabbleMetaMove? metaMove))
         {
             moveContext.SetRetryMove(true);
+            scrabbleMetaMove = null;
+            return string.Empty;
         }
 
         // Calculate move score
@@ -164,7 +166,11 @@ public class ScrabbleBoard : IBoard, IDisplay
 
         metaMoves.Add(metaMove);
 
-        // maybe write to console with total score?
+        scrabbleMetaMove = metaMove;
+
+        Console.WriteLine();
+        Console.WriteLine("+" + totalScore + " points");
+        Console.WriteLine();
 
         return tilesToRemove.ToString();
     }
@@ -300,18 +306,18 @@ public class ScrabbleBoard : IBoard, IDisplay
     public bool isValidTile(char tile)
     {
         // *
-        if (tile != 42)
+        if (tile == 42)
         {
-            return false;
+            return true;
         }
 
         // 'A' to 'Z'
-        if ((tile < 65) && (tile > 90))
+        if ((tile >= 65) && (tile <= 90))
         {
-            return false;
+            return true;
         }
 
-        return true;
+        return false;
     }
 
     public (int x, int y) GetXYCoordinate(string coordinate)
@@ -616,6 +622,8 @@ public class ScrabbleBoard : IBoard, IDisplay
         // Check adjacent tiles for additional words (are they valid?)
         if (tryGetNewAdjacentWords(move, out ScrabbleMetaMove metaMove))
         {
+            var debug = metaMove.GetAdditionalMoves();
+
             // check if these adjacent words are valid scrabble words
             foreach (ScrabbleMove adjMove in metaMove.GetAdditionalMoves())
             {
@@ -693,7 +701,7 @@ public class ScrabbleBoard : IBoard, IDisplay
                 }
 
                 // if there are empty space above and below, do not add to potentialWordsList
-                if (potentialWordLoop.Length == 1)
+                if ((potentialWordLoop.Length == 1) || (potentialWordLoop.Length == 0))
                 {
                     continue;
                 }

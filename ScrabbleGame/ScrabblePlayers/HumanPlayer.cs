@@ -51,6 +51,8 @@ public class HumanPlayer : PlayerBase, IPlayer
             Word = string.Empty,
         };
 
+        ScrabbleMetaMove metaMove = new ScrabbleMetaMove(playerMove);
+
         while (moveContext.GetRetryMove())
         {
             moveContext.SetRetryMove(false);
@@ -68,6 +70,27 @@ public class HumanPlayer : PlayerBase, IPlayer
             {
                 moveContext.SetRetryMove(true);
                 continue;
+            }
+
+            if (word == "(swap)")
+            {
+                if (scrabbleBoard.GetBagCount() == 0)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("Cannot swap tiles, tile bag is empty");
+                    Console.WriteLine();
+                    moveContext.SetRetryMove(true);
+                    continue;
+                }
+
+                moveContext.SetSwapTiles(true);
+                break;
+            }
+
+            if (word == "(pass)")
+            {
+                moveContext.SetPassMove(true);
+                break;
             }
 
             if (!generator.CheckDictionary(word))
@@ -131,31 +154,44 @@ public class HumanPlayer : PlayerBase, IPlayer
             // this line looks weird, change this later by adding more versions of the function
             playerMove.Score = scrabbleBoard.GetMoveScore(playerMove, word!);
 
-            playerLettersUsed = scrabbleBoard.AddWord(playerMove, moveContext);
-
-            if (moveContext.GetRetryMove())
-            {
-                continue;
-            }
+            playerLettersUsed = scrabbleBoard.AddWord(playerMove, moveContext, out metaMove);
         }
 
-        // work on this
-        // 1. AddWord should ref out a MetaMove
-        // 2. Handle Swap (in playBase)
-        // 3. Handle Pass
-        // 4. 
+        if (moveContext.GetPassMove())
+        {
+            Console.WriteLine();
+            Console.WriteLine("Passing Move");
+            Console.WriteLine();
+        }
+        else if (moveContext.GetSwapTiles())
+        {
+            Console.WriteLine();
+            Console.WriteLine("Swapping tiles");
+            Console.WriteLine("Type letters you wish to swap: ");
 
-        // Console.WriteLine();
-        // Console.WriteLine("+" + playerMove.Score + " points");
-        // Console.WriteLine();
+            string? unwantedTiles = Console.ReadLine();
 
-        // this is ignorant of tiles on the board, should the scrabble board obj tell you which tiles to remove?
-        // ex played "TOWER" with T already on board an on rack, removed the rack tile
-        updateTileRack(playerLettersUsed);
+            if (unwantedTiles is null)
+            {
+                throw new Exception("FATAL ERROR");
+            }
 
-        drawTiles();
+            this.swapTiles(unwantedTiles);
 
-        score += playerMove.Score;
+            displayPlayerTiles();
+        }
+        else
+        {
+            // this is ignorant of tiles on the board, should the scrabble board obj tell you which tiles to remove?
+            // ex played "TOWER" with T already on board an on rack, removed the rack tile
+            updateTileRack(playerLettersUsed);
+
+            drawTiles();
+
+            displayPlayerTiles();
+
+            score += metaMove.GetTotalScore();
+        }        
 
         if(base.isFinalMove())
         {

@@ -8,6 +8,12 @@ public class MoveContext
     private bool passMove;
     private bool swapTiles;
 
+    // need to have some restrictions that prevent any of these from being simultaneously true
+    // pass
+    // swap
+    // retry
+    
+    
 
     public MoveContext(bool retryState)
     {

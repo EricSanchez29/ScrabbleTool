@@ -39,7 +39,7 @@ public class PlayerBase
 
             if (isPlayer1)
             {
-                if (!generator.IsValidTileRack(newTiles))
+                if (generator.IsValidTileRack(newTiles))
                 {
                     invalidRack = false;
                 }
