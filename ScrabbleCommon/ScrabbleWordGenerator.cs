@@ -241,6 +241,11 @@ public class ScrabbleWordGenerator
     {
         int asciiValue = (int)letter;
 
+        if (letter == '*')
+        {
+            return letter;
+        }
+
         // is upperCase?
         if ((letter > 64) && (letter < 91))
         {

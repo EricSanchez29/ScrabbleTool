@@ -159,10 +159,8 @@ public class ScrabbleBoard : IBoard, IDisplay
         {
             metaMove = new ScrabbleMetaMove(playerMove);
         }
-        else
-        {
-            metaMove.SetTotalScore(totalScore);
-        }
+
+        metaMove.SetTotalScore(totalScore);
 
         metaMoves.Add(metaMove);
 
@@ -701,7 +699,7 @@ public class ScrabbleBoard : IBoard, IDisplay
                 }
 
                 // if there are empty space above and below, do not add to potentialWordsList
-                if ((potentialWordLoop.Length == 1) || (potentialWordLoop.Length == 0))
+                if (potentialWordLoop.Length <= 1)
                 {
                     continue;
                 }
@@ -815,7 +813,7 @@ public class ScrabbleBoard : IBoard, IDisplay
                 }
 
                 // if there are empty spaces to the left and to the right, do not add this loop to potentialWordsList
-                if (potentialWordLoop.Length == 1)
+                if (potentialWordLoop.Length <= 1)
                 {
                     continue;
                 }
@@ -926,12 +924,46 @@ public class ScrabbleBoard : IBoard, IDisplay
 
         x = capitalX - 65;
 
-        StringBuilder sb = new StringBuilder(coordinate).Remove(0, 1);
+        var numberString = new StringBuilder(coordinate).Remove(0, 1).ToString();
 
-        y = Convert.ToInt32(sb.ToString()) - 1;
-
-        if (y == 0)
+        // ASCII 0-9 is decimal 48-57
+        if (numberString.Length == 2)
         {
+            // if there are 2 digits the first should be 1
+
+            if (numberString[0] != '1')
+            {
+                return false;
+            }
+
+            y = 10;
+
+            char numberChar = numberString[1];
+
+            // // max number is 15, min 2 digit number is 10
+            if ((numberChar < 48) || (numberChar > 53))
+            {
+                return false;
+            }
+
+            y = y + (int)(numberChar - 48) - 1;
+        }
+        else if (numberString.Length == 1)
+        {
+            char numberChar = numberString[0];
+
+            // // max number is 15, min 2 digit number is 10
+            if ((numberChar < 48) || (numberChar > 57))
+            {
+                return false;
+            }
+
+            y = numberChar - 48 - 1;
+        }
+        else
+        {
+            // string length is not correct
+            // since I've checked length before i shouldn't ever reach this
             return false;
         }
 
