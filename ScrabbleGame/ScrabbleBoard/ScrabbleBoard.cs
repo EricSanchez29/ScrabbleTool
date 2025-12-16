@@ -557,10 +557,47 @@ public class ScrabbleBoard : IBoard, IDisplay
         return metaMoves.Last();
     }
 
+    private bool tryIsValidFirstMove(ScrabbleMove move)
+    {
+        if (move.Direction)
+        {
+            // if word is written in across direction, 
+            // coordinate must be (x,7) aka must occupy center row
+            if (move.Y_coordinate != 7)
+            {
+                return false;
+            }
+
+            // check if the move contains the center square H8 (aka (7,7))
+            if ((move.X_coordinate - 7 > 0) || (move.Word.Length + move.X_coordinate < 7))
+            {
+                return false;
+            }
+
+        }
+        else
+        {
+            // if word is written in down direction, 
+            // coordinate must be (7,y) aka must occupy center column
+            if (move.X_coordinate != 7)
+            {
+                return false;
+            }
+
+            // check if the move contains the center square H8 (aka (7,7))
+            if ((move.Y_coordinate - 7 > 0) || (move.Word.Length + move.Y_coordinate < 7))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     // scrabbleMetaMove is only not null if this funcition returns true, is there a better way to do this?
     private bool tryIsValidMove(ScrabbleMove move, out ScrabbleMetaMove? scrabbleMetaMove)
     {
-        // is the orignal coordinate out of bounds?
+        // Is the starting coordinate out of bounds?
         if (!IsValidCoordinate(move.X_coordinate, move.Y_coordinate))
         {
             scrabbleMetaMove = null;
@@ -589,6 +626,15 @@ public class ScrabbleBoard : IBoard, IDisplay
             }
         }
 
+        // The first move must contain center square H8
+        if ((metaMoves.Count == 0) && !tryIsValidFirstMove(move))
+        {
+            Console.WriteLine();
+            Console.WriteLine("First move does not contain center square");
+            scrabbleMetaMove = null;
+            return false;
+        }
+
         // Is there an unhandled character? (I may already handle this elsewhere but maybe move here)
         for (int i = 0; i < move.Word.Length; i++)
         {
@@ -603,7 +649,7 @@ public class ScrabbleBoard : IBoard, IDisplay
 
         // Is this move going to attempt to overwrite tiles already on the board
 
-// TO DO
+        // TO DO
 
 
 

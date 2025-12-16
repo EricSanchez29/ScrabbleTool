@@ -1,14 +1,19 @@
-﻿namespace ScrabbleTests;
+﻿using System.Security.Principal;
+
+namespace ScrabbleTests;
 
 public class ScrabbleBoardUnitTests
 {
-    [Fact]
-    public void Test()
+    public ScrabbleBoardUnitTests()
     {
-
+        gen = new ScrabbleWordGenerator(GlobalTestVariables.DictionaryLocation);
+        board = new ScrabbleBoard(gen);
     }
 
-   
+    ScrabbleWordGenerator gen;
+    ScrabbleBoard board;
+
+
     [Fact]
     public void TestDrawTiles()
     {
@@ -19,10 +24,6 @@ public class ScrabbleBoardUnitTests
     [Fact]
     public void TestGetXYCoordinate()
     {
-        // setup
-        var gen = new ScrabbleWordGenerator(GlobalTestVariables.DictionaryLocation);
-        var board = new ScrabbleBoard(gen);
-
         // A1
         var result = board.TryGetXYCoordinate("A1", out int x, out int y);
         Assert.True(result);
@@ -58,12 +59,18 @@ public class ScrabbleBoardUnitTests
         // Y10
         var result6 = board.TryGetXYCoordinate("H*", out int x6, out int y6);
         Assert.False(result6);
+
+        // H8
+        var result7 = board.TryGetXYCoordinate("H8", out int x7, out int y7);
+        Assert.True(result7);
+        Assert.True(x7 == 7);
+        Assert.True(y7 == 7);
     }
 
     [Fact]
     public void TestIsSpecialTile()
     {
-
+        
     }
 
     [Fact]
@@ -78,7 +85,7 @@ public class ScrabbleBoardUnitTests
     [Fact]
     public void TestAddWord()
     {
-    // - will have to prepopulate board 
+    // - will have to prepopulate board
     }
 
 
