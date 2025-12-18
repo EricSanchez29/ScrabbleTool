@@ -539,7 +539,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
 
         var move = MakeMove(sb.ToString());
 
-        scrabbleBoard.AddWord(move, new MoveContext(false));
+        scrabbleBoard.AddWord(move, new MoveContext(false), out ScrabbleMetaMove metaMove);
 
         // remove tiles bot just used
         updateTileRack(move.Word);
