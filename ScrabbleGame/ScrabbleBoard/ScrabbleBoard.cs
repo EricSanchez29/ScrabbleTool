@@ -55,7 +55,7 @@ public class ScrabbleBoard : IBoard, IDisplay
     // and also add a bingo check +50 points
 
     // return how many letters were not already on the board
-    public string AddWord(ScrabbleMove playerMove, MoveContext moveContext, out ScrabbleMetaMove? scrabbleMetaMove)
+    public string AddWord(ScrabbleMove playerMove, MoveContext moveContext, out ScrabbleMetaMove scrabbleMetaMove)
     {
         var tilesToRemove = new StringBuilder();
 
@@ -64,7 +64,7 @@ public class ScrabbleBoard : IBoard, IDisplay
         if (!tryIsValidMove(playerMove, out ScrabbleMetaMove? metaMove))
         {
             moveContext.SetRetryMove(true);
-            scrabbleMetaMove = null;
+            scrabbleMetaMove = new ScrabbleMetaMove(playerMove);
             return string.Empty;
         }
 
