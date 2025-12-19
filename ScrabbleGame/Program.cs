@@ -1,9 +1,10 @@
 ﻿
-string dictionaryLocation = @"C:\WorkSpace\Github\ScrabbleTool\ScrabbleCommon\data\NWL2023.txt";
+
+using ScrabbleCommon;
 
 bool restart = true;
 
 while (restart)
 {
-    restart = Game.StartGame(dictionaryLocation);
+    restart = Game.StartGame(GlobalVariables.DictionaryRelativePath);
 }
