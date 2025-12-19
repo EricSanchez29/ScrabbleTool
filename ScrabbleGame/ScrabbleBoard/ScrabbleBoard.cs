@@ -27,6 +27,8 @@ public class ScrabbleBoard : IBoard, IDisplay
     // get rid of one of these later
     private List<ScrabbleMetaMove> metaMoves = [];
 
+    private HashSet<string> boardWords = new HashSet<string>();
+
     /// <summary>
     /// 
     /// </summary>
@@ -78,6 +80,8 @@ public class ScrabbleBoard : IBoard, IDisplay
                 var moveScore = GetMoveScore(additionalMove, additionalMove.Word);
 
                 totalScore += moveScore;
+
+                addWordToHashSet(additionalMove);
             }
         }
 
@@ -86,6 +90,7 @@ public class ScrabbleBoard : IBoard, IDisplay
 
         totalScore += playerMove.Score;
 
+        addWordToHashSet(playerMove);
 
         // only manipulate tiles (output string) here
         if (!playerMove.Direction)
@@ -152,6 +157,7 @@ public class ScrabbleBoard : IBoard, IDisplay
         // check for bingo (+50 points)
         if (tilesToRemove.Length == 7)
         {
+            // need to test more, playerbase does't have the correct score
             totalScore += 50;
         }
 
@@ -714,7 +720,7 @@ public class ScrabbleBoard : IBoard, IDisplay
             for (int i = 0; i < playerMove.Word.Length; i++)
             {
                 // "walk" down the lane and get every tile already on the board in that lane   
-                var potentialWordLoop = new StringBuilder(playerMove.Word[i]);
+                var potentialWordLoop = new StringBuilder();
                 int potentialWordLoopYCoord = playerMove.Y_coordinate;
 
                 // stop either at the first blank tile or the end of the board
@@ -730,6 +736,8 @@ public class ScrabbleBoard : IBoard, IDisplay
                     potentialWordLoop.Insert(0, thisChar);
                     potentialWordLoopYCoord--;
                 }
+
+                potentialWordLoop.Append(playerMove.Word[i]);
 
                 // look down the lane
                 for (int j = playerMove.Y_coordinate + 1; j < 15; j++)
@@ -750,13 +758,21 @@ public class ScrabbleBoard : IBoard, IDisplay
                     continue;
                 }
 
-                metaMove.AddAddtionalMove(new ScrabbleMove
+                var potentialAdditionalMove = new ScrabbleMove
                 {
                     Word = potentialWordLoop.ToString(),
                     Direction = false,
                     X_coordinate = playerMove.X_coordinate + i,
                     Y_coordinate = potentialWordLoopYCoord,
-                });
+                };
+
+                if (isWordOnBoard(potentialAdditionalMove))
+                {
+                    // adjacent word is not a new word, its already on the board
+                    continue;
+                }
+
+                metaMove.AddAddtionalMove(potentialAdditionalMove);
             }
 
             var potentialWord = new StringBuilder();
@@ -787,7 +803,7 @@ public class ScrabbleBoard : IBoard, IDisplay
             // word should be on the left (begining) if there are only tiles on the right
             potentialWord.Append(playerMove.Word);
 
-            // question: is it word inserting a character into stringbuilder, compared to building a char array backwards and reversing it
+            // question: is it worth inserting a character into stringbuilder, compared to building a char array backwards and reversing it
 
             // peak to the right
             if (!IsOpenSpace(playerMove.X_coordinate + 1, playerMove.Y_coordinate))
@@ -808,13 +824,18 @@ public class ScrabbleBoard : IBoard, IDisplay
 
             if (potentialWord.ToString() != playerMove.Word)
             {
-                metaMove.AddAddtionalMove(new ScrabbleMove
+                var potentialMove = new ScrabbleMove
                 {
                     Word = potentialWord.ToString(),
                     Direction = true,
                     Y_coordinate = playerMove.Y_coordinate,
                     X_coordinate = potentialWordXCoord,
-                });
+                };
+
+                if (!isWordOnBoard(potentialMove))
+                {
+                    metaMove.AddAddtionalMove(potentialMove);    
+                }
             }
         }
         else // down
@@ -827,8 +848,7 @@ public class ScrabbleBoard : IBoard, IDisplay
             for (int i = 0; i < playerMove.Word.Length; i++)
             {
                 // "walk" down the lane and get every tile already on the board in that lane   
-
-                var potentialWordLoop = new StringBuilder(playerMove.Word[i]);
+                var potentialWordLoop = new StringBuilder();
                 int potentialWordLoopXCoord = playerMove.X_coordinate;
 
                 // stop either at the first blank tile or the end of the board
@@ -844,6 +864,8 @@ public class ScrabbleBoard : IBoard, IDisplay
                     potentialWordLoop.Insert(0, thisChar);
                     potentialWordLoopXCoord--;
                 }
+
+                potentialWordLoop.Append(playerMove.Word[i]);
 
                 // look down the lane
                 for (int j = playerMove.X_coordinate + 1; j < 15; j++)
@@ -864,13 +886,21 @@ public class ScrabbleBoard : IBoard, IDisplay
                     continue;
                 }
 
-                metaMove.AddAddtionalMove(new ScrabbleMove
+                var potentialAdditionalMove = new ScrabbleMove
                 {
                     Word = potentialWordLoop.ToString(),
                     Direction = true,
                     X_coordinate = potentialWordLoopXCoord,
                     Y_coordinate = playerMove.Y_coordinate + i,
-                });
+                };
+
+                if (isWordOnBoard(potentialAdditionalMove))
+                {
+                    // adjacent word is not a new word, its already on the board
+                    continue;
+                }
+
+                metaMove.AddAddtionalMove(potentialAdditionalMove);
             }
 
             var potentialWord = new StringBuilder();
@@ -901,6 +931,7 @@ public class ScrabbleBoard : IBoard, IDisplay
             // word should be on the left (begining) if there are only tiles on the right
             potentialWord.Append(playerMove.Word);
 
+// something is wrong with this
             // peak below
             if (!IsOpenSpace(playerMove.X_coordinate + 1, playerMove.Y_coordinate))
             {
@@ -920,20 +951,49 @@ public class ScrabbleBoard : IBoard, IDisplay
 
             if (potentialWord.ToString() != playerMove.Word)
             {
-                metaMove.AddAddtionalMove(new ScrabbleMove
+                var potentialMove = new ScrabbleMove
                 {
                     Word = potentialWord.ToString(),
                     Direction = false,
                     X_coordinate = playerMove.X_coordinate,
                     Y_coordinate = potentialWordYCoord,
-                });
+                };
+
+                if (!isWordOnBoard(potentialMove))
+                {
+                    metaMove.AddAddtionalMove(potentialMove);
+                }
             }
         }
 
         return metaMove.HasAdditionalMoves();
     }
 
-    //private bool is
+    private void addWordToHashSet(ScrabbleMove scrabbleMove)
+    {
+        var key = new StringBuilder(scrabbleMove.Word);
+        key.Append('_');
+        key.Append(scrabbleMove.X_coordinate);
+        key.Append('_');
+        key.Append(scrabbleMove.Y_coordinate);
+        key.Append('_');
+        key.Append(scrabbleMove.Direction);
+
+        boardWords.Add(key.ToString());
+    }
+
+    private bool isWordOnBoard(ScrabbleMove scrabbleMove)
+    {
+        var key = new StringBuilder(scrabbleMove.Word);
+        key.Append('_');
+        key.Append(scrabbleMove.X_coordinate);
+        key.Append('_');
+        key.Append(scrabbleMove.Y_coordinate);
+        key.Append('_');
+        key.Append(scrabbleMove.Direction);
+
+        return boardWords.Contains(key.ToString());
+    }
 
     public bool IsValidCoordinate(int x, int y)
     {
