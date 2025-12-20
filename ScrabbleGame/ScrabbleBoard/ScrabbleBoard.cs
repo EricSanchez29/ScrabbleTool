@@ -806,10 +806,12 @@ public class ScrabbleBoard : IBoard, IDisplay
             // question: is it worth inserting a character into stringbuilder, compared to building a char array backwards and reversing it
 
             // peak to the right
-            if (!IsOpenSpace(playerMove.X_coordinate + 1, playerMove.Y_coordinate))
+            int endOfPlayerMoveX = playerMove.X_coordinate + playerMove.Word.Length;
+
+            if (!IsOpenSpace(endOfPlayerMoveX, playerMove.Y_coordinate))
             {
                 // if not empty keep looking until end of board or until empty
-                for (int i = playerMove.X_coordinate + 1; i < 15; i++)
+                for (int i = endOfPlayerMoveX; i < 15; i++)
                 {
                     char currentChar = board[i, playerMove.Y_coordinate];
 
@@ -910,9 +912,9 @@ public class ScrabbleBoard : IBoard, IDisplay
             if (!IsOpenSpace(playerMove.X_coordinate, playerMove.Y_coordinate - 1))
             {
                 // if not empty keep looking until end of board
-                for (int i = playerMove.X_coordinate - 1; i >= 0; i--)
+                for (int i = playerMove.Y_coordinate - 1; i >= 0; i--)
                 {
-                    char currentChar = board[i, playerMove.Y_coordinate];
+                    char currentChar = board[playerMove.X_coordinate, i];
 
                     if (isSpecialTile(currentChar))
                     {
@@ -931,14 +933,16 @@ public class ScrabbleBoard : IBoard, IDisplay
             // word should be on the left (begining) if there are only tiles on the right
             potentialWord.Append(playerMove.Word);
 
-// something is wrong with this
-            // peak below
-            if (!IsOpenSpace(playerMove.X_coordinate + 1, playerMove.Y_coordinate))
+            int endOfPlayerMoveY = playerMove.Y_coordinate + playerMove.Word.Length;
+
+            if (!IsOpenSpace(playerMove.X_coordinate, endOfPlayerMoveY))
             {
+                // I think I could make this more efficient, aka not accessing the first char twice
+
                 // if not empty keep looking until end of board or until empty
-                for (int i = playerMove.X_coordinate + 1; i < 15; i++)
+                for (int i = endOfPlayerMoveY; i < 15; i++)
                 {
-                    char currentChar = board[i, playerMove.Y_coordinate];
+                    char currentChar = board[playerMove.X_coordinate, i];
 
                     if (isSpecialTile(currentChar))
                     {
