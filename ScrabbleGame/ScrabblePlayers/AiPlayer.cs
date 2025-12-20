@@ -19,7 +19,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
     private (int X, int Y) centerCoordinate = new(7, 7);
 
     // to do: need to check that the bot has a potential bingo (+50 pts)
-    public ScrabbleMove MakeMove(string playerTiles)
+    public List<ScrabbleMove> MakeMove(string playerTiles)
     {
         // Case 1: AI making the first move
         // if center is empty, no one has made a legal scrabble move yet
@@ -88,21 +88,18 @@ public class ScrabbleBot : PlayerBase, IPlayer
         // sort potential moves by score
         var topScoringMoves = potentialMoves.OrderByDescending(x => x.Move.Score);
 
-        // choose highest scoring potential move
-        var topScoringMove = topScoringMoves.First();
+        // // choose highest scoring potential move
+        // var topScoringMove = topScoringMoves.First();
 
-        Console.WriteLine();
-        Console.WriteLine("+" + topScoringMove.Move.Score + " points");
-        Console.WriteLine();
+        // // remove lane from list
+        // openLanes.Remove(topScoringMove.Lane);
 
-        // remove lane from list
-        openLanes.Remove(topScoringMove.Lane);
-
-        // record bot move
-        botMoves.Add(topScoringMove.Move);
+        // // record bot move
+        // botMoves.Add(topScoringMove.Move);
 
         // return move
-        return topScoringMove.Move;
+        // why do I have to cast this?
+        return (List<ScrabbleMove>)topScoringMoves;
     }
 
         /*
@@ -530,35 +527,112 @@ public class ScrabbleBot : PlayerBase, IPlayer
 
     public void MakeMove(GameContext context)
     {
-        StringBuilder sb = new StringBuilder();
+        var moveContext = new MoveContext(false);
+
+        var sb = new StringBuilder();
+
+        var metaMove = new ScrabbleMetaMove(new ScrabbleMove() { Word = string.Empty });
+
+        string tilesToRemove = string.Empty;
 
         foreach (char tile in tileRack)
         {
             sb.Append(tile);
         }
 
-        var move = MakeMove(sb.ToString());
+        var moves = MakeMove(sb.ToString());
 
-        scrabbleBoard.AddWord(move, new MoveContext(false), out ScrabbleMetaMove metaMove);
+        sb.Clear();
 
-        // remove tiles bot just used
-        updateTileRack(move.Word);
+        if (moves is null)
+        {
+            // if tiles available swap all tiles
+            // could improve upon this with heuristics
 
-        drawTiles();
+            int bagCount = scrabbleBoard.GetBagCount();
 
-        score += move.Score;
+            if (bagCount == 0)
+            {
+                // no moves to make with current tiles, no new tiles to get
+                // pass turn
+                moveContext.SetPassMove(true);
+            }
 
-        // do other game context stuff
-        //
-        // pass
-        // swap
-        // etc
+            // swap tiles
+            if (bagCount > 7)
+            {
+                bagCount = 7;
+            }
 
+            for (int i = 0; i < bagCount; i++)
+            {
+                sb.Append(tileRack[i]);
+            }
+
+            tilesToRemove = sb.ToString();
+
+            moveContext.SetSwapTiles(true);
+        }
+        else
+        {
+            foreach (var move in moves)
+            {
+
+                tilesToRemove = scrabbleBoard.AddWord(move, moveContext, out metaMove);
+
+                if (moveContext.GetRetryMove())
+                {
+                    continue;
+                }
+
+                // remove tiles bot just used
+                updateTileRack(move.Word);
+
+                drawTiles();
+
+                score += move.Score;
+            }
+
+            if (metaMove.GetMainMove().Word == string.Empty)
+            {
+                // retry?
+            }
+        }
+
+        if (moveContext.GetPassMove())
+        {
+            Console.WriteLine();
+            Console.WriteLine("Passing Move");
+            Console.WriteLine();
+        }
+        else if (moveContext.GetSwapTiles())
+        {
+            Console.WriteLine();
+            Console.WriteLine("Swapping tiles");
+            Console.WriteLine("Type letters you wish to swap: ");
+
+            updateTileRack(tilesToRemove);
+        }
+        else
+        {
+            updateTileRack(tilesToRemove);
+
+            drawTiles();
+
+            score += metaMove.GetTotalScore();
+        }
 
         if (isFinalMove())
         {
             context.SetFinalMove();
         }
+    }
+
+    private bool isInvalidMove(ScrabbleMove move)
+    {
+// too do!
+        
+        return false;
     }
 
     public void DrawInitialTiles(bool isPlayer1)
