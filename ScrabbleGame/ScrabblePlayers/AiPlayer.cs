@@ -77,9 +77,11 @@ public class ScrabbleBot : PlayerBase, IPlayer
                 // validate that the move makes sense
                 if (bestMove.Score == 0) { continue; }
 
-                if (!generator.CheckDictionary(bestMove.Word)) { continue; }
+                // // this isn't really necessary
+                // if (!generator.CheckDictionary(bestMove.Word)) { continue; }
 
-                if (!scrabbleBoard.IsValidCoordinate(bestMove.X_coordinate, bestMove.Y_coordinate)) { continue; }
+                // // I've already called GetMoveScore before validating the coordinate, should I simply remove this?
+                // if (!scrabbleBoard.IsValidCoordinate(bestMove.X_coordinate, bestMove.Y_coordinate)) { continue; }
 
                 potentialMoves.Add(new ScrabblePotentialMove(bestMove, lane));
             }
@@ -322,6 +324,8 @@ public class ScrabbleBot : PlayerBase, IPlayer
         for (int i = 0; i < indexes.Count; i++)
         {
             var coordinate = getCoordinateFromWordIndex(indexes[i], lane);
+
+            if (scrabbleBoard.IsValidCoordinate(coordinate.X_coordinate, coordinate.Y_coordinate)) { continue; }
 
             int wordScore = scrabbleBoard.GetMoveScore(coordinate, word);
 
