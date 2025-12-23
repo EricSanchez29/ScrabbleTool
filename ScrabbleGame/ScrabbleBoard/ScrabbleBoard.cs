@@ -670,6 +670,8 @@ public class ScrabbleBoard : IBoard, IDisplay
         }
 
         // Check adjacent tiles for additional words (are they valid?)
+        // would it make sense to check the dicitionary within tryGetNewAdjacentWords
+        // this would prevent me from finding all subsequent words after the first invalid word appears
         if (tryGetNewAdjacentWords(move, out ScrabbleMetaMove metaMove))
         {
             var debug = metaMove.GetAdditionalMoves();

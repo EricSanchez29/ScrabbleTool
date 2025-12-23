@@ -1,3 +1,4 @@
+using System.Data;
 using System.Text;
 
 public class ScrabbleBot : PlayerBase, IPlayer
@@ -19,7 +20,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
     private (int X, int Y) centerCoordinate = new(7, 7);
 
     // to do: need to check that the bot has a potential bingo (+50 pts)
-    public List<ScrabbleMove> MakeMove(string playerTiles)
+    public IOrderedEnumerable<ScrabblePotentialMove> MakeMove(string playerTiles)
     {
         // Case 1: AI making the first move
         // if center is empty, no one has made a legal scrabble move yet
@@ -34,6 +35,8 @@ public class ScrabbleBot : PlayerBase, IPlayer
 
         if (openLanes == null)
         {
+            // for some reason I reached this code after AI went first
+
             // Case 2: Opponent made the first move, AI goes 2nd
             // create lanes for empty list
             openLanes = getLanesFromWord(oppLastMove.GetMainMove());
@@ -56,12 +59,6 @@ public class ScrabbleBot : PlayerBase, IPlayer
             // every single word is considered for this lane
             foreach (var word in words)
             {
-
-                // if (word.Word == "INTENTS")
-                // {
-                //     int breakpoint = 0;
-                // }
-
                 // only consider words that contain the letter in the lane
                 if (!word.Word.Contains(lane.Tile))
                 {
@@ -90,18 +87,14 @@ public class ScrabbleBot : PlayerBase, IPlayer
         // sort potential moves by score
         var topScoringMoves = potentialMoves.OrderByDescending(x => x.Move.Score);
 
-        // // choose highest scoring potential move
-        // var topScoringMove = topScoringMoves.First();
 
-        // // remove lane from list
-        // openLanes.Remove(topScoringMove.Lane);
 
         // // record bot move
         // botMoves.Add(topScoringMove.Move);
 
         // return move
         // why do I have to cast this?
-        return (List<ScrabbleMove>)topScoringMoves;
+        return topScoringMoves;
     }
 
         /*
@@ -121,6 +114,9 @@ public class ScrabbleBot : PlayerBase, IPlayer
     // check this function but also change code that uses lanes
     // 
     // this function is fundementally ignoring possible adjacent words
+    //
+    // need to also have a check for lenght, lane must be at least length 3 
+    // - 1 space away from other letters and for min word length of 2
     private List<ScrabbleLane> getLanesFromWord(in ScrabbleMove move)
     {
         var lanes = new List<ScrabbleLane>();
@@ -139,7 +135,8 @@ public class ScrabbleBot : PlayerBase, IPlayer
                 {
                     if (!scrabbleBoard.IsOpenSpace(j, move.Y_coordinate))
                     {
-                        j--;
+                        j--; // test this
+                        j--; // i can't have a new word next to an non open space unless I include the letter of that non open space
                         break;
                     }
                 }
@@ -164,6 +161,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
                 }
 
                 j++;
+                j++; // need to test
 
                 leftLane = new ScrabbleLane
                 {
@@ -287,7 +285,72 @@ public class ScrabbleBot : PlayerBase, IPlayer
     // Can I track every open lane through an entire of a Scrabble game?
     private void updateOpenLanes(ScrabbleMove newMove)
     {
-        // makes sure to validate possible lanes
+        if (openLanes is null)
+        {
+            // this will only happen when ScrabbleBot is making his first move
+            openLanes = getLanesFromWord(newMove);
+            return;
+        }
+
+        // look through each lane and either
+        // - modify lane if lane is perpendicular to new word and create a 2nd lane
+        // - delete lane if lane is parallel to the new word 
+        // (currently can't handle prefixes or suffixes for word from)
+        //
+
+        var newOpenLanes = new List<ScrabbleLane>();
+
+        if (newMove.Direction)
+        {
+            
+        }
+        else // newWord is pointing Down
+        {
+            foreach (var openLane in openLanes)
+            {
+                if (openLane.Direction)
+                {
+                    // perpendicular lanes
+                    if ((openLane.Y_coordinate >= newMove.Y_coordinate) 
+                    && (openLane.Y_coordinate < (newMove.Y_coordinate + newMove.Word.Length)))
+                    {
+                        // does the openLane intersect the path of the new word
+                        if((openLane.X_coordinate + openLane.Length) >= newMove.X_coordinate)
+                        {
+                            // either split this lane in two or delete
+
+                            // only split if lane is long enough to cross 
+                            if ((openLane.X_coordinate + openLane.Length - newMove.X_coordinate) > 2)
+                            {
+                                // split lane
+                                // make new lane, check the end for adjacent letters
+                                
+                            }
+
+                            // resize original lane
+                            openLane.Length = newMove.X_coordinate - openLane.X_coordinate - 1;
+
+                        }                        
+                    }
+                }
+                else
+                {
+                    // parallel lanes
+                    if (openLane.X_coordinate == newMove.X_coordinate)
+                    {
+                        // does the lane cross paths with the newWord
+                        // - either they occupy the same tile space 
+                        // - or there is not at least one tile space between them
+
+                    }
+                }
+            }
+        }
+
+        foreach (var newLanes in newOpenLanes)
+        {
+            
+        }
     }
 
     // assumes that the lane character is included within the word
@@ -376,19 +439,16 @@ public class ScrabbleBot : PlayerBase, IPlayer
     }
 
     // need to create lanes for my own word
-    public ScrabbleMove makeStartingMove(string playerTiles)
+    public IOrderedEnumerable<ScrabblePotentialMove> makeStartingMove(string playerTiles)
     {
         // get potential words
         var potentialWords = generator.GetBingoList(playerTiles).OrderBy(x => x.Score);
         if (potentialWords.Count() == 0)
         {
-            return new ScrabbleMove
-            {
-                Word = string.Empty,
-            };
+            return null; // what should I do instead?
         }
 
-        var potentialMoves = new List<ScrabbleMove>();
+        var potentialMoves = new List<ScrabblePotentialMove>();
 
         // find points for each word
         foreach (var word in potentialWords)
@@ -399,7 +459,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
                 // find placement where i get the max points (DL with high tile value)
                 var postition = bestInitTilePlacment(word.Word);
 
-                var potentialMove = new ScrabbleMove
+                var move = new ScrabbleMove
                 {
                     Direction = true,
                     Word = word.Word,
@@ -407,13 +467,13 @@ public class ScrabbleBot : PlayerBase, IPlayer
                     Y_coordinate = postition.y,
                 };
 
-                potentialMove.Score = scrabbleBoard.GetMoveScore(potentialMove, word.Word);
-                potentialMoves.Add(potentialMove);
+                move.Score = scrabbleBoard.GetMoveScore(move, word.Word);
+                potentialMoves.Add(new ScrabblePotentialMove(move, new ScrabbleLane()));
             }
             // for shorter words, (n <= 4) default to center square
             else
             {
-                var potentialMove = new ScrabbleMove
+                var move = new ScrabbleMove
                 {
                     Direction = true,
                     Word = word.Word,
@@ -421,16 +481,18 @@ public class ScrabbleBot : PlayerBase, IPlayer
                     Y_coordinate = centerCoordinate.Y,
                 };
 
-                potentialMove.Score = scrabbleBoard.GetMoveScore(potentialMove, word.Word);
-                potentialMoves.Add(potentialMove);
+                move.Score = scrabbleBoard.GetMoveScore(move, word.Word);
+                // don't really need a scrabble lane for the first move
+                potentialMoves.Add(new ScrabblePotentialMove(move, new ScrabbleLane()));
             }
         }
         // order by calculated score and pick hightest one
         // I'm ignoring the fact that there could be two words with the same score
         // - should the secondary
 
-        var list = potentialMoves.OrderByDescending(x => x.Score);
-        return list.First();
+        var list = potentialMoves.OrderByDescending(x => x.Move.Score);
+
+        return list;
     }
 
     // defaulting to Across for direction of word
@@ -539,91 +601,66 @@ public class ScrabbleBot : PlayerBase, IPlayer
 
         string tilesToRemove = string.Empty;
 
+        // is there a cleaner way to convert from char array to a string
         foreach (char tile in tileRack)
         {
             sb.Append(tile);
         }
 
-        var moves = MakeMove(sb.ToString());
+        var potentialMoves = MakeMove(sb.ToString());
 
-        sb.Clear();
-
-        if (moves is null)
+        if (potentialMoves is null)
         {
-            // if tiles available swap all tiles
-            // could improve upon this with heuristics
-
-            int bagCount = scrabbleBoard.GetBagCount();
-
-            if (bagCount == 0)
-            {
-                // no moves to make with current tiles, no new tiles to get
-                // pass turn
-                moveContext.SetPassMove(true);
-            }
-
-            // swap tiles
-            if (bagCount > 7)
-            {
-                bagCount = 7;
-            }
-
-            for (int i = 0; i < bagCount; i++)
-            {
-                sb.Append(tileRack[i]);
-            }
-
-            tilesToRemove = sb.ToString();
-
-            moveContext.SetSwapTiles(true);
+            tilesToRemove = passOrSwapMove(moveContext);
         }
         else
         {
-            foreach (var move in moves)
+            foreach (var potentialMove in potentialMoves)
             {
-
-                tilesToRemove = scrabbleBoard.AddWord(move, moveContext, out metaMove);
+                tilesToRemove = scrabbleBoard.AddWord(potentialMove.Move, moveContext, out metaMove);
 
                 if (moveContext.GetRetryMove())
                 {
                     continue;
                 }
 
+                // No retry means the move is valid so finish making the move
+
+                // remove lane from list
+                openLanes?.Remove(potentialMove.Lane);
+
+                updateOpenLanes(potentialMove.Move);
+
                 // remove tiles bot just used
-                updateTileRack(move.Word);
+                updateTileRack(potentialMove.Move.Word);
 
                 drawTiles();
 
-                score += move.Score;
+                score += potentialMove.Move.Score;
+
+                break;
             }
 
             if (metaMove.GetMainMove().Word == string.Empty)
             {
-                // retry?
+                tilesToRemove = passOrSwapMove(moveContext);
             }
         }
 
         if (moveContext.GetPassMove())
         {
             Console.WriteLine();
-            Console.WriteLine("Passing Move");
+            Console.WriteLine("ScrabbleBot is passing move");
             Console.WriteLine();
         }
         else if (moveContext.GetSwapTiles())
         {
             Console.WriteLine();
-            Console.WriteLine("Swapping tiles");
-            Console.WriteLine("Type letters you wish to swap: ");
+            Console.WriteLine("ScrabbleBot is swapping tiles");
 
-            updateTileRack(tilesToRemove);
-        }
-        else
-        {
             updateTileRack(tilesToRemove);
 
             drawTiles();
-
-            score += metaMove.GetTotalScore();
         }
 
         if (isFinalMove())
@@ -632,10 +669,42 @@ public class ScrabbleBot : PlayerBase, IPlayer
         }
     }
 
+    // if tiles available swap as many tiles as possible
+    // otherwise pass
+    private string passOrSwapMove(MoveContext moveContext)
+    {
+        int bagCount = scrabbleBoard.GetBagCount();
+
+        var sb = new StringBuilder();
+
+        if (bagCount == 0)
+        {
+            // no moves to make with current tiles, no new tiles to get
+            // pass turn
+            moveContext.SetPassMove(true);
+            return string.Empty;
+        }
+
+        // if at least 7 tiles are left then I will end up swapping all tiles
+        if (bagCount > 7)
+        {
+            bagCount = 7;
+        }
+
+        for (int i = 0; i < bagCount; i++)
+        {
+            sb.Append(tileRack[i]);
+        }
+
+        moveContext.SetSwapTiles(true);
+
+        return sb.ToString();
+    } 
+
     private bool isInvalidMove(ScrabbleMove move)
     {
-// too do!
-        
+        // too do!
+
         return false;
     }
 

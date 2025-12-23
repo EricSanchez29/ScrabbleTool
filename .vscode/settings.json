@@ -1,6 +1,6 @@
 {
     "dotnet.defaultSolution": "FindBingo.sln",
-    "editor.autoClosingBrackets": "never",
-    "editor.autoIndent":"brackets",
+    "editor.autoClosingBrackets":"beforeWhitespace",
+    "editor.autoIndent":"keep",
     "editor.autoIndentOnPaste": true,
 }
