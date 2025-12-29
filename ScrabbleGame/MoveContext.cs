@@ -4,50 +4,76 @@ using System;
 // maybe this could be a part of game context but idk its worth passing that object around more places
 public class MoveContext
 {
-    private bool retryMove;
-    private bool passMove;
-    private bool swapTiles;
+    // private bool retryMove;
+    // private bool passMove;
+    // private bool swapTiles;
 
-    // need to have some restrictions that prevent any of these from being simultaneously true
-    // pass
-    // swap
-    // retry
-    
-    
+    //b1b0
+    // 0 0 pass
+    // 0 1 swap
+    // 1 0 retry
+    // 1 1 go (no retry)
+    private bool bit1 = true;
+    private bool bit0 = true;
 
     public MoveContext(bool retryState)
     {
         SetRetryMove(retryState);
-        passMove = false;
     }
 
     public void SetRetryMove(bool retryState)
     {
-        retryMove = retryState;
+        if (retryState)
+        {
+            bit1 = true;
+            bit0 = false;
+        }
+        else
+        {
+            bit1 = true;
+            bit0 = true;
+        }
     }
 
     public bool GetRetryMove()
     {
-        return retryMove;
+        if (bit1 && !bit0)
+        {
+            return true;
+        }
+
+        return false;
     }
 
     public void SetPassMove(bool passState)
     {
-        passMove = passState;
+        bit1 = false;
+        bit0 = false;
     }
 
     public bool GetPassMove()
     {
-        return passMove;
+        if (!bit1 && !bit0)
+        {
+            return true;
+        }
+
+        return false;
     }
 
     public void SetSwapTiles(bool swapState)
     {
-        swapTiles = true;
+        bit1 = false;
+        bit0 = true;
     }
 
     public bool GetSwapTiles()
     {
-        return swapTiles;
+        if (!bit1 && bit0)
+        {
+            return true;
+        }
+
+        return false;
     }
 }

@@ -368,15 +368,15 @@ public class ScrabbleBot : PlayerBase, IPlayer
                                 var newLane = new ScrabbleLane()
                                 {
                                     Direction = true,
-                                    Length = openLane.Length - newMove.Y_coordinate, // check this math
-                                    X_coordinate = newMove.X_coordinate,
-                                    Y_coordinate = openLane.Y_coordinate,
+                                    Length = openLane.Y_coordinate + openLane.Length - newMove.Y_coordinate, // check this math
+                                    X_coordinate = openLane.X_coordinate,
+                                    Y_coordinate = newMove.Y_coordinate,
                                     TilePosition = 0,
                                 };
 
                                 newLane.Tile = scrabbleBoard.GetTileChar(newLane.X_coordinate, newLane.Y_coordinate);
 
-                                openLanes.Add(newLane);
+                                newOpenLanes.Add(newLane);
                             }
 
                             // resize original lane
@@ -411,7 +411,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
                                 var newLane = new ScrabbleLane()
                                 {
                                     Direction = true,
-                                    Length = openLane.Length - newMove.X_coordinate, // check this math
+                                    Length = openLane.X_coordinate +  openLane.Length - newMove.X_coordinate, // check this math
                                     X_coordinate = newMove.X_coordinate,
                                     Y_coordinate = openLane.Y_coordinate,
                                     TilePosition = 0,
@@ -419,7 +419,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
 
                                 newLane.Tile = scrabbleBoard.GetTileChar(newLane.X_coordinate, newLane.Y_coordinate);
 
-                                openLanes.Add(newLane);
+                                newOpenLanes.Add(newLane);
                             }
 
                             // resize original lane
@@ -472,8 +472,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
             }
         }
 
-
-        openLanes.AddRange(openLanes);
+        openLanes.AddRange(newOpenLanes);
 
         foreach (var oldLane in lanesToRemove)
         {
