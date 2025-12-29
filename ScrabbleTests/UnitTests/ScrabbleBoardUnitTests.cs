@@ -1,4 +1,5 @@
 ﻿using System.Security.Principal;
+using ScrabbleCommon;
 
 namespace ScrabbleTests;
 
@@ -6,7 +7,7 @@ public class ScrabbleBoardUnitTests
 {
     public ScrabbleBoardUnitTests()
     {
-        gen = new ScrabbleWordGenerator(GlobalTestVariables.DictionaryLocation);
+        gen = new ScrabbleWordGenerator(GlobalVariables.DictionaryRelativePath);
         board = new ScrabbleBoard(gen);
     }
 

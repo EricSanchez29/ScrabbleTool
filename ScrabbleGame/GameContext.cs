@@ -1,3 +1,4 @@
+// would it make sense to make this static
 public class GameContext
 {
     private bool? gameState { get; set; }
@@ -5,14 +6,9 @@ public class GameContext
     // false == restart game
     // null == shutdown game
 
-    private bool isFinalMove { get; set;}
+    private bool isFinalMove { get; set; }
 
 
-    // should I use the shutdown state to signal that the game is over?
-    // or 
-    private bool gameOver { get; set; }
-
-    private Exception? exception;
 
     public GameContext()
     {
@@ -20,18 +16,19 @@ public class GameContext
         isFinalMove = false;
     }
 
-    public void EndGame()
-    {
-        gameOver = true;
-        gameState = null;
-    }
+    // public void EndGame()
+    // {
+    //     gameOver = true;
+    //     gameState = null;
+    // }
 
-    public void RecordException(Exception ex)
-    {
-        exception = ex;
+    // public void RecordException(Exception ex)
+    // {
+    //     exception = ex;
 
-        // either create log here or get this exception in the program to log
-    }
+    //     // either create log here or get this exception in the program to log
+    // }
+    //private Exception? exception;
 
     public void SetFinalMove()
     {
@@ -43,7 +40,7 @@ public class GameContext
         return isFinalMove;
     }
 
-    public bool Continue_questionMark()
+    public bool GetContinue()
     {
         if (gameState == true)
         {
@@ -53,17 +50,17 @@ public class GameContext
         return false;
     }
 
-    public void RestartGame()
+    public void SetRestartGame()
     {
         gameState = false;
     }
 
-    public void ShutdownGame()
+    public void SetShutdownGame()
     {
         gameState = null;
     }
 
-    public bool RestartGame_questionMark()
+    public bool GetRestartGame()
     {
         if (gameState == false)
         {
@@ -73,7 +70,7 @@ public class GameContext
         return false;
     }
 
-    public bool ShutdownGame_questionMark()
+    public bool GetShutdownGame()
     {
         if (gameState == null)
         {

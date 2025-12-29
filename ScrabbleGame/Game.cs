@@ -33,7 +33,7 @@ public static class Game
         player2.DrawInitialTiles(false);
         var context = new GameContext();
 
-        while (context.Continue_questionMark())
+        while (context.GetContinue())
         {
             // 1st player makes choice
             player1.MakeMove(context);
@@ -60,7 +60,7 @@ public static class Game
             }
         }
 
-        return context.RestartGame_questionMark();
+        return context.GetRestartGame();
     }
 
     // bool is shutdown bit? is this weird?
