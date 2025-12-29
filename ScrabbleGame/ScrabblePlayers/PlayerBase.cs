@@ -15,11 +15,6 @@ public class PlayerBase
     // its always a 7 element collection of characters, i can use a default char position to indicate an empty position in the end game
     protected List<char> tileRack = new List<char>(7);
 
-    // the human player doesn't have a use for this yet
-    // maybe with better UI I will be able to display moves
-    // for now these moves are only tracked by the ai player
-    //protected List<ScrabbleMove> moves = new List<ScrabbleMove>();
-
     protected int score = 0;
 
     protected string drawInitialTiles(bool isPlayer1)
@@ -70,12 +65,6 @@ public class PlayerBase
 
             tileRack.Remove(wordTiles[i]);
         }
-    }
-
-    // player must choose which tiles to switch (input string)
-    protected void swapTiles(string unwantedTiles)
-    {
-        // to do
     }
 
     protected bool isFinalMove()

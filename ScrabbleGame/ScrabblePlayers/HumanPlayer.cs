@@ -83,13 +83,13 @@ public class HumanPlayer : PlayerBase, IPlayer
                     continue;
                 }
 
-                moveContext.SetSwapTiles(true);
+                moveContext.SetSwapTiles();
                 break;
             }
 
             if (word == "(pass)")
             {
-                moveContext.SetPassMove(true);
+                moveContext.SetPassMove();
                 break;
             }
 
@@ -176,14 +176,14 @@ public class HumanPlayer : PlayerBase, IPlayer
                 throw new Exception("FATAL ERROR");
             }
 
-            this.swapTiles(unwantedTiles);
+            updateTileRack(unwantedTiles);
+
+            drawTiles();
 
             displayPlayerTiles();
         }
         else
         {
-            // this is ignorant of tiles on the board, should the scrabble board obj tell you which tiles to remove?
-            // ex played "TOWER" with T already on board an on rack, removed the rack tile
             updateTileRack(playerLettersUsed);
 
             drawTiles();

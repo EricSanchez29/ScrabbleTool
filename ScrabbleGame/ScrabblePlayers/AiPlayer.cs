@@ -808,7 +808,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
         {
             // no moves to make with current tiles, no new tiles to get
             // pass turn
-            moveContext.SetPassMove(true);
+            moveContext.SetPassMove();
             return string.Empty;
         }
 
@@ -823,7 +823,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
             sb.Append(tileRack[i]);
         }
 
-        moveContext.SetSwapTiles(true);
+        moveContext.SetSwapTiles();
 
         return sb.ToString();
     } 

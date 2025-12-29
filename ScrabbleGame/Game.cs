@@ -8,14 +8,6 @@ public static class Game
         ScrabbleBoard scrabbleBoard = new ScrabbleBoard(wordGenerator);
         scrabbleBoard.DisplayBoard();
 
-
-        // //testing
-        // var bot = new ScrabbleBot(wordGenerator, scrabbleBoard);
-
-        // var testString = "TESTI**";
-        // bot.TestMove(testString.ToCharArray(), 'A');
-
-
         IPlayer player1;
         IPlayer player2;
 

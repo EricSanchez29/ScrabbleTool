@@ -12,7 +12,7 @@ public class MoveContext
     // 0 0 pass
     // 0 1 swap
     // 1 0 retry
-    // 1 1 go (no retry)
+    // 1 1 continue (no retry)
     private bool bit1 = true;
     private bool bit0 = true;
 
@@ -45,7 +45,7 @@ public class MoveContext
         return false;
     }
 
-    public void SetPassMove(bool passState)
+    public void SetPassMove()
     {
         bit1 = false;
         bit0 = false;
@@ -61,7 +61,7 @@ public class MoveContext
         return false;
     }
 
-    public void SetSwapTiles(bool swapState)
+    public void SetSwapTiles()
     {
         bit1 = false;
         bit0 = true;
