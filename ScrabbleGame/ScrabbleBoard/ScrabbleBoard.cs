@@ -169,7 +169,7 @@ public class ScrabbleBoard : IBoard, IDisplay
         metaMove.SetTotalScore(totalScore);
 
         // this is causing me to add invalid moves toe metaMoves
-        //metaMoves.Add(metaMove);
+        metaMoves.Add(metaMove);
 
         scrabbleMetaMove = metaMove;
 
@@ -1041,7 +1041,7 @@ public class ScrabbleBoard : IBoard, IDisplay
             }
         }
 
-        return metaMove.HasAdditionalMoves();
+        return true;
     }
 
     private void addWordToHashSet(ScrabbleMove scrabbleMove)
