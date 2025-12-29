@@ -282,7 +282,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
 
     // this might be difficult or impossible at some point
     // should I really track every open lane?
-    // Can I track every open lane through an entire of a Scrabble game?
+    // Can I track every open lane through an entire Scrabble game?
     private void updateOpenLanes(ScrabbleMove newMove)
     {
         if (openLanes is null)
@@ -300,9 +300,93 @@ public class ScrabbleBot : PlayerBase, IPlayer
 
         var newOpenLanes = new List<ScrabbleLane>();
 
-        if (newMove.Direction)
+        var lanesToRemove = new List<ScrabbleLane>();
+
+        if (newMove.Direction) // newWord is pointing Across
         {
-            
+            foreach (var openLane in openLanes)
+            {
+                if (openLane.Direction)
+                {
+                    // parallel lanes
+                    if (openLane.Y_coordinate == newMove.Y_coordinate)
+                    {
+                        // does the lane cross paths with the newWord
+                        // - either they occupy the same tile space 
+                        // - or there is not at least one tile space between them
+
+                        // lane starts before the word starts
+                        if (openLane.X_coordinate < newMove.X_coordinate)
+                        {
+                            if (openLane.X_coordinate + openLane.Length >= newMove.X_coordinate)
+                            {
+                                // need to be removed but can't do that in a foreach loop
+                                //openLanes.Remove(openLane);
+
+                                lanesToRemove.Add(openLane);
+                            }
+                        }
+                        // word starts before the lane starts
+                        else if (openLane.X_coordinate > newMove.X_coordinate)
+                        {
+                            lanesToRemove.Add(openLane);
+
+                            // at a later date I could modify lanes to include whole words 
+                            // and search the dictionary using a substring of a word in order to find candidate words
+
+                        }
+                        else
+                        {
+                            // the openLane and newMove both start on the same tile 
+                            // so lane should be deleted
+
+                            lanesToRemove.Add(openLane);
+
+                            // at a later date I could modify lanes to include whole words 
+                            // and search the dictionary using a substring of a word in order to find candidate words
+                        }
+                    }
+                    
+
+                }
+                else
+                {
+                    // perpendicular lanes
+                    if ((openLane.X_coordinate >= newMove.X_coordinate) 
+                    && (openLane.Y_coordinate < (newMove.Y_coordinate + newMove.Word.Length)))
+                    {
+                        // does the openLane intersect the path of the new word
+                        if((openLane.Y_coordinate + openLane.Length) >= newMove.Y_coordinate)
+                        {
+                            // either split this lane in two or resize
+
+                            // only split if lane is long enough to cross 
+                            if ((openLane.Y_coordinate + openLane.Length - newMove.Y_coordinate) > 2)
+                            {
+                                // split lane
+                                // make new lane, check the end for adjacent letters
+                                var newLane = new ScrabbleLane()
+                                {
+                                    Direction = true,
+                                    Length = openLane.Length - newMove.Y_coordinate, // check this math
+                                    X_coordinate = newMove.X_coordinate,
+                                    Y_coordinate = openLane.Y_coordinate,
+                                    TilePosition = 0,
+                                };
+
+                                newLane.Tile = scrabbleBoard.GetTileChar(newLane.X_coordinate, newLane.Y_coordinate);
+
+                                openLanes.Add(newLane);
+                            }
+
+                            // resize original lane
+                            openLane.Length = newMove.Y_coordinate - openLane.Y_coordinate - 1;
+
+                        }                        
+                    }
+                }
+
+            }
         }
         else // newWord is pointing Down
         {
@@ -317,14 +401,25 @@ public class ScrabbleBot : PlayerBase, IPlayer
                         // does the openLane intersect the path of the new word
                         if((openLane.X_coordinate + openLane.Length) >= newMove.X_coordinate)
                         {
-                            // either split this lane in two or delete
+                            // either split this lane in two or resize
 
                             // only split if lane is long enough to cross 
                             if ((openLane.X_coordinate + openLane.Length - newMove.X_coordinate) > 2)
                             {
                                 // split lane
                                 // make new lane, check the end for adjacent letters
-                                
+                                var newLane = new ScrabbleLane()
+                                {
+                                    Direction = true,
+                                    Length = openLane.Length - newMove.X_coordinate, // check this math
+                                    X_coordinate = newMove.X_coordinate,
+                                    Y_coordinate = openLane.Y_coordinate,
+                                    TilePosition = 0,
+                                };
+
+                                newLane.Tile = scrabbleBoard.GetTileChar(newLane.X_coordinate, newLane.Y_coordinate);
+
+                                openLanes.Add(newLane);
                             }
 
                             // resize original lane
@@ -342,14 +437,47 @@ public class ScrabbleBot : PlayerBase, IPlayer
                         // - either they occupy the same tile space 
                         // - or there is not at least one tile space between them
 
+                        // lane starts before the word starts
+                        if (openLane.Y_coordinate < newMove.Y_coordinate)
+                        {
+                            if (openLane.Y_coordinate + openLane.Length >= newMove.Y_coordinate)
+                            {
+                                // need to be removed but can't do that in a foreach loop
+                                //openLanes.Remove(openLane);
+
+                                lanesToRemove.Add(openLane);
+                            }
+                        }
+                        // word starts before the lane starts
+                        else if (openLane.Y_coordinate > newMove.Y_coordinate)
+                        {
+                            lanesToRemove.Add(openLane);
+
+                            // at a later date I could modify lanes to include whole words 
+                            // and search the dictionary using a substring of a word in order to find candidate words
+
+                        }
+                        else
+                        {
+                            // the openLane and newMove both start on the same tile 
+                            // so lane should be deleted
+
+                            lanesToRemove.Add(openLane);
+
+                            // at a later date I could modify lanes to include whole words 
+                            // and search the dictionary using a substring of a word in order to find candidate words
+                        }
                     }
                 }
             }
         }
 
-        foreach (var newLanes in newOpenLanes)
+
+        openLanes.AddRange(openLanes);
+
+        foreach (var oldLane in lanesToRemove)
         {
-            
+            openLanes.Remove(oldLane);
         }
     }
 
