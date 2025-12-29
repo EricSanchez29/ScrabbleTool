@@ -695,13 +695,6 @@ public class ScrabbleBoard : IBoard, IDisplay
                     }
 
                 }
-                else
-                {
-                    // will only write to the scrabbleboard with the tiles in my hand
-                    board[x_offset, playerMove.Y_coordinate] = playerMove.Word[i];
-
-                    tilesToRemove.Append(playerMove.Word[i]);
-                }
 
                 x_offset++;
             }
