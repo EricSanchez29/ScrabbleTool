@@ -795,7 +795,7 @@ public class ScrabbleBoard : IBoard, IDisplay
                         break;
                     }
 
-                    potentialWord.Insert(currentChar, 0);
+                    potentialWord.Insert(0, currentChar);
                     potentialWordXCoord--;
                 }
             }
@@ -925,7 +925,7 @@ public class ScrabbleBoard : IBoard, IDisplay
                         break;
                     }
 
-                    potentialWord.Insert(currentChar, 0);
+                    potentialWord.Insert(0, currentChar);
                     potentialWordYCoord--;
                 }
             }
