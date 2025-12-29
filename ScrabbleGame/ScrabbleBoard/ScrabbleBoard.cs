@@ -107,8 +107,8 @@ public class ScrabbleBoard : IBoard, IDisplay
                     if (board[playerMove.X_coordinate, y_offset] != playerMove.Word[i])
                     {
                         // shouldn't reach this if I am correctly checking this in tryIsValidMove()
-                        Console.WriteLine("Invalid play, board position already occupied");
-                        moveContext.SetRetryMove(true);
+                        // this is a game breaking error
+                        throw new Exception("Invalid play, board position already occupied. Error occured in tryIsValidMove()");
                     }
                 }
                 else
@@ -136,8 +136,8 @@ public class ScrabbleBoard : IBoard, IDisplay
                     if (board[x_offset, playerMove.Y_coordinate] != playerMove.Word[i])
                     {
                         // shouldn't reach this if I am correctly checking this in tryIsValidMove()
-                        Console.WriteLine("Invalid play, board position already occupied");
-                        moveContext.SetRetryMove(true);
+                        // this is a game breaking error
+                        throw new Exception("Invalid play, board position already occupied. Error occured in tryIsValidMove()");
                     }
 
                 }
@@ -157,10 +157,10 @@ public class ScrabbleBoard : IBoard, IDisplay
         // check for bingo (+50 points)
         if (tilesToRemove.Length == 7)
         {
-            // need to test more, playerbase does't have the correct score
             totalScore += 50;
         }
 
+        // only do this when no adjacent words were found
         if (metaMove is null)
         {
             metaMove = new ScrabbleMetaMove(playerMove);
@@ -168,7 +168,8 @@ public class ScrabbleBoard : IBoard, IDisplay
 
         metaMove.SetTotalScore(totalScore);
 
-        metaMoves.Add(metaMove);
+        // this is causing me to add invalid moves toe metaMoves
+        //metaMoves.Add(metaMove);
 
         scrabbleMetaMove = metaMove;
 
@@ -600,7 +601,6 @@ public class ScrabbleBoard : IBoard, IDisplay
         return true;
     }
 
-    // scrabbleMetaMove is only not null if this funcition returns true, is there a better way to do this?
     private bool tryIsValidMove(ScrabbleMove move, out ScrabbleMetaMove? scrabbleMetaMove)
     {
         // Is the starting coordinate out of bounds?
@@ -654,10 +654,59 @@ public class ScrabbleBoard : IBoard, IDisplay
         }
 
         // Is this move going to attempt to overwrite tiles already on the board
+        if (!move.Direction)
+        {
+            int y_offset = move.Y_coordinate;
 
-        // TO DO
+            for (int i = 0; i < move.Word.Length; i++)
+            {
+                // check if position is already taken
+                if (!isSpecialTile(board[move.X_coordinate, y_offset]))
+                {
+                    // if this position is already occupied by the same letter than I am not overwriting
+                    // I'm merely using a board letter in my word
+                    if (board[move.X_coordinate, y_offset] != move.Word[i])
+                    {
+                        // can't overwrite a letter
+                        scrabbleMetaMove = null;
+                        return false;
+                    }
+                }
 
+                y_offset++;
+            }
+        }
+        else
+        {
+            int x_offset = move.X_coordinate;
 
+            for (int i = 0; i < move.Word.Length; i++)
+            {
+                // check if position is already taken
+                if (!isSpecialTile(board[x_offset, move.Y_coordinate]))
+                {
+                    // if this position is already occupied by the same letter than I am not overwriting
+                    // I'm merely using a board letter in my word
+                    if (board[x_offset, move.Y_coordinate] != move.Word[i])
+                    {
+                        // can't overwrite a letter
+                        scrabbleMetaMove = null;
+                        return false;
+                    }
+
+                }
+                else
+                {
+                    // will only write to the scrabbleboard with the tiles in my hand
+                    board[x_offset, playerMove.Y_coordinate] = playerMove.Word[i];
+
+                    tilesToRemove.Append(playerMove.Word[i]);
+                }
+
+                x_offset++;
+            }
+
+        }
 
         // Input word is a valid word in my dictionary (is this necessary?)
         // I should do this outside     
@@ -670,25 +719,14 @@ public class ScrabbleBoard : IBoard, IDisplay
         }
 
         // Check adjacent tiles for additional words (are they valid?)
-        // would it make sense to check the dicitionary within tryGetNewAdjacentWords
-        // this would prevent me from finding all subsequent words after the first invalid word appears
         if (tryGetNewAdjacentWords(move, out ScrabbleMetaMove metaMove))
         {
             var debug = metaMove.GetAdditionalMoves();
 
-            // check if these adjacent words are valid scrabble words
+            // all additionalMove words should already be validated
+            // if no addtionalMoves found exits normally with true
             foreach (ScrabbleMove adjMove in metaMove.GetAdditionalMoves())
             {
-                if (!generator.CheckDictionary(adjMove.Word))
-                {
-                    // If any adjacent word is an invalid dictionary word
-                    // then playerMove is an invalid move, return false
-                    Console.WriteLine();
-                    Console.WriteLine("The adjacent word: " + adjMove.Word + " is not a valid word");
-                    scrabbleMetaMove = null;
-                    return false;
-                }
-
                 // calculate adjacent moves scores, add to metaMove
                 adjMove.Score = GetMoveScore(adjMove as ScrabbleBase, adjMove.Word);
 
@@ -697,16 +735,18 @@ public class ScrabbleBoard : IBoard, IDisplay
 
             scrabbleMetaMove = metaMove;
         }
-        // else no adjacent words can be formed, move on
+        // at least one invalid adjacent word was found
         else
         {
             scrabbleMetaMove = null;
+            return false;
         }
 
         return true;
     }
 
-    // need to thoroughly test both across and down since its confusing to read over
+    // return true if new adjacent words are valid or if no adjacent words were found
+    // return false if at least one new adjacent word is not found in the dictionary
     private bool tryGetNewAdjacentWords(ScrabbleMove playerMove, out ScrabbleMetaMove metaMove)
     {
         metaMove = new ScrabbleMetaMove(playerMove);
@@ -760,9 +800,18 @@ public class ScrabbleBoard : IBoard, IDisplay
                     continue;
                 }
 
+                string potentialWordLoopString = potentialWordLoop.ToString();
+
+                if (!generator.CheckDictionary(potentialWordLoopString))
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("The adjacent word: " + potentialWordLoopString + " is not a valid word");
+                    return false;
+                }
+
                 var potentialAdditionalMove = new ScrabbleMove
                 {
-                    Word = potentialWordLoop.ToString(),
+                    Word = potentialWordLoopString,
                     Direction = false,
                     X_coordinate = playerMove.X_coordinate + i,
                     Y_coordinate = potentialWordLoopYCoord,
@@ -826,11 +875,20 @@ public class ScrabbleBoard : IBoard, IDisplay
                 }
             }
 
-            if (potentialWord.ToString() != playerMove.Word)
+            string potentialWordString = potentialWord.ToString();
+
+            if (!generator.CheckDictionary(potentialWordString))
+            {
+                Console.WriteLine();
+                Console.WriteLine("The adjacent word: " + potentialWordString + " is not a valid word");
+                return false;
+            }
+
+            if (potentialWordString != playerMove.Word)
             {
                 var potentialMove = new ScrabbleMove
                 {
-                    Word = potentialWord.ToString(),
+                    Word = potentialWordString,
                     Direction = true,
                     Y_coordinate = playerMove.Y_coordinate,
                     X_coordinate = potentialWordXCoord,
@@ -838,7 +896,7 @@ public class ScrabbleBoard : IBoard, IDisplay
 
                 if (!isWordOnBoard(potentialMove))
                 {
-                    metaMove.AddAddtionalMove(potentialMove);    
+                    metaMove.AddAddtionalMove(potentialMove);
                 }
             }
         }
@@ -890,9 +948,18 @@ public class ScrabbleBoard : IBoard, IDisplay
                     continue;
                 }
 
+                string potentialWordLoopString = potentialWordLoop.ToString();
+
+                if (!generator.CheckDictionary(potentialWordLoopString))
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("The adjacent word: " + potentialWordLoopString + " is not a valid word");
+                    return false;
+                }
+
                 var potentialAdditionalMove = new ScrabbleMove
                 {
-                    Word = potentialWordLoop.ToString(),
+                    Word = potentialWordLoopString,
                     Direction = true,
                     X_coordinate = potentialWordLoopXCoord,
                     Y_coordinate = playerMove.Y_coordinate + i,
@@ -955,7 +1022,16 @@ public class ScrabbleBoard : IBoard, IDisplay
                 }
             }
 
-            if (potentialWord.ToString() != playerMove.Word)
+            string potentialWordString = potentialWord.ToString();
+
+            if (!generator.CheckDictionary(potentialWordString))
+            {
+                Console.WriteLine();
+                Console.WriteLine("The adjacent word: " + potentialWordString + " is not a valid word");
+                return false;
+            }
+
+            if (potentialWordString != playerMove.Word)
             {
                 var potentialMove = new ScrabbleMove
                 {
