@@ -569,6 +569,28 @@ public class ScrabbleBoard : IBoard, IDisplay
         return metaMoves.Last();
     }
 
+    public bool IsWordOutOfBounds(int wordLength, bool direction, int x, int y)
+    {
+        // Does the word go out of bounds?
+        if (direction)
+        {
+            // across
+            if (!IsValidCoordinate(x + wordLength - 1, y))
+            {
+                return false;
+            }
+        }
+        else
+        {
+            // down
+            if (!IsValidCoordinate(x, y + wordLength - 1))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private bool tryIsValidFirstMove(ScrabbleMove move)
     {
         if (move.Direction)
@@ -616,25 +638,10 @@ public class ScrabbleBoard : IBoard, IDisplay
         }
 
         // Does the word go out of bounds?
-        if (move.Direction)
+        if (!IsWordOutOfBounds(move.Word.Length, move.Direction, move.X_coordinate, move.Y_coordinate))
         {
-            // across
-            if (!IsValidCoordinate(move.X_coordinate + move.Word.Length - 1, move.Y_coordinate))
-            {
-                scrabbleMetaMove = null;
-                return false;
-            }
-        }
-        else
-        {
-            // down
-            if (!IsValidCoordinate(move.X_coordinate, move.Y_coordinate + move.Word.Length - 1))
-            {
-                Console.WriteLine();
-                Console.WriteLine("Word is out of bounds");
-                scrabbleMetaMove = null;
-                return false;
-            }
+            scrabbleMetaMove = null;
+            return false;
         }
 
         // The first move must contain center square H8

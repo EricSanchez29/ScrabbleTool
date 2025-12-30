@@ -718,7 +718,10 @@ public class ScrabbleBot : PlayerBase, IPlayer
         {
             var coordinate = getCoordinateFromWordIndex(indexes[i], lane);
 
+            
             if (!scrabbleBoard.IsValidCoordinate(coordinate.X_coordinate, coordinate.Y_coordinate)) { continue; }
+
+            if (!scrabbleBoard.IsWordOutOfBounds(word.Length, coordinate.Direction, coordinate.X_coordinate, coordinate.Y_coordinate)) { continue; }
 
             int wordScore = scrabbleBoard.GetMoveScore(coordinate, word);
 
