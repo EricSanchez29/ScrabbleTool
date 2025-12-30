@@ -168,7 +168,6 @@ public class ScrabbleBoard : IBoard, IDisplay
 
         metaMove.SetTotalScore(totalScore);
 
-        // this is causing me to add invalid moves toe metaMoves
         metaMoves.Add(metaMove);
 
         scrabbleMetaMove = metaMove;

@@ -33,26 +33,28 @@ public class ScrabbleBot : PlayerBase, IPlayer
         // get opponent's most recent move
         var oppLastMove = scrabbleBoard.GetLastMove();
 
-        if (openLanes == null)
-        {
-            // for some reason I reached this code after AI went first
+        updateOpenLanes(oppLastMove.GetMainMove());
 
-            // Case 2: Opponent made the first move, AI goes 2nd
-            // create lanes for empty list
-            openLanes = getLanesFromWord(oppLastMove.GetMainMove());
-        }
-        else
-        {
-            // Case 3: this is the AI's 2nd move or later
-            updateOpenLanes(oppLastMove.GetMainMove());
-        }
+        // if (openLanes == null)
+        // {
+        //     // for some reason I reached this code after AI went first
+
+        //     // Case 2: Opponent made the first move, AI goes 2nd
+        //     // create lanes for empty list
+        //     openLanes = getLanesFromWord(oppLastMove.GetMainMove());
+        // }
+        // else
+        // {
+        //     // Case 3: this is the AI's 2nd move or later
+        //     updateOpenLanes(oppLastMove.GetMainMove());
+        // }
 
         // do I need to keep track of moves?
         opponentMoves.Add(oppLastMove.GetMainMove());
 
         var potentialMoves = new List<ScrabblePotentialMove>();
 
-        foreach (var lane in openLanes)
+        foreach (var lane in openLanes!)
         {
             var words = generator.GetBingoList(playerTiles + lane.Tile);
 
@@ -117,7 +119,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
     //
     // need to also have a check for lenght, lane must be at least length 3 
     // - 1 space away from other letters and for min word length of 2
-    private List<ScrabbleLane> getLanesFromWord(in ScrabbleMove move)
+    private List<ScrabbleLane> getLanesFromFirstWord(in ScrabbleMove move)
     {
         var lanes = new List<ScrabbleLane>();
 
@@ -287,21 +289,163 @@ public class ScrabbleBot : PlayerBase, IPlayer
     {
         if (openLanes is null)
         {
-            // this will only happen when ScrabbleBot is making his first move
-            openLanes = getLanesFromWord(newMove);
+            openLanes = getLanesFromFirstWord(newMove);
             return;
         }
 
-        // look through each lane and either
-        // - modify lane if lane is perpendicular to new word and create a 2nd lane
+        // create new lanes based on newMove
+        //
+        // look through openLanes and either
+        // - modify lane if lane is perpendicular to new word
         // - delete lane if lane is parallel to the new word 
-        // (currently can't handle prefixes or suffixes for word from)
+        // (currently can't handle prefixes or suffixes for word, would need to change the way I query the dictionary to do this well)
         //
 
         var newOpenLanes = new List<ScrabbleLane>();
 
+        // need to test this new code
+        if (newMove.Direction)
+        {
+            for (int i = 0; i < newMove.Word.Length; i++)
+            {
+                if (newMove.Y_coordinate == 0)
+                {
+                    continue;
+                }
+
+                int lane_y_coordinate = newMove.Y_coordinate - 1;
+
+                bool keepLooking = true;
+                // look above newMove
+                while (keepLooking)
+                {
+                    if (scrabbleBoard.IsOpenSpace(newMove.X_coordinate, lane_y_coordinate))
+                    {
+                        if (lane_y_coordinate == 0)
+                        {
+                            // have reached the end of the board
+                            break;
+                        }
+
+                        lane_y_coordinate--;
+                    }
+                    else
+                    {
+                        keepLooking = false;
+                        lane_y_coordinate++;
+                        lane_y_coordinate++; // need a space between words
+                    }
+                }
+
+                // add char
+                var laneFromNewMove = new ScrabbleLane()
+                {
+                    Direction = false,
+                    X_coordinate = newMove.X_coordinate,
+                    Y_coordinate = lane_y_coordinate,
+                    Tile = newMove.Word[i],
+                    TilePosition = newMove.Y_coordinate - lane_y_coordinate, // check this math
+                };
+
+                // look right
+                keepLooking = true;
+                lane_y_coordinate = newMove.Y_coordinate + 1;
+                while (keepLooking)
+                {
+                    if (scrabbleBoard.IsOpenSpace(newMove.X_coordinate, lane_y_coordinate))
+                    {
+                        if (lane_y_coordinate == 14)
+                        {
+                            break;
+                        }
+
+                        lane_y_coordinate++;
+                    }
+                    else
+                    {
+                        keepLooking = false;
+                        lane_y_coordinate--;
+                        lane_y_coordinate--;
+                    }
+                }
+
+                laneFromNewMove.Length = lane_y_coordinate - laneFromNewMove.Y_coordinate; // check math
+                newOpenLanes.Add(laneFromNewMove);
+            }
+        }
+        else
+        {
+            for (int i = 0; i < newMove.Word.Length; i++)
+            {
+                if (newMove.X_coordinate == 0)
+                {
+                    continue;
+                }
+
+                int lane_x_coordinate = newMove.X_coordinate - 1;
+
+                bool keepLooking = true;
+                // look above newMove
+                while (keepLooking)
+                {
+                    if (scrabbleBoard.IsOpenSpace(lane_x_coordinate, newMove.Y_coordinate))
+                    {
+                        if (lane_x_coordinate == 0)
+                        {
+                            // have reached the end of the board
+                            break;
+                        }
+
+                        lane_x_coordinate--;
+                    }
+                    else
+                    {
+                        keepLooking = false;
+                        lane_x_coordinate++;
+                        lane_x_coordinate++; // need a space between words
+                    }
+                }
+
+                // add char
+                var laneFromNewMove = new ScrabbleLane()
+                {
+                    Direction = false,
+                    X_coordinate = lane_x_coordinate,
+                    Y_coordinate = newMove.Y_coordinate,
+                    Tile = newMove.Word[i],
+                    TilePosition = newMove.X_coordinate - lane_x_coordinate, // check this math
+                };
+
+                // look right
+                keepLooking = true;
+                lane_x_coordinate = newMove.X_coordinate + 1;
+                while (keepLooking)
+                {
+                    if (scrabbleBoard.IsOpenSpace(lane_x_coordinate, newMove.Y_coordinate))
+                    {
+                        if (lane_x_coordinate == 14)
+                        {
+                            break;
+                        }
+
+                        lane_x_coordinate++;
+                    }
+                    else
+                    {
+                        keepLooking = false;
+                        lane_x_coordinate--;
+                        lane_x_coordinate--;
+                    }
+                }
+
+                laneFromNewMove.Length = lane_x_coordinate - laneFromNewMove.X_coordinate; // check math
+                newOpenLanes.Add(laneFromNewMove);
+            }
+        }
+        
         var lanesToRemove = new List<ScrabbleLane>();
 
+        // check to see if any openLanes cross paths with the newMove
         if (newMove.Direction) // newWord is pointing Across
         {
             foreach (var openLane in openLanes)
@@ -346,46 +490,42 @@ public class ScrabbleBot : PlayerBase, IPlayer
                             // and search the dictionary using a substring of a word in order to find candidate words
                         }
                     }
-                    
-
                 }
                 else
                 {
                     // perpendicular lanes
-                    if ((openLane.X_coordinate >= newMove.X_coordinate) 
+                    if ((openLane.X_coordinate >= newMove.X_coordinate)
                     && (openLane.Y_coordinate < (newMove.Y_coordinate + newMove.Word.Length)))
                     {
                         // does the openLane intersect the path of the new word
-                        if((openLane.Y_coordinate + openLane.Length) >= newMove.Y_coordinate)
+                        if ((openLane.Y_coordinate + openLane.Length) >= newMove.Y_coordinate)
                         {
                             // either split this lane in two or resize
 
-                            // only split if lane is long enough to cross 
-                            if ((openLane.Y_coordinate + openLane.Length - newMove.Y_coordinate) > 2)
-                            {
-                                // split lane
-                                // make new lane, check the end for adjacent letters
-                                var newLane = new ScrabbleLane()
-                                {
-                                    Direction = true,
-                                    Length = openLane.Y_coordinate + openLane.Length - newMove.Y_coordinate, // check this math
-                                    X_coordinate = openLane.X_coordinate,
-                                    Y_coordinate = newMove.Y_coordinate,
-                                    TilePosition = 0,
-                                };
+                            // // only split if lane is long enough to cross 
+                            // if ((openLane.Y_coordinate + openLane.Length - newMove.Y_coordinate) > 2)
+                            // {
+                            //     // split lane
+                            //     // make new lane, check the end for adjacent letters
+                            //     var newLane = new ScrabbleLane()
+                            //     {
+                            //         Direction = true,
+                            //         Length = openLane.Y_coordinate + openLane.Length - newMove.Y_coordinate, // check this math
+                            //         X_coordinate = openLane.X_coordinate,
+                            //         Y_coordinate = newMove.Y_coordinate,
+                            //         TilePosition = 0,
+                            //     };
 
-                                newLane.Tile = scrabbleBoard.GetTileChar(newLane.X_coordinate, newLane.Y_coordinate);
+                            //     newLane.Tile = scrabbleBoard.GetTileChar(newLane.X_coordinate, newLane.Y_coordinate);
 
-                                newOpenLanes.Add(newLane);
-                            }
+                            //     newOpenLanes.Add(newLane);
+                            // }
 
                             // resize original lane
                             openLane.Length = newMove.Y_coordinate - openLane.Y_coordinate - 1;
-
-                        }                        
+                        }
                     }
                 }
-
             }
         }
         else // newWord is pointing Down
@@ -395,37 +535,37 @@ public class ScrabbleBot : PlayerBase, IPlayer
                 if (openLane.Direction)
                 {
                     // perpendicular lanes
-                    if ((openLane.Y_coordinate >= newMove.Y_coordinate) 
+                    if ((openLane.Y_coordinate >= newMove.Y_coordinate)
                     && (openLane.Y_coordinate < (newMove.Y_coordinate + newMove.Word.Length)))
                     {
                         // does the openLane intersect the path of the new word
-                        if((openLane.X_coordinate + openLane.Length) >= newMove.X_coordinate)
+                        if ((openLane.X_coordinate + openLane.Length) >= newMove.X_coordinate)
                         {
                             // either split this lane in two or resize
 
-                            // only split if lane is long enough to cross 
-                            if ((openLane.X_coordinate + openLane.Length - newMove.X_coordinate) > 2)
-                            {
-                                // split lane
-                                // make new lane, check the end for adjacent letters
-                                var newLane = new ScrabbleLane()
-                                {
-                                    Direction = true,
-                                    Length = openLane.X_coordinate +  openLane.Length - newMove.X_coordinate, // check this math
-                                    X_coordinate = newMove.X_coordinate,
-                                    Y_coordinate = openLane.Y_coordinate,
-                                    TilePosition = 0,
-                                };
+                            // // only split if lane is long enough to cross 
+                            // if ((openLane.X_coordinate + openLane.Length - newMove.X_coordinate) > 2)
+                            // {
+                            //     // split lane
+                            //     // make new lane, check the end for adjacent letters
+                            //     var newLane = new ScrabbleLane()
+                            //     {
+                            //         Direction = true,
+                            //         Length = openLane.X_coordinate + openLane.Length - newMove.X_coordinate, // check this math
+                            //         X_coordinate = newMove.X_coordinate,
+                            //         Y_coordinate = openLane.Y_coordinate,
+                            //         TilePosition = 0,
+                            //     };
 
-                                newLane.Tile = scrabbleBoard.GetTileChar(newLane.X_coordinate, newLane.Y_coordinate);
+                            //     newLane.Tile = scrabbleBoard.GetTileChar(newLane.X_coordinate, newLane.Y_coordinate);
 
-                                newOpenLanes.Add(newLane);
-                            }
+                            //     newOpenLanes.Add(newLane);
+                            // }
 
                             // resize original lane
                             openLane.Length = newMove.X_coordinate - openLane.X_coordinate - 1;
 
-                        }                        
+                        }
                     }
                 }
                 else
@@ -473,6 +613,9 @@ public class ScrabbleBot : PlayerBase, IPlayer
         }
 
         openLanes.AddRange(newOpenLanes);
+
+        // look through every letter's coordinate of the newMove and create lanes when necessary
+        
 
         foreach (var oldLane in lanesToRemove)
         {
@@ -827,13 +970,6 @@ public class ScrabbleBot : PlayerBase, IPlayer
 
         return sb.ToString();
     } 
-
-    private bool isInvalidMove(ScrabbleMove move)
-    {
-        // too do!
-
-        return false;
-    }
 
     public void DrawInitialTiles(bool isPlayer1)
     {
