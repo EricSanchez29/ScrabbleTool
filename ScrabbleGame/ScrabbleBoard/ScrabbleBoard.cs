@@ -72,6 +72,9 @@ public class ScrabbleBoard : IBoard, IDisplay
 
         // Calculate move score
 
+        Console.WriteLine();
+        Console.WriteLine("Main move: " + playerMove.Word + " +" + playerMove.Score + " points");
+
         // calculate scores for additional moves if available
         if (metaMove is not null) // this move creates additional words besides Move.Word
         {
@@ -82,6 +85,9 @@ public class ScrabbleBoard : IBoard, IDisplay
                 totalScore += moveScore;
 
                 addWordToHashSet(additionalMove);
+
+                Console.WriteLine();
+                Console.WriteLine("Adjacent move: " + additionalMove.Word + " +" + additionalMove.Score + " points");
             }
         }
 
