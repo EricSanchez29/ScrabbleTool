@@ -70,6 +70,8 @@ public class ScrabbleBoard : IBoard, IDisplay
             return string.Empty;
         }
 
+        moveContext.SetRetryMove(false);
+
         // Calculate move score
 
         Console.WriteLine();
@@ -834,25 +836,33 @@ public class ScrabbleBoard : IBoard, IDisplay
             var potentialWord = new StringBuilder();
             int potentialWordXCoord = playerMove.X_coordinate;
 
-            // peak the left side of the move
-            if (!IsOpenSpace(playerMove.X_coordinate - 1, playerMove.Y_coordinate))
+            if (playerMove.X_coordinate == 0)
             {
-                // if not empty keep looking until end of board
-                for (int i = playerMove.X_coordinate - 1; i >= 0; i--)
+                // can't look left, already reached end of board
+            }
+            else
+            {
+                // peak the left side of the move
+                if (!IsOpenSpace(playerMove.X_coordinate - 1, playerMove.Y_coordinate))
                 {
-                    char currentChar = board[i, playerMove.Y_coordinate];
-
-                    if (isSpecialTile(currentChar))
+                    // if not empty keep looking until end of board
+                    for (int i = playerMove.X_coordinate - 1; i >= 0; i--)
                     {
-                        // no more tiles on the board for potentialWord, 
-                        // don't reach end of the board
-                        break;
-                    }
+                        char currentChar = board[i, playerMove.Y_coordinate];
 
-                    potentialWord.Insert(0, currentChar);
-                    potentialWordXCoord--;
+                        if (isSpecialTile(currentChar))
+                        {
+                            // no more tiles on the board for potentialWord, 
+                            // don't reach end of the board
+                            break;
+                        }
+
+                        potentialWord.Insert(0, currentChar);
+                        potentialWordXCoord--;
+                    }
                 }
             }
+
 
             // word should be in the middle when there are tiles to the left and right
             // word should be on the right (end) if there are only tiles on the left
@@ -862,21 +872,28 @@ public class ScrabbleBoard : IBoard, IDisplay
             // question: is it worth inserting a character into stringbuilder, compared to building a char array backwards and reversing it
 
             // peak to the right
-            int endOfPlayerMoveX = playerMove.X_coordinate + playerMove.Word.Length;
+            int endOfPlayerMoveX = playerMove.X_coordinate + playerMove.Word.Length - 1;
 
-            if (!IsOpenSpace(endOfPlayerMoveX, playerMove.Y_coordinate))
+            if (endOfPlayerMoveX == 14)
             {
-                // if not empty keep looking until end of board or until empty
-                for (int i = endOfPlayerMoveX; i < 15; i++)
+                // can't look right, alread reached the end of the board
+            }
+            else
+            {
+                if (!IsOpenSpace(endOfPlayerMoveX, playerMove.Y_coordinate))
                 {
-                    char currentChar = board[i, playerMove.Y_coordinate];
-
-                    if (isSpecialTile(currentChar))
+                    // if not empty keep looking until end of board or until empty
+                    for (int i = endOfPlayerMoveX; i < 15; i++)
                     {
-                        break;
-                    }
+                        char currentChar = board[i, playerMove.Y_coordinate];
 
-                    potentialWord.Append(currentChar);
+                        if (isSpecialTile(currentChar))
+                        {
+                            break;
+                        }
+
+                        potentialWord.Append(currentChar);
+                    }
                 }
             }
 
@@ -905,7 +922,7 @@ public class ScrabbleBoard : IBoard, IDisplay
                 }
             }
         }
-        else // down
+        else // playerMove direction is down
         {
             // copied and pasted from above and changed to the perpendicular situation
             // need to verify both are functioning as expected
@@ -982,23 +999,26 @@ public class ScrabbleBoard : IBoard, IDisplay
             var potentialWord = new StringBuilder();
             int potentialWordYCoord = playerMove.Y_coordinate;
 
-            // peak above the move
-            if (!IsOpenSpace(playerMove.X_coordinate, playerMove.Y_coordinate - 1))
+            if (potentialWordYCoord > 0)
             {
-                // if not empty keep looking until end of board
-                for (int i = playerMove.Y_coordinate - 1; i >= 0; i--)
+                // peak above the move
+                if (!IsOpenSpace(playerMove.X_coordinate, playerMove.Y_coordinate - 1))
                 {
-                    char currentChar = board[playerMove.X_coordinate, i];
-
-                    if (isSpecialTile(currentChar))
+                    // if not empty keep looking until end of board
+                    for (int i = playerMove.Y_coordinate - 1; i >= 0; i--)
                     {
-                        // no more tiles on the board for potentialWord, 
-                        // don't reach end of the board
-                        break;
-                    }
+                        char currentChar = board[playerMove.X_coordinate, i];
 
-                    potentialWord.Insert(0, currentChar);
-                    potentialWordYCoord--;
+                        if (isSpecialTile(currentChar))
+                        {
+                            // no more tiles on the board for potentialWord, 
+                            // don't reach end of the board
+                            break;
+                        }
+
+                        potentialWord.Insert(0, currentChar);
+                        potentialWordYCoord--;
+                    }
                 }
             }
 
@@ -1007,23 +1027,26 @@ public class ScrabbleBoard : IBoard, IDisplay
             // word should be on the left (begining) if there are only tiles on the right
             potentialWord.Append(playerMove.Word);
 
-            int endOfPlayerMoveY = playerMove.Y_coordinate + playerMove.Word.Length;
+            int endOfPlayerMoveY = playerMove.Y_coordinate + playerMove.Word.Length - 1; // does this math make sense?
 
-            if (!IsOpenSpace(playerMove.X_coordinate, endOfPlayerMoveY))
+            if (endOfPlayerMoveY < 14)
             {
-                // I think I could make this more efficient, aka not accessing the first char twice
-
-                // if not empty keep looking until end of board or until empty
-                for (int i = endOfPlayerMoveY; i < 15; i++)
+                if (!IsOpenSpace(playerMove.X_coordinate, endOfPlayerMoveY + 1))
                 {
-                    char currentChar = board[playerMove.X_coordinate, i];
+                    // I think I could make this more efficient, aka not accessing the first char twice
 
-                    if (isSpecialTile(currentChar))
+                    // if not empty keep looking until end of board or until empty
+                    for (int i = endOfPlayerMoveY; i < 15; i++)
                     {
-                        break;
-                    }
+                        char currentChar = board[playerMove.X_coordinate, i];
 
-                    potentialWord.Append(currentChar);
+                        if (isSpecialTile(currentChar))
+                        {
+                            break;
+                        }
+
+                        potentialWord.Append(currentChar);
+                    }
                 }
             }
 

@@ -27,7 +27,6 @@ public class HumanPlayer : PlayerBase, IPlayer
     private void displayPlayerTiles()
     {
         Console.WriteLine();
-        Console.WriteLine();
 
         for (int i = 0; i < tileRack.Count; i++)
         {
@@ -96,7 +95,7 @@ public class HumanPlayer : PlayerBase, IPlayer
             if (!generator.CheckDictionary(word))
             {
                 Console.WriteLine("Word not found in dictionary.");
-                Console.WriteLine("Retry :");
+                Console.WriteLine("Retry:");
                 moveContext.SetRetryMove(true);
                 continue;
             }
@@ -119,21 +118,32 @@ public class HumanPlayer : PlayerBase, IPlayer
             if (!valid)
             {
                 Console.WriteLine("Invalid coordinate");
-                Console.WriteLine("Retry :");
+                Console.WriteLine("Retry:");
                 moveContext.SetRetryMove(true);
                 continue;
             }
 
             Console.WriteLine("");
-            Console.WriteLine("Enter direction ('down' - 'across')");
+            Console.WriteLine("Enter direction ('down' or 'across')");
             Console.WriteLine("");
 
             // read key
             string? directionString = Console.ReadLine();
 
-            if (directionString == "down" || directionString == "d")
+            if (directionString == "down" || directionString == "d" || directionString == "DOWN" || directionString == "D")
             {
                 direction = false;
+            }
+            else if (directionString == "across" || directionString == "a" || directionString == "ACROSS" || directionString == "A")
+            {
+                direction = true;
+            }
+            else
+            {
+                Console.WriteLine("Invalid direction");
+                Console.WriteLine("Retry:");
+                moveContext.SetRetryMove(true);
+                continue;
             }
 
             // change this later maybe?
@@ -151,7 +161,7 @@ public class HumanPlayer : PlayerBase, IPlayer
                 Direction = direction,
             };
 
-            // this line looks weird, change this later by adding more versions of the function
+            // why precalculate the score, shouldn't the board do this?
             playerMove.Score = scrabbleBoard.GetMoveScore(playerMove, word!);
 
             playerLettersUsed = scrabbleBoard.AddWord(playerMove, moveContext, out metaMove);
@@ -190,10 +200,10 @@ public class HumanPlayer : PlayerBase, IPlayer
 
             displayPlayerTiles();
 
-            score += metaMove.GetTotalScore();
-        }        
+            score += metaMove.GetTotalScore(); // total score not set
+        }
 
-        if(base.isFinalMove())
+        if (base.isFinalMove())
         {
             gameContext.SetFinalMove();
         }

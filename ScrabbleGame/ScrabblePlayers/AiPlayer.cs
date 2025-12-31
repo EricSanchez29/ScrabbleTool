@@ -303,11 +303,6 @@ public class ScrabbleBot : PlayerBase, IPlayer
 
         var newOpenLanes = new List<ScrabbleLane>();
 
-
-        // add this check, if the tile immediately to the left/up or immediately to the right/down
-        // then cannot have a single char lane, may add functionality for this later.
-
-        // need to test this new code
         if (newMove.Direction)
         {
             for (int i = 0; i < newMove.Word.Length; i++)
@@ -316,7 +311,15 @@ public class ScrabbleBot : PlayerBase, IPlayer
 
                 // if tile immediately above or below is occupied cannot form a lane
                 // by this game's definition a lane can only have one char
-                if (!scrabbleBoard.IsOpenSpace(newMove.X_coordinate + i, newMove.Y_coordinate - 1)||!scrabbleBoard.IsOpenSpace(newMove.X_coordinate + i, newMove.Y_coordinate + 1))
+                if (newMove.Y_coordinate > 0)
+                {
+                    if (!scrabbleBoard.IsOpenSpace(newMove.X_coordinate + i, newMove.Y_coordinate - 1))
+                    {
+                        continue;
+                    }
+                }
+
+                if (!scrabbleBoard.IsOpenSpace(newMove.X_coordinate + i, newMove.Y_coordinate + 1))
                 {
                     continue;
                 }
@@ -413,7 +416,17 @@ public class ScrabbleBot : PlayerBase, IPlayer
 
                 // if tile immediately to the left or the right is occupied cannot form a lane
                 // by this game's definition a lane can only have one char
-                if (!scrabbleBoard.IsOpenSpace(newMove.X_coordinate - 1, newMove.Y_coordinate + i)||!scrabbleBoard.IsOpenSpace(newMove.X_coordinate + 1, newMove.Y_coordinate + i))
+                if (newMove.X_coordinate > 0)
+                {
+                    // can only look to the left the coordinate if its not the edge of the board
+                    if (!scrabbleBoard.IsOpenSpace(newMove.X_coordinate - 1, newMove.Y_coordinate + i))
+                    {
+                        continue;
+                    }
+                }
+
+
+                if (!scrabbleBoard.IsOpenSpace(newMove.X_coordinate + 1, newMove.Y_coordinate + i))
                 {
                     continue;
                 }
