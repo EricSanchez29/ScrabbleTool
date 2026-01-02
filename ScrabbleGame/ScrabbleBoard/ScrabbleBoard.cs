@@ -57,13 +57,13 @@ public class ScrabbleBoard : IBoard, IDisplay
     // and also add a bingo check +50 points
 
     // return how many letters were not already on the board
-    public string AddWord(ScrabbleMove playerMove, MoveContext moveContext, out ScrabbleMetaMove scrabbleMetaMove)
+    public string AddWord(ScrabbleMove playerMove, MoveContext moveContext, string playerTiles, out ScrabbleMetaMove scrabbleMetaMove)
     {
         var tilesToRemove = new StringBuilder();
 
         int totalScore = 0;
 
-        if (!tryIsValidMove(playerMove, out ScrabbleMetaMove? metaMove))
+        if (!tryIsValidMove(playerMove, playerTiles, out ScrabbleMetaMove? metaMove))
         {
             moveContext.SetRetryMove(true);
             scrabbleMetaMove = new ScrabbleMetaMove(playerMove);
@@ -630,7 +630,7 @@ public class ScrabbleBoard : IBoard, IDisplay
         return true;
     }
 
-    private bool tryIsValidMove(ScrabbleMove move, out ScrabbleMetaMove? scrabbleMetaMove)
+    private bool tryIsValidMove(ScrabbleMove move, string playerTiles, out ScrabbleMetaMove? scrabbleMetaMove)
     {
         // Is the starting coordinate out of bounds?
         if (!IsValidCoordinate(move.X_coordinate, move.Y_coordinate))
@@ -668,6 +668,8 @@ public class ScrabbleBoard : IBoard, IDisplay
         }
 
         // Is this move going to attempt to overwrite tiles already on the board
+        var boardTilesSb = new StringBuilder();
+
         if (!move.Direction)
         {
             int y_offset = move.Y_coordinate;
@@ -684,6 +686,10 @@ public class ScrabbleBoard : IBoard, IDisplay
                         // can't overwrite a letter
                         scrabbleMetaMove = null;
                         return false;
+                    }
+                    else
+                    {
+                        boardTilesSb.Append(move.Word[i]);
                     }
                 }
 
@@ -707,13 +713,45 @@ public class ScrabbleBoard : IBoard, IDisplay
                         scrabbleMetaMove = null;
                         return false;
                     }
+                    else
+                    {
+                        boardTilesSb.Append(move.Word[i]);
+                    }
 
                 }
 
                 x_offset++;
             }
+        }
+
+        // Is this move attempting to use tiles that are not in their rack nor on the board
+        var playerTilesList = playerTiles.ToList();
+        var boardTilesList = boardTilesSb.ToString().ToList();
+
+        foreach (char tile in move.Word)
+        {
+            if (playerTilesList.Contains(tile))
+            {
+                playerTilesList.Remove(tile);
+            }
+            else if (playerTilesList.Contains('*'))
+            {
+                playerTilesList.Remove('*');
+            }
+            else if (boardTilesList.Contains(tile))
+            {
+                boardTilesList.Remove(tile);
+            }
+            else
+            {
+                Console.WriteLine();
+                Console.WriteLine("Move is not valid. Could not find the tile " + tile + " on player rack or on the board");
+                scrabbleMetaMove = null;
+                return false;
+            }
 
         }
+
 
         // Input word is a valid word in my dictionary (is this necessary?)
         // I should do this outside     

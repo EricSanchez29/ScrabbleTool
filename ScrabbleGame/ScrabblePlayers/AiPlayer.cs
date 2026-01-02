@@ -963,7 +963,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
         {
             foreach (var potentialMove in potentialMoves)
             {
-                tilesToRemove = scrabbleBoard.AddWord(potentialMove.Move, moveContext, out metaMove);
+                tilesToRemove = scrabbleBoard.AddWord(potentialMove.Move, moveContext, GetRemainingTiles(), out metaMove);
 
                 if (moveContext.GetRetryMove())
                 {

@@ -161,7 +161,7 @@ public class HumanPlayer : PlayerBase, IPlayer
                 Direction = direction,
             };
 
-            playerLettersUsed = scrabbleBoard.AddWord(playerMove, moveContext, out metaMove);
+            playerLettersUsed = scrabbleBoard.AddWord(playerMove, moveContext, GetRemainingTiles(), out metaMove);
         }
 
         if (moveContext.GetPassMove())
