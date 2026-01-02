@@ -161,9 +161,6 @@ public class HumanPlayer : PlayerBase, IPlayer
                 Direction = direction,
             };
 
-            // why precalculate the score, shouldn't the board do this?
-            playerMove.Score = scrabbleBoard.GetMoveScore(playerMove, word!);
-
             playerLettersUsed = scrabbleBoard.AddWord(playerMove, moveContext, out metaMove);
         }
 

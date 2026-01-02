@@ -63,7 +63,7 @@ public class PlayerBase
 
                 if (!tileRack.Remove('*'))
                 {
-                    throw new Exception("Couldn't remove " + wordTiles[i] + "but player does not have a * tile");
+                    throw new Exception("Couldn't remove " + wordTiles[i] + " but player does not have a * tile");
                 }
             }
         }
