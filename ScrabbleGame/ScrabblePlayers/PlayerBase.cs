@@ -57,13 +57,15 @@ public class PlayerBase
     {
         for (int i = 0; i < wordTiles.Length; i++)
         {
-            if (tileRack.Find(x => x == wordTiles[i]) == default(char))
+            if (!tileRack.Remove(wordTiles[i]))
             {
-                //throw new Exception("Word cannot be created using");
-                continue;
-            }
+                // failed to remove tile, does the user have a blank tile?
 
-            tileRack.Remove(wordTiles[i]);
+                if (!tileRack.Remove('*'))
+                {
+                    throw new Exception("Couldn't remove " + wordTiles[i] + "but player does not have a * tile");
+                }
+            }
         }
     }
 

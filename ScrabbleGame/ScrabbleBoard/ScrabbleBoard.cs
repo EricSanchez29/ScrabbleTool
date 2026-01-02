@@ -880,6 +880,8 @@ public class ScrabbleBoard : IBoard, IDisplay
             }
             else
             {
+                endOfPlayerMoveX++;
+
                 if (!IsOpenSpace(endOfPlayerMoveX, playerMove.Y_coordinate))
                 {
                     // if not empty keep looking until end of board or until empty
@@ -1031,7 +1033,9 @@ public class ScrabbleBoard : IBoard, IDisplay
 
             if (endOfPlayerMoveY < 14)
             {
-                if (!IsOpenSpace(playerMove.X_coordinate, endOfPlayerMoveY + 1))
+                endOfPlayerMoveY++;
+
+                if (!IsOpenSpace(playerMove.X_coordinate, endOfPlayerMoveY))
                 {
                     // I think I could make this more efficient, aka not accessing the first char twice
 
