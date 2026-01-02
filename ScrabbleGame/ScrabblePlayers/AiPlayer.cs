@@ -978,7 +978,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
                 updateOpenLanes(potentialMove.Move);
 
                 // remove tiles bot just used
-                updateTileRack(potentialMove.Move.Word);
+                updateTileRack(tilesToRemove);
 
                 drawTiles();
 
@@ -987,6 +987,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
                 break;
             }
 
+            // no valid move was found, decide if bot should pass or swap
             if (metaMove.GetMainMove().Word == string.Empty)
             {
                 tilesToRemove = passOrSwapMove(moveContext);
