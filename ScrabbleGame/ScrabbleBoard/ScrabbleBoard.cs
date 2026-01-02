@@ -734,13 +734,13 @@ public class ScrabbleBoard : IBoard, IDisplay
             {
                 playerTilesList.Remove(tile);
             }
-            else if (playerTilesList.Contains('*'))
-            {
-                playerTilesList.Remove('*');
-            }
             else if (boardTilesList.Contains(tile))
             {
                 boardTilesList.Remove(tile);
+            }
+            else if (playerTilesList.Contains('*')) 
+            {
+                playerTilesList.Remove('*');
             }
             else
             {
