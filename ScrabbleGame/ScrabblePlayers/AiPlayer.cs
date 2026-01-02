@@ -319,9 +319,12 @@ public class ScrabbleBot : PlayerBase, IPlayer
                     }
                 }
 
-                if (!scrabbleBoard.IsOpenSpace(newMove.X_coordinate + i, newMove.Y_coordinate + 1))
+                if (newMove.Y_coordinate < 14)
                 {
-                    continue;
+                    if (!scrabbleBoard.IsOpenSpace(newMove.X_coordinate + i, newMove.Y_coordinate + 1))
+                    {
+                        continue;
+                    }
                 }
 
                 if (newMove.Y_coordinate == 0)
@@ -425,10 +428,12 @@ public class ScrabbleBot : PlayerBase, IPlayer
                     }
                 }
 
-
-                if (!scrabbleBoard.IsOpenSpace(newMove.X_coordinate + 1, newMove.Y_coordinate + i))
+                if (newMove.X_coordinate < 14)
                 {
-                    continue;
+                    if (!scrabbleBoard.IsOpenSpace(newMove.X_coordinate + 1, newMove.Y_coordinate + i))
+                    {
+                        continue;
+                    }
                 }
 
                 if (newMove.X_coordinate == 0)

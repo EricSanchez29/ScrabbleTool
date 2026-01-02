@@ -74,6 +74,10 @@ public class ScrabbleBoard : IBoard, IDisplay
 
         // Calculate move score
 
+        // calculate main move score
+        playerMove.Score = GetMoveScore(playerMove, playerMove.Word);
+        totalScore += playerMove.Score;
+
         Console.WriteLine();
         Console.WriteLine("Main move: " + playerMove.Word + " +" + playerMove.Score + " points");
 
@@ -92,11 +96,6 @@ public class ScrabbleBoard : IBoard, IDisplay
                 Console.WriteLine("Adjacent move: " + additionalMove.Word + " +" + additionalMove.Score + " points");
             }
         }
-
-        // calculate main move score
-        playerMove.Score = GetMoveScore(playerMove, playerMove.Word);
-
-        totalScore += playerMove.Score;
 
         addWordToHashSet(playerMove);
 
