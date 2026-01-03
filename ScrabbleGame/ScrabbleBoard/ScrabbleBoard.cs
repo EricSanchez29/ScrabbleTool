@@ -448,7 +448,7 @@ public class ScrabbleBoard : IBoard, IDisplay
 
         for (int i = tripleWord; i > 0; i--)
         {
-            score = score * 2;
+            score = score * 3;
         }
 
         return score;

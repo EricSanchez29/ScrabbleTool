@@ -92,6 +92,18 @@ public class HumanPlayer : PlayerBase, IPlayer
                 break;
             }
 
+            // validate string
+            // only alphabet chars
+            // no spaces
+            // no numbers
+            if(!isValidWordString(word))
+            {
+                Console.WriteLine("Word is not in valid format. Must not contain spaces or numbers");
+                Console.WriteLine("Retry:");
+                moveContext.SetRetryMove(true);
+                continue;
+            }
+
             if (!generator.CheckDictionary(word))
             {
                 Console.WriteLine("Word not found in dictionary.");
@@ -212,5 +224,20 @@ public class HumanPlayer : PlayerBase, IPlayer
 
         Console.WriteLine();
         Console.WriteLine("Player Tiles: " + newTiles);
+    }
+
+    private bool isValidWordString(string userInput)
+    {
+        foreach (char character in userInput)
+        {
+            char capiltalChar = ScrabbleWordGenerator.ConverLowerToUpper(character);
+
+            if ((capiltalChar < 65) || (capiltalChar > 90))
+            {
+                return false;
+            }
+        }
+        
+        return true;
     }
 }

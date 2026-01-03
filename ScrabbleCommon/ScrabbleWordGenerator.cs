@@ -236,15 +236,9 @@ public class ScrabbleWordGenerator
         return sb.ToString();
     }
 
-    // need to test
     public static char ConverLowerToUpper(char letter)
     {
         int asciiValue = (int)letter;
-
-        if (letter == '*')
-        {
-            return letter;
-        }
 
         // is upperCase?
         if ((letter > 64) && (letter < 91))
@@ -259,7 +253,7 @@ public class ScrabbleWordGenerator
             return (char)asciiValue;
         }
 
-        throw new Exception("Bad inputs");
+        return letter;
     }
 
     // maybe this should not be a separate function,
