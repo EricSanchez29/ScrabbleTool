@@ -274,6 +274,14 @@ public class ScrabbleBoard : IBoard, IDisplay
 
         for (int i = tileCount; i > 0; i--)
         {
+            if (bag.Count == 0)
+            {
+                // if the tileCount requested is larger than the
+                // number of tiles in the bag
+                // return the number of tiles available
+                break;
+            }
+
             // draw random tiles from bag
             var randomNumber = rando.Next(0, bag.Count - 1);
             list.Append(bag[randomNumber]);

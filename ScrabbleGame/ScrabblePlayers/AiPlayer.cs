@@ -934,6 +934,11 @@ public class ScrabbleBot : PlayerBase, IPlayer
 
     private void drawTiles()
     {
+        if (scrabbleBoard.GetBagCount() == 0)
+        {
+            return;
+        }
+
         string newTiles = scrabbleBoard.DrawTiles(7 - tileRack.Count);
 
         for (int i = 0; i < newTiles.Length; i++)
