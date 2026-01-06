@@ -3,6 +3,8 @@ public static class Game
     // should this be static?
     public static bool StartGame(string dictionaryLocation)
     {
+        Console.BackgroundColor = ConsoleColor.Black;
+
         ScrabbleWordGenerator wordGenerator = new ScrabbleWordGenerator(dictionaryLocation);
 
         ScrabbleBoard scrabbleBoard = new ScrabbleBoard(wordGenerator);
@@ -38,8 +40,7 @@ public static class Game
             // 1st player makes choice
             player1.MakeMove(context);
             scrabbleBoard.DisplayBoard();
-            Console.WriteLine();
-            Console.WriteLine("Player 1 score: " + player1.GetPlayerScore());
+            scrabbleBoard.DisplayScoreBoard(player1.GetPlayerScore(), player2.GetPlayerScore());
             Console.WriteLine();
 
             if (context.GetIsFinalMove())
@@ -50,8 +51,7 @@ public static class Game
             // 2nd player makes choice
             player2.MakeMove(context);
             scrabbleBoard.DisplayBoard();
-            Console.WriteLine();
-            Console.WriteLine("Player 2 score: " + player2.GetPlayerScore());
+            scrabbleBoard.DisplayScoreBoard(player1.GetPlayerScore(), player2.GetPlayerScore());
             Console.WriteLine();
 
             if (context.GetIsFinalMove())
@@ -63,8 +63,6 @@ public static class Game
         return context.GetRestartGame();
     }
 
-    // bool is shutdown bit? is this weird?
-    //
     // who made the final move?
     // player 1 = false, player 2 = true
     private static bool finalMoveSequence(bool finalMovePlayer, string otherPlayerTiles)
@@ -79,6 +77,8 @@ public static class Game
 
     private static int calculateFinalScore(IPlayer player1, IPlayer player2)
     {
+        // need to subtract value of letters in players rack, if other player has used all their tiles
+
         return 0;
     }
 }

@@ -188,6 +188,7 @@ public class ScrabbleBoard : IBoard, IDisplay
         Console.Write(" ");
         Console.Write(" ");
         Console.Write(" ");
+        Console.Write(" ");
 
         // A - O
         for (int k = 0; k < 15; k++)
@@ -261,6 +262,75 @@ public class ScrabbleBoard : IBoard, IDisplay
                 Console.Write(" ");
             }
         }
+    }
+
+    public void DisplayScoreBoard(int player1Score, int player2Score)
+    {
+        Console.WriteLine();
+        Console.WriteLine(" ");
+        Console.Write(" ");
+
+        Console.Write("Player 1: ");
+        displayNumberString(player1Score);
+
+        for (int i = 0; i < 33; i++)
+        {
+            Console.Write(" ");
+        }
+        
+
+        Console.Write("Player 2: ");
+        displayNumberString(player2Score);
+        Console.Write(" ");
+        Console.Write(" ");
+        Console.Write(" ");
+
+    }
+    
+    
+    private void displayNumberString(int playerScore)
+    {
+        StringBuilder sb;
+
+        if (playerScore < 0)
+        {
+            throw new Exception("Something went wrong, cannot have a negative score.");
+        }
+        else if ((playerScore < 10) && (playerScore >= 0))
+        {
+            // add 3 spaces before number
+            sb = new StringBuilder(Convert.ToString(playerScore));
+
+            sb.Insert(0, "   ");
+        }
+        else if ((playerScore < 100) && (playerScore >= 10))
+        {
+            // add 2 space before number
+            sb = new StringBuilder(Convert.ToString(playerScore));
+
+            sb.Insert(0, "  ");
+        }
+        else if ((playerScore < 1000) && (playerScore >= 100))
+        {
+            // add 1 space before number
+            sb = new StringBuilder(Convert.ToString(playerScore));
+
+            sb.Insert(0, ' ');
+        }
+        else
+        {
+            // add no space before number
+            sb = new StringBuilder(Convert.ToString(playerScore));
+
+            if (sb.Length > 4)
+            {
+                throw new Exception("Something went wrong, cannot handle a score higher than 9999.");
+            }
+        }
+
+        var debug = sb.ToString();
+
+        Console.Write(sb.ToString());
     }
 
     public string DrawTiles(int tileCount)
@@ -673,7 +743,7 @@ public class ScrabbleBoard : IBoard, IDisplay
         return metaMoves.Last();
     }
 
-    public bool IsWordOutOfBounds(int wordLength, bool direction, int x, int y)
+    public bool IsWordInBounds(int wordLength, bool direction, int x, int y)
     {
         // Does the word go out of bounds?
         if (direction)
@@ -742,7 +812,7 @@ public class ScrabbleBoard : IBoard, IDisplay
         }
 
         // Does the word go out of bounds?
-        if (!IsWordOutOfBounds(move.Word.Length, move.Direction, move.X_coordinate, move.Y_coordinate))
+        if (!IsWordInBounds(move.Word.Length, move.Direction, move.X_coordinate, move.Y_coordinate))
         {
             scrabbleMetaMove = null;
             return false;

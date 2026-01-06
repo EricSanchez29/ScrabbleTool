@@ -7,12 +7,6 @@ public class ScrabbleBot : PlayerBase, IPlayer
     {
     }
 
-
-    // change this to metamove
-    private List<ScrabbleMove> opponentMoves = new List<ScrabbleMove>();
-
-    private List<ScrabbleMove> botMoves = new List<ScrabbleMove>();
-
     private List<ScrabbleLane>? openLanes = null;
 
     private string centerSquare = "H8";
@@ -22,7 +16,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
     // to do: need to check that the bot has a potential bingo (+50 pts)
     public List<ScrabblePotentialMove> MakeMove(string playerTiles)
     {
-        // Case 1: AI making the first move
+        // Bot is making the first move
         // if center is empty, no one has made a legal scrabble move yet
         if (scrabbleBoard.GetTileChar(centerSquare) == '\\')
         {
@@ -30,27 +24,12 @@ public class ScrabbleBot : PlayerBase, IPlayer
             return makeStartingMove(playerTiles);
         }
 
+        // Otherwise bot will update its list of openLanes to make moves in
+
         // get opponent's most recent move
         var oppLastMove = scrabbleBoard.GetLastMove();
 
         updateOpenLanes(oppLastMove.GetMainMove());
-
-        // if (openLanes == null)
-        // {
-        //     // for some reason I reached this code after AI went first
-
-        //     // Case 2: Opponent made the first move, AI goes 2nd
-        //     // create lanes for empty list
-        //     openLanes = getLanesFromWord(oppLastMove.GetMainMove());
-        // }
-        // else
-        // {
-        //     // Case 3: this is the AI's 2nd move or later
-        //     updateOpenLanes(oppLastMove.GetMainMove());
-        // }
-
-        // do I need to keep track of moves?
-        opponentMoves.Add(oppLastMove.GetMainMove());
 
         var potentialMoves = new List<ScrabblePotentialMove>();
 
@@ -76,23 +55,12 @@ public class ScrabbleBot : PlayerBase, IPlayer
                 // validate that the move makes sense
                 if (bestMove.Score == 0) { continue; }
 
-                // // this isn't really necessary
-                // if (!generator.CheckDictionary(bestMove.Word)) { continue; }
-
-                // // I've already called GetMoveScore before validating the coordinate, should I simply remove this?
-                // if (!scrabbleBoard.IsValidCoordinate(bestMove.X_coordinate, bestMove.Y_coordinate)) { continue; }
-
                 potentialMoves.Add(new ScrabblePotentialMove(bestMove, lane));
             }
         }
 
         // sort potential moves by score
         var topScoringMoves = potentialMoves.OrderByDescending(x => x.Move.Score);
-
-
-
-        // // record bot move
-        // botMoves.Add(topScoringMove.Move);
 
         // return move
         // why do I have to cast this?
@@ -282,9 +250,6 @@ public class ScrabbleBot : PlayerBase, IPlayer
         return lanes;
     }
 
-    // this might be difficult or impossible at some point
-    // should I really track every open lane?
-    // Can I track every open lane through an entire Scrabble game?
     private void updateOpenLanes(ScrabbleMove newMove)
     {
         if (openLanes is null)
@@ -739,7 +704,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
             
             if (!scrabbleBoard.IsValidCoordinate(coordinate.X_coordinate, coordinate.Y_coordinate)) { continue; }
 
-            if (!scrabbleBoard.IsWordOutOfBounds(word.Length, coordinate.Direction, coordinate.X_coordinate, coordinate.Y_coordinate)) { continue; }
+            if (!scrabbleBoard.IsWordInBounds(word.Length, coordinate.Direction, coordinate.X_coordinate, coordinate.Y_coordinate)) { continue; }
 
             int wordScore = scrabbleBoard.GetPotentialMoveScore(coordinate, word);
 
@@ -789,7 +754,6 @@ public class ScrabbleBot : PlayerBase, IPlayer
         return pos;
     }
 
-    // need to create lanes for my own word
     public List<ScrabblePotentialMove> makeStartingMove(string playerTiles)
     {
         // get potential words
