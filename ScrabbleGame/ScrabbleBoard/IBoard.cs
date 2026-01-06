@@ -9,7 +9,7 @@ public interface IBoard
     public bool TryGetXYCoordinate(string coordinate, out int x, out int y);
     public string AddWord(ScrabbleMove move, MoveContext moveContext, string plyaerTiles, out ScrabbleMetaMove metaMove); 
     public (int x, int y) GetXYCoordinate(string coordinate);
-    public int GetMoveScore(in ScrabbleBase move, string word);
+    public int GetPotentialMoveScore(in ScrabbleBase move, string word);
     public ScrabbleMetaMove GetLastMove();
     // or should this function be part of addword (return string instead of void)
     public string DrawTiles(int numberOfTiles);

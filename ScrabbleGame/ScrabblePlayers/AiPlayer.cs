@@ -741,7 +741,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
 
             if (!scrabbleBoard.IsWordOutOfBounds(word.Length, coordinate.Direction, coordinate.X_coordinate, coordinate.Y_coordinate)) { continue; }
 
-            int wordScore = scrabbleBoard.GetMoveScore(coordinate, word);
+            int wordScore = scrabbleBoard.GetPotentialMoveScore(coordinate, word);
 
             if (wordScore > topScore)
             {
@@ -818,7 +818,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
                     Y_coordinate = postition.y,
                 };
 
-                move.Score = scrabbleBoard.GetMoveScore(move, word.Word);
+                move.Score = scrabbleBoard.GetPotentialMoveScore(move, word.Word);
                 potentialMoves.Add(new ScrabblePotentialMove(move, new ScrabbleLane()));
             }
             // for shorter words, (n <= 4) default to center square
@@ -832,7 +832,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
                     Y_coordinate = centerCoordinate.Y,
                 };
 
-                move.Score = scrabbleBoard.GetMoveScore(move, word.Word);
+                move.Score = scrabbleBoard.GetPotentialMoveScore(move, word.Word);
                 // don't really need a scrabble lane for the first move
                 potentialMoves.Add(new ScrabblePotentialMove(move, new ScrabbleLane()));
             }

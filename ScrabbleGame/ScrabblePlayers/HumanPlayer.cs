@@ -94,11 +94,9 @@ public class HumanPlayer : PlayerBase, IPlayer
 
             // validate string
             // only alphabet chars
-            // no spaces
-            // no numbers
             if(!isValidWordString(word))
             {
-                Console.WriteLine("Word is not in valid format. Must not contain spaces or numbers");
+                Console.WriteLine("Word is not in valid format. Must not contain spaces, numbers or any other characters besides A-Z and a-z");
                 Console.WriteLine("Retry:");
                 moveContext.SetRetryMove(true);
                 continue;

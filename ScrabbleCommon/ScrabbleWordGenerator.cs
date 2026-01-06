@@ -258,7 +258,7 @@ public class ScrabbleWordGenerator
 
     // maybe this should not be a separate function,
     // will do this inline in the next version
-    private static char convertUpperToLowerCase(char letter)
+    public static char ConvertUpperToLowerCase(char letter)
     {
         int asciiValue = (int)letter;
 

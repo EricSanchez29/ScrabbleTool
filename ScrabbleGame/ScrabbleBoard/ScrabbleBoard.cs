@@ -72,8 +72,6 @@ public class ScrabbleBoard : IBoard, IDisplay
 
         moveContext.SetRetryMove(false);
 
-        // Calculate move score
-
         // calculate main move score
         playerMove.Score = GetMoveScore(playerMove, playerMove.Word);
         totalScore += playerMove.Score;
@@ -81,14 +79,11 @@ public class ScrabbleBoard : IBoard, IDisplay
         Console.WriteLine();
         Console.WriteLine("Main move: " + playerMove.Word + " +" + playerMove.Score + " points");
 
-        // calculate scores for additional moves if available
         if (metaMove is not null) // this move creates additional words besides Move.Word
         {
             foreach (var additionalMove in metaMove.GetAdditionalMoves())
             {
-                var moveScore = GetMoveScore(additionalMove, additionalMove.Word);
-
-                totalScore += moveScore;
+                totalScore += additionalMove.Score;
 
                 addWordToHashSet(additionalMove);
 
@@ -235,21 +230,27 @@ public class ScrabbleBoard : IBoard, IDisplay
                     Console.Write((char)tileValue);
 
                 }
+                else if ((tileValue >= 97) && (tileValue <= 122))
+                {
+                    // this is a blank tile used as another letter
+                    Console.Write(" ");
+                    Console.Write((char)(tileValue - 32));
+                }
                 else if (tileValue == 91)
                 {
-                    Console.Write("DL");
+                    Console.Write("dl");
                 }
                 else if (tileValue == 92)
                 {
-                    Console.Write("DW");
+                    Console.Write("dw");
                 }
                 else if (tileValue == 93)
                 {
-                    Console.Write("TL");
+                    Console.Write("tl");
                 }
                 else if (tileValue == 94)
                 {
-                    Console.Write("TW");
+                    Console.Write("tw");
                 }
                 else
                 {
@@ -364,7 +365,7 @@ public class ScrabbleBoard : IBoard, IDisplay
         return new(x_coordinate, y_coordinate);
     }
 
-    public int GetMoveScore(in ScrabbleBase move, string word)
+    public int GetPotentialMoveScore(in ScrabbleBase moveBase, string word)
     {
         int score = 0;
 
@@ -375,14 +376,14 @@ public class ScrabbleBoard : IBoard, IDisplay
 
         // should I have less duplicate code, 
         // does it really matter once its converted into CLI?
-        if (move.Direction)
+        if (moveBase.Direction)
         {
             // direction ==  true: across
             for (int i = 0; i < word.Length; i++)
             {
                 // DL('[') , DW('\'), TL(']'), TW('^')
 
-                char character = GetTileChar(move.X_coordinate + i, move.Y_coordinate);
+                char character = GetTileChar(moveBase.X_coordinate + i, moveBase.Y_coordinate);
                 // could probably put this switch in a function
                 // if I want to cut down on file size
                 switch (character)
@@ -419,7 +420,7 @@ public class ScrabbleBoard : IBoard, IDisplay
             {
                 // DL('[') , DW('\'), TL(']'), TW('^')
 
-                char character = GetTileChar(move.X_coordinate, move.Y_coordinate + i);
+                char character = GetTileChar(moveBase.X_coordinate, moveBase.Y_coordinate + i);
 
                 switch (character)
                 {
@@ -462,6 +463,100 @@ public class ScrabbleBoard : IBoard, IDisplay
         return score;
 
 
+    }
+
+    public int GetMoveScore(in ScrabbleBase moveBase, string word)
+    {
+        int score = 0;
+        int doubleWord = 0;
+        int tripleWord = 0;
+
+        if (moveBase.Direction)
+        {
+            // direction ==  true: across
+            for (int i = 0; i < word.Length; i++)
+            {
+                char character = GetTileChar(moveBase.X_coordinate + i, moveBase.Y_coordinate);
+
+                score += getMoveScoreHelper(character, word[i], out int dub, out int tri);
+
+                doubleWord += dub;
+                tripleWord += tri;
+            }
+        }
+        else
+        {
+            // direction ==  false: down
+            for (int i = 0; i < word.Length; i++)
+            {
+                char character = GetTileChar(moveBase.X_coordinate, moveBase.Y_coordinate + i);
+
+                score += getMoveScoreHelper(character, word[i], out int dub, out int tri);
+
+                doubleWord += dub;
+                tripleWord += tri;                
+            }
+        }
+
+        // multiply (double/triple)
+        for (int i = doubleWord; i > 0; i--)
+        {
+            score = score * 2;
+        }
+
+        for (int i = tripleWord; i > 0; i--)
+        {
+            score = score * 3;
+        }
+
+        return score;
+    }
+
+    private int getMoveScoreHelper(char tileOnBoard, char wordCharacter, out int doubleWord, out int tripleWord)
+    {
+        int score = 0;
+        doubleWord = 0;
+        tripleWord = 0;
+
+        // DL('[') , DW('\'), TL(']'), TW('^')
+        switch (tileOnBoard)
+        {
+            case '[':
+                int newCharVal = getTilePointValue(wordCharacter);
+                newCharVal *= 2;
+                score += newCharVal;
+                break;
+            case '\\':
+                doubleWord++;
+                score += getTilePointValue(wordCharacter);
+                break;
+            case ']':
+                int newCharVal3 = getTilePointValue(wordCharacter);
+                newCharVal3 *= 3;
+                score += newCharVal3;
+                break;
+            case '^':
+                tripleWord++;
+                score += getTilePointValue(wordCharacter);
+                break;
+            default: // tile on board is blank or occupied by the same tile as character
+                score += getTilePointValue(wordCharacter);
+                break;
+        }
+
+        return score;
+    }
+
+    private int getTilePointValue(char tile)
+    {
+        if ((tile >= 65) && (tile <= 90))
+        {
+            return ScrabbleWordGenerator.GetTilePointValue(tile);
+        }
+        else // should I check that it is indeed a lower case char?
+        {
+            return 0;   
+        }
     }
 
     //A-Z and DL('[') , DW('\'), TL(']'), TW('^')
@@ -735,30 +830,48 @@ public class ScrabbleBoard : IBoard, IDisplay
         var playerTilesList = playerTiles.ToList();
         var boardTilesList = boardTilesSb.ToString().ToList();
 
-        foreach (char tile in move.Word)
+        var blankIndexes = new List<int>(2);
+
+        for (int i = 0; i < move.Word.Length; i++)
         {
-            if (playerTilesList.Contains(tile))
+            if (playerTilesList.Contains(move.Word[i]))
             {
-                playerTilesList.Remove(tile);
+                playerTilesList.Remove(move.Word[i]);
             }
-            else if (boardTilesList.Contains(tile))
+            else if (boardTilesList.Contains(move.Word[i]))
             {
-                boardTilesList.Remove(tile);
+                boardTilesList.Remove(move.Word[i]);
             }
-            else if (playerTilesList.Contains('*')) 
+            else if (playerTilesList.Contains('*'))
             {
+                blankIndexes.Add(i);
                 playerTilesList.Remove('*');
             }
             else
             {
                 Console.WriteLine();
-                Console.WriteLine("Move is not valid. Could not find the tile " + tile + " on player rack or on the board");
+                Console.WriteLine("Move is not valid. Could not find the tile " + move.Word[i] + " on player rack or on the board");
                 scrabbleMetaMove = null;
                 return false;
             }
-
         }
 
+        if (blankIndexes.Count > 2)
+        {
+            throw new Exception("Something went wrong, there cannot be more than 2 blank/wildcard tiles in a game");
+        }
+
+        if (blankIndexes.Count > 0)
+        {
+            var sb = new StringBuilder(move.Word);
+
+            foreach (var blankIndex in blankIndexes)
+            {
+                sb[blankIndex] = ScrabbleWordGenerator.ConvertUpperToLowerCase(move.Word[blankIndex]);
+            }
+
+            move.Word = sb.ToString();
+        }
 
         // Input word is a valid word in my dictionary (is this necessary?)
         // I should do this outside     
@@ -773,16 +886,14 @@ public class ScrabbleBoard : IBoard, IDisplay
         // Check adjacent tiles for additional words (are they valid?)
         if (tryGetNewAdjacentWords(move, out ScrabbleMetaMove metaMove))
         {
-            var debug = metaMove.GetAdditionalMoves();
-
             // all additionalMove words should already be validated
             // if no addtionalMoves found exits normally with true
             foreach (ScrabbleMove adjMove in metaMove.GetAdditionalMoves())
             {
                 // calculate adjacent moves scores, add to metaMove
-                adjMove.Score = GetMoveScore(adjMove as ScrabbleBase, adjMove.Word);
+                adjMove.Score = GetMoveScore(adjMove, adjMove.Word);
 
-                // will calculate the total score outside of this function, probaby in AddWord()
+                // will calculate the total score outside of this function, probably in AddWord()
             }
 
             scrabbleMetaMove = metaMove;
