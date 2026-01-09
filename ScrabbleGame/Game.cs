@@ -35,6 +35,8 @@ public static class Game
         player2.DrawInitialTiles(false);
         var context = new GameContext();
 
+        bool? finalMoveMaker = null; // false if player 1, true if player 2
+
         while (context.GetContinue())
         {
             // 1st player makes choice
@@ -45,7 +47,7 @@ public static class Game
 
             if (context.GetIsFinalMove())
             {
-                return finalMoveSequence(false, player2.GetRemainingTiles());
+                finalMoveMaker = false;
             }
 
             // 2nd player makes choice
@@ -56,29 +58,78 @@ public static class Game
 
             if (context.GetIsFinalMove())
             {
-                return finalMoveSequence(true, player1.GetRemainingTiles());
+                finalMoveMaker = true;
+                break;
             }
         }
 
+        // gameover message
+        Console.WriteLine();
+        Console.WriteLine("Game Over!");
+
+        int player1FinalScore;
+        int player2FinalScore;
+
+        if (finalMoveMaker is not null)
+        {
+            // calculate final scores
+
+
+            if ((bool)finalMoveMaker) // player 2 made the final move
+            {
+                var leftOverTiles = player1.GetRemainingTiles();
+                var diffScore = 0;
+
+                foreach (var tile in leftOverTiles)
+                {
+                    diffScore += ScrabbleWordGenerator.GetTilePointValue(tile);
+                }
+
+                player1FinalScore = player1.GetPlayerScore() - diffScore;
+                player2FinalScore = player2.GetPlayerScore() + diffScore;
+            }
+            else // player 1 made the final move
+            {
+                var leftOverTiles = player2.GetRemainingTiles();
+                var diffScore = 0;
+
+                foreach (var tile in leftOverTiles)
+                {
+                    diffScore += ScrabbleWordGenerator.GetTilePointValue(tile);
+                }
+
+                player1FinalScore = player1.GetPlayerScore() + diffScore;
+                player2FinalScore = player2.GetPlayerScore() - diffScore;
+            }
+        }
+        else // no final score adjustment necessary
+        {
+            player1FinalScore = player1.GetPlayerScore();
+            player2FinalScore = player2.GetPlayerScore();
+        }
+
+        // display final score
+        Console.WriteLine();
+        Console.WriteLine("Final Score:");
+        scrabbleBoard.DisplayScoreBoard(player1FinalScore, player2FinalScore);
+
+        // congratulate the winner
+        if (player1FinalScore > player2FinalScore)
+        {
+            Console.WriteLine();
+            Console.WriteLine("Player 1 wins!");
+        }
+        else if (player1FinalScore < player2FinalScore)
+        {
+            Console.WriteLine();
+            Console.WriteLine("Player 2 wins!");
+        }
+        else // tied game
+        {
+            Console.WriteLine();
+            Console.WriteLine("Tied Game!");
+        }
+
         return context.GetRestartGame();
-    }
-
-    // who made the final move?
-    // player 1 = false, player 2 = true
-    private static bool finalMoveSequence(bool finalMovePlayer, string otherPlayerTiles)
-    {
-        // display final game screen
-
-        // calculate final scores
-
-
-        return false;
-    }
-
-    private static int calculateFinalScore(IPlayer player1, IPlayer player2)
-    {
-        // need to subtract value of letters in players rack, if other player has used all their tiles
-
-        return 0;
     }
 }

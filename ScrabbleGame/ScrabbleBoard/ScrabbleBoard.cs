@@ -106,7 +106,7 @@ public class ScrabbleBoard : IBoard, IDisplay
                 {
                     // if this position is already occupied by the same letter than I am not overwriting
                     // I'm merely using a board letter in my word
-                    if (board[playerMove.X_coordinate, y_offset] != playerMove.Word[i])
+                    if (!isSameLetter(board[playerMove.X_coordinate, y_offset], playerMove.Word[i]) )
                     {
                         // shouldn't reach this if I am correctly checking this in tryIsValidMove()
                         // this is a game breaking error
@@ -135,7 +135,7 @@ public class ScrabbleBoard : IBoard, IDisplay
                 {
                     // if this position is already occupied by the same letter than I am not overwriting
                     // I'm merely using a board letter in my word
-                    if (board[x_offset, playerMove.Y_coordinate] != playerMove.Word[i])
+                    if (!isSameLetter(board[x_offset, playerMove.Y_coordinate], playerMove.Word[i]))
                     {
                         // shouldn't reach this if I am correctly checking this in tryIsValidMove()
                         // this is a game breaking error
@@ -270,7 +270,7 @@ public class ScrabbleBoard : IBoard, IDisplay
         Console.WriteLine(" ");
         Console.Write(" ");
 
-        Console.Write("Player 1: ");
+        Console.Write("Player 1:");
         displayNumberString(player1Score);
 
         for (int i = 0; i < 33; i++)
@@ -279,7 +279,7 @@ public class ScrabbleBoard : IBoard, IDisplay
         }
         
 
-        Console.Write("Player 2: ");
+        Console.Write("Player 2:");
         displayNumberString(player2Score);
         Console.Write(" ");
         Console.Write(" ");
@@ -743,6 +743,57 @@ public class ScrabbleBoard : IBoard, IDisplay
         return metaMoves.Last();
     }
 
+    
+
+    // compare lowercase to uppercase
+    private bool isSameLetter(char boardTile, char rackTile)
+    {
+        if ((boardTile > 96) && (boardTile < 123)) // boardTile is lowercase
+        {
+            if ((rackTile > 96) && (rackTile < 123)) // rackTile is lowercase
+            {
+                if (boardTile == rackTile)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+            else if ((rackTile > 64) && (rackTile < 91)) // rackTile is uppercase
+            {
+                if (boardTile - 32 == rackTile)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+        }
+        else if ((boardTile > 64) && (boardTile < 91)) // boardTile is uppercase
+        {
+            if ((rackTile > 96) && (rackTile < 123)) // rackTile is lowercase
+            {
+                if (rackTile - 32 == boardTile)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+            else if ((rackTile > 64) && (rackTile < 91)) // rackTile is uppercase
+            {
+                if (boardTile == rackTile)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+        }
+
+        return false;
+    }
+
     public bool IsWordInBounds(int wordLength, bool direction, int x, int y)
     {
         // Does the word go out of bounds?
@@ -853,7 +904,7 @@ public class ScrabbleBoard : IBoard, IDisplay
                 {
                     // if this position is already occupied by the same letter than I am not overwriting
                     // I'm merely using a board letter in my word
-                    if (board[move.X_coordinate, y_offset] != move.Word[i])
+                    if (!isSameLetter(board[move.X_coordinate, y_offset], move.Word[i]))
                     {
                         // can't overwrite a letter
                         scrabbleMetaMove = null;
@@ -879,7 +930,7 @@ public class ScrabbleBoard : IBoard, IDisplay
                 {
                     // if this position is already occupied by the same letter than I am not overwriting
                     // I'm merely using a board letter in my word
-                    if (board[x_offset, move.Y_coordinate] != move.Word[i])
+                    if (!isSameLetter(board[x_offset, move.Y_coordinate], move.Word[i]))
                     {
                         // can't overwrite a letter
                         scrabbleMetaMove = null;

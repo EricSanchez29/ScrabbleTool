@@ -452,27 +452,18 @@ public class ScrabbleWordGenerator
     // right now only using this for a single character lane
     // might have to redesign lanes to include more than one char, which will necesitate a change here
     // in char[] must be 7 characters long
-    public HashSet<string> GetPossibleScrabbleWords(in char[] playerTiles, in char laneChar)
+    public List<string> GetPossibleScrabbleWords(string tiles)
     {
         HashSet<string> possibleWords = new HashSet<string>();
 
-        var totalTiles = new char[8];
+        getPossibleScrabbleWordHelper(tiles.ToArray(), possibleWords);
 
-        for (int i = 0; i < 7; i++)
-        {
-            totalTiles[i] = playerTiles[i];
-        }
-
-        totalTiles[7] = laneChar;
-
-        getPossibleScrabbleWordHelper(totalTiles, possibleWords);
-        
-        return possibleWords;
+        return possibleWords.ToList();
     }
 
     private void getPossibleScrabbleWordHelper(char[] totalTiles, HashSet<string> possibleWords)
     {
-        if (containsBlanks(totalTiles, out int[] indexes))
+        if (tryContainsBlankTiles(totalTiles, out int[] indexes))
         {
             // indexes are set to this default value
             if (indexes[1] == int.MaxValue)
@@ -550,10 +541,8 @@ public class ScrabbleWordGenerator
         return true;
     }
     
-    private bool containsBlanks(char[] totalTiles, out int[] indexes)
+    private bool tryContainsBlankTiles(char[] totalTiles, out int[] indexes)
     {
-        //I don't want to use linq here because at most there only supposed to be two 
-
         indexes = new int[2];
         indexes[0] = int.MaxValue;
         indexes[1] = int.MaxValue;

@@ -35,13 +35,13 @@ public class ScrabbleBot : PlayerBase, IPlayer
 
         foreach (var lane in openLanes!)
         {
-            var words = generator.GetBingoList(playerTiles + lane.Tile);
+            var words = generator.GetPossibleScrabbleWords(playerTiles + lane.Tile);
 
             // every single word is considered for this lane
             foreach (var word in words)
             {
                 // only consider words that contain the letter in the lane
-                if (!word.Word.Contains(lane.Tile))
+                if (!word.Contains(lane.Tile))
                 {
                     // for some reason im not reaching this code, 
                     // how does every word already have the tile character?
@@ -50,7 +50,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
                 }
 
                 // find best position for word 
-                var bestMove = getBestMove(lane, word.Word);
+                var bestMove = getBestMove(lane, word);
 
                 // validate that the move makes sense
                 if (bestMove.Score == 0) { continue; }
