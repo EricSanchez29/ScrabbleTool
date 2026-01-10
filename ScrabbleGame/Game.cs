@@ -48,6 +48,7 @@ public static class Game
             if (context.GetIsFinalMove())
             {
                 finalMoveMaker = false;
+                break;
             }
 
             // 2nd player makes choice
@@ -73,7 +74,6 @@ public static class Game
         if (finalMoveMaker is not null)
         {
             // calculate final scores
-
 
             if ((bool)finalMoveMaker) // player 2 made the final move
             {
