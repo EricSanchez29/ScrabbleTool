@@ -4,7 +4,7 @@ public interface IPlayer
 
     public void DrawInitialTiles(bool isPlayer1);
 
-    public string GetRemainingTiles();
+    public string GetTilesString();
 
     public int GetPlayerScore();
 }

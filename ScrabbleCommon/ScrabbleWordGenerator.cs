@@ -119,12 +119,6 @@ public class ScrabbleWordGenerator
         return GetPointValues(bingoWords);
     }
 
-// to do
-    public List<string> GetWords(string playerLetters)
-    {
-        return new List<string>();
-    }
-
     private void spellWordsOut(string playerLetters, HashSet<string> dictionary, HashSet<string> validWords)
     {
         List<char> chars;

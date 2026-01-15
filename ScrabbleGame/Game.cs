@@ -77,7 +77,7 @@ public static class Game
 
             if ((bool)finalMoveMaker) // player 2 made the final move
             {
-                var leftOverTiles = player1.GetRemainingTiles();
+                var leftOverTiles = player1.GetTilesString();
                 var diffScore = 0;
 
                 foreach (var tile in leftOverTiles)
@@ -90,7 +90,7 @@ public static class Game
             }
             else // player 1 made the final move
             {
-                var leftOverTiles = player2.GetRemainingTiles();
+                var leftOverTiles = player2.GetTilesString();
                 var diffScore = 0;
 
                 foreach (var tile in leftOverTiles)

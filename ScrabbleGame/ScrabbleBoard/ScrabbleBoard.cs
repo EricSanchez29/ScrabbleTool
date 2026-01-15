@@ -102,11 +102,11 @@ public class ScrabbleBoard : IBoard, IDisplay
             for (int i = 0; i < playerMove.Word.Length; i++)
             {
                 // check if position is already taken
-                if (!isSpecialTile(board[playerMove.X_coordinate, y_offset]))
+                if (!IsSpecialTile(board[playerMove.X_coordinate, y_offset]))
                 {
                     // if this position is already occupied by the same letter than I am not overwriting
                     // I'm merely using a board letter in my word
-                    if (!isSameLetter(board[playerMove.X_coordinate, y_offset], playerMove.Word[i]) )
+                    if (!IsSameLetter(board[playerMove.X_coordinate, y_offset], playerMove.Word[i]) )
                     {
                         // shouldn't reach this if I am correctly checking this in tryIsValidMove()
                         // this is a game breaking error
@@ -131,11 +131,11 @@ public class ScrabbleBoard : IBoard, IDisplay
             for (int i = 0; i < playerMove.Word.Length; i++)
             {
                 // check if position is already taken
-                if (!isSpecialTile(board[x_offset, playerMove.Y_coordinate]))
+                if (!IsSpecialTile(board[x_offset, playerMove.Y_coordinate]))
                 {
                     // if this position is already occupied by the same letter than I am not overwriting
                     // I'm merely using a board letter in my word
-                    if (!isSameLetter(board[x_offset, playerMove.Y_coordinate], playerMove.Word[i]))
+                    if (!IsSameLetter(board[x_offset, playerMove.Y_coordinate], playerMove.Word[i]))
                     {
                         // shouldn't reach this if I am correctly checking this in tryIsValidMove()
                         // this is a game breaking error
@@ -377,13 +377,14 @@ public class ScrabbleBoard : IBoard, IDisplay
     {
         return board[x, y];
     }
+    
     public bool IsOpenSpace(int x, int y)
     {
-        return isSpecialTile(board[x, y]);
+        return IsSpecialTile(board[x, y]);
 
     }
 
-    public bool isSpecialTile(char tile)
+    public bool IsSpecialTile(char tile)
     {
         if ((tile == ' ') || (tile == '[') || (tile == '\\') || (tile == ']') || (tile == '^'))
         {
@@ -737,16 +738,18 @@ public class ScrabbleBoard : IBoard, IDisplay
         return scrabbleBag;
     }
 
-
     public ScrabbleMetaMove GetLastMove()
     {
         return metaMoves.Last();
     }
 
-    
+    public List<ScrabbleMetaMove> GetAllMoves()
+    {
+        return metaMoves;
+    }
 
     // compare lowercase to uppercase
-    private bool isSameLetter(char boardTile, char rackTile)
+    public bool IsSameLetter(char boardTile, char rackTile)
     {
         if ((boardTile > 96) && (boardTile < 123)) // boardTile is lowercase
         {
@@ -900,11 +903,11 @@ public class ScrabbleBoard : IBoard, IDisplay
             for (int i = 0; i < move.Word.Length; i++)
             {
                 // check if position is already taken
-                if (!isSpecialTile(board[move.X_coordinate, y_offset]))
+                if (!IsSpecialTile(board[move.X_coordinate, y_offset]))
                 {
                     // if this position is already occupied by the same letter than I am not overwriting
                     // I'm merely using a board letter in my word
-                    if (!isSameLetter(board[move.X_coordinate, y_offset], move.Word[i]))
+                    if (!IsSameLetter(board[move.X_coordinate, y_offset], move.Word[i]))
                     {
                         // can't overwrite a letter
                         scrabbleMetaMove = null;
@@ -926,11 +929,11 @@ public class ScrabbleBoard : IBoard, IDisplay
             for (int i = 0; i < move.Word.Length; i++)
             {
                 // check if position is already taken
-                if (!isSpecialTile(board[x_offset, move.Y_coordinate]))
+                if (!IsSpecialTile(board[x_offset, move.Y_coordinate]))
                 {
                     // if this position is already occupied by the same letter than I am not overwriting
                     // I'm merely using a board letter in my word
-                    if (!isSameLetter(board[x_offset, move.Y_coordinate], move.Word[i]))
+                    if (!IsSameLetter(board[x_offset, move.Y_coordinate], move.Word[i]))
                     {
                         // can't overwrite a letter
                         scrabbleMetaMove = null;
@@ -1054,7 +1057,7 @@ public class ScrabbleBoard : IBoard, IDisplay
                 {
                     char thisChar = board[playerMove.X_coordinate + i, j];
 
-                    if (isSpecialTile(thisChar))
+                    if (IsSpecialTile(thisChar))
                     {
                         break;
                     }
@@ -1070,7 +1073,7 @@ public class ScrabbleBoard : IBoard, IDisplay
                 {
                     char thisChar = board[playerMove.X_coordinate + i, j];
 
-                    if (isSpecialTile(thisChar))
+                    if (IsSpecialTile(thisChar))
                     {
                         break;
                     }
@@ -1127,7 +1130,7 @@ public class ScrabbleBoard : IBoard, IDisplay
                     {
                         char currentChar = board[i, playerMove.Y_coordinate];
 
-                        if (isSpecialTile(currentChar))
+                        if (IsSpecialTile(currentChar))
                         {
                             // no more tiles on the board for potentialWord, 
                             // don't reach end of the board
@@ -1166,7 +1169,7 @@ public class ScrabbleBoard : IBoard, IDisplay
                     {
                         char currentChar = board[i, playerMove.Y_coordinate];
 
-                        if (isSpecialTile(currentChar))
+                        if (IsSpecialTile(currentChar))
                         {
                             break;
                         }
@@ -1219,7 +1222,7 @@ public class ScrabbleBoard : IBoard, IDisplay
                 {
                     char thisChar = board[j, playerMove.Y_coordinate + i];
 
-                    if (isSpecialTile(thisChar))
+                    if (IsSpecialTile(thisChar))
                     {
                         break;
                     }
@@ -1235,7 +1238,7 @@ public class ScrabbleBoard : IBoard, IDisplay
                 {
                     char thisChar = board[j, playerMove.Y_coordinate + i];
 
-                    if (isSpecialTile(thisChar))
+                    if (IsSpecialTile(thisChar))
                     {
                         break;
                     }
@@ -1288,7 +1291,7 @@ public class ScrabbleBoard : IBoard, IDisplay
                     {
                         char currentChar = board[playerMove.X_coordinate, i];
 
-                        if (isSpecialTile(currentChar))
+                        if (IsSpecialTile(currentChar))
                         {
                             // no more tiles on the board for potentialWord, 
                             // don't reach end of the board
@@ -1321,7 +1324,7 @@ public class ScrabbleBoard : IBoard, IDisplay
                     {
                         char currentChar = board[playerMove.X_coordinate, i];
 
-                        if (isSpecialTile(currentChar))
+                        if (IsSpecialTile(currentChar))
                         {
                             break;
                         }

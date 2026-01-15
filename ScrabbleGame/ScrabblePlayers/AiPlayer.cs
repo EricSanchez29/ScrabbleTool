@@ -5,7 +5,10 @@ public class ScrabbleBot : PlayerBase, IPlayer
 {
     public ScrabbleBot(ScrabbleWordGenerator wordGenerator, IBoard board) : base(board, wordGenerator)
     {
+        rootDictionary = Morphemes.GetRootWordDictionary(@"..\..\..\rootList.txt");
     }
+
+    Dictionary<string, List<string>> rootDictionary;
 
     private List<ScrabbleLane>? openLanes = null;
 
@@ -59,25 +62,274 @@ public class ScrabbleBot : PlayerBase, IPlayer
             }
         }
 
+        // check if bot could add to an already existing word
+        tryGetPrefixSuffix(potentialMoves);
+
         // sort potential moves by score
         var topScoringMoves = potentialMoves.OrderByDescending(x => x.Move.Score);
 
-        // return move
-        // why do I have to cast this?
         return topScoringMoves.ToList();
     }
 
-        /*
-            "Path finder" method
+    private void tryGetPrefixSuffix(List<ScrabblePotentialMove> potentialMoves)
+    {
+        foreach (var move in scrabbleBoard.GetAllMoves())
+        {
+            var mainMove = move.GetMainMove();
 
-            2. Look for "hooks" (tiles from previous words) that will open up lanes in quadrant
+            var boardWord = ScrabbleWordGenerator.ConvertLowerWordToUpperWord(mainMove.Word);
 
-            3. Use hook letter and player tiles (1 + 7) and find bingos (and also non bingo potential words)
+            if (rootDictionary.TryGetValue(boardWord, out List<string>? list))
+            {
+                foreach (var newWord in list)
+                {
+                    if (tryToSpellWord(ScrabbleWordGenerator.ConvertLowerWordToUpperWord(newWord), boardWord, this.GetTilesString()))
+                    {
+                        // validate whether new word is possible on board
+                        if (!tryGetNewMove(mainMove, newWord, out ScrabbleMove? newMove))
+                        {
+                            continue;
+                        }
 
-            4. Apply bonus tile scores to potential words 
+                        newMove!.Score = scrabbleBoard.GetMoveScore(newMove, newMove.Word);
 
-            5. Select best option ()
-        */
+                        var newPotentialMove = new ScrabblePotentialMove(newMove!, null);
+
+                        potentialMoves.Add(newPotentialMove);
+                    }
+                }
+            }
+
+            foreach (var addtionalWord in move.GetAdditionalMoves())
+            {
+                var boardWord1 = ScrabbleWordGenerator.ConvertLowerWordToUpperWord(addtionalWord.Word);
+
+                if (rootDictionary.TryGetValue(boardWord1, out List<string>? list1))
+                {
+                    foreach (var newWord in list1)
+                    {
+                        if (tryToSpellWord(ScrabbleWordGenerator.ConvertLowerWordToUpperWord(newWord), boardWord1, this.GetTilesString()))
+                        {
+                            // validate whether move is possible on board
+                            if (!tryGetNewMove(mainMove, newWord, out ScrabbleMove? newMove))
+                            {
+                                continue;
+                            }
+
+                            newMove!.Score = scrabbleBoard.GetMoveScore(newMove, newMove.Word);
+
+                            var newPotentialMove = new ScrabblePotentialMove(newMove, null);
+
+                            potentialMoves.Add(newPotentialMove);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private bool tryToSpellWord(string word, string boardWord, string playerTiles)
+    {
+        var wordL = word.ToList();
+
+        foreach (var letter in boardWord)
+        {
+            if (!wordL.Remove(letter))
+            {
+                // the word should be a superset of the boardWord
+                throw new Exception();
+            }
+        }
+
+        int blanks = 0;
+
+        foreach (var letter in playerTiles)
+        {
+            if (wordL.Count == 0)
+            {
+                break;
+            }
+            
+            if (letter == '*')
+            {
+                blanks++;
+            }
+
+            if (!wordL.Remove(letter))
+            {
+                return false;
+            }
+        }
+
+        if (blanks == 0)
+        {
+            return true;
+        }
+
+        while (blanks != 0)
+        {
+            wordL.RemoveAt(0);
+
+            blanks--;
+        }
+
+        // need to "use up" all the letters of word list
+        if (wordL.Count == 0)
+        {
+            return true;
+        }
+
+        // between the boardTiles and the playerTiles
+        // could not spell out the target word
+        return false;
+    }
+
+    // will this new word overwrite tiles already on board aka is there enough blank space
+    // also checks if new coordinates would be out of bounds
+    private bool tryGetNewMove(ScrabbleMove oldMove, string newWord, out ScrabbleMove? newMove)
+    {
+        newMove = null;
+
+        if (oldMove.Direction) // across
+        {
+            // find new left bound, x coordinate
+
+            int index = newWord.IndexOf(oldMove.Word);
+            // note that this only gives the first occurence of the oldWord substring, 
+            // what should I do if there are two or more instances of the substring aka I have more options to place my tiles
+
+            if (index == -1)
+            {
+                throw new Exception("Something went wrong");
+            }
+
+            /*
+                XXXROOTXXX (across)
+                
+                ROOT Coordinate = (x, y)
+
+                SUPERSTRING = (x-3, y)
+            */
+            int newX_coordinate = oldMove.X_coordinate - index;
+
+            if (!scrabbleBoard.IsValidCoordinate(newX_coordinate, oldMove.Y_coordinate))
+            {
+                return false;
+            }
+
+            if (!scrabbleBoard.IsWordInBounds(newWord.Length, true, newX_coordinate, oldMove.Y_coordinate))
+            {
+                return false;
+            }
+
+            // do I overwrite anything on board? AKA Is there space on the board
+            for (int i = 0; i < newWord.Length; i++)
+            {
+                var boardTile = scrabbleBoard.GetTileChar(newX_coordinate + i, oldMove.Y_coordinate);
+
+                if (!scrabbleBoard.IsSpecialTile(boardTile))
+                {
+                    // space is not open, is it the same as the word[i] tile
+                    if (!scrabbleBoard.IsSameLetter(boardTile, newWord[i]))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            newMove = new ScrabbleMove
+            {
+                Word = newWord,
+                Direction = true,
+                X_coordinate = newX_coordinate,
+                Y_coordinate = oldMove.Y_coordinate,
+            };
+
+            // it is very unlikely to find a superstring that contains multiple copies of the root word
+            // this likelhood increased if I consider root words of size 2 and 3
+
+            // // find new left bound, x coordinate
+            // var stringArray = newWord.Split(oldMove.Word, StringSplitOptions.RemoveEmptyEntries);
+
+            // int arraySize = stringArray.Count();
+
+            // switch (arraySize)
+            // {
+            //     case 0:
+            //         throw new Exception("Something went wrong, should only ever reach this code if " + newMove + " is a superstring of " + oldMove.Word);
+            //     case 1:
+
+            //         break;
+            //     case 2:
+            //         break;
+            //     default:
+            //         break;
+            // }
+        }
+        else // down
+        {
+            // find new upper bound, y coordinate
+
+            int index = newWord.IndexOf(oldMove.Word);
+            // note that this only gives the first occurence of the oldWord substring, 
+            // what should I do if there are two or more instances of the substring aka I have more options to place my tiles
+
+            if (index == -1)
+            {
+                throw new Exception("Something went wrong");
+            }
+
+            int newY_coordinate = oldMove.X_coordinate - index;
+
+            if (!scrabbleBoard.IsValidCoordinate(oldMove.X_coordinate, newY_coordinate))
+            {
+                return false;
+            }
+
+            if (!scrabbleBoard.IsWordInBounds(newWord.Length, true, oldMove.X_coordinate, newY_coordinate))
+            {
+                return false;
+            }
+
+            // do I overwrite anything on board? AKA Is there space on the board
+            for (int i = 0; i < newWord.Length; i++)
+            {
+                var boardTile = scrabbleBoard.GetTileChar(oldMove.X_coordinate, newY_coordinate + i);
+
+                if (!scrabbleBoard.IsSpecialTile(boardTile))
+                {
+                    // space is not open, is it the same as the word[i] tile?
+                    if (!scrabbleBoard.IsSameLetter(boardTile, newWord[i]))
+                    {
+                        // if board space is already occupied by a different letter, reject possible word
+                        return false;
+                    }
+                }
+            }
+
+            newMove = new ScrabbleMove
+            {
+                Word = newWord,
+                Direction = false,
+                X_coordinate = oldMove.X_coordinate,
+                Y_coordinate = newY_coordinate,
+            };
+        }
+
+        return true;
+    }
+
+    /*
+        "Path finder" method
+
+        2. Look for "hooks" (tiles from previous words) that will open up lanes in quadrant
+
+        3. Use hook letter and player tiles (1 + 7) and find bingos (and also non bingo potential words)
+
+        4. Apply bonus tile scores to potential words 
+
+        5. Select best option ()
+    */
 
 
     // spaces for words, includes letter of a word already on the board
@@ -937,7 +1189,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
         {
             foreach (var potentialMove in potentialMoves)
             {
-                tilesToRemove = scrabbleBoard.AddWord(potentialMove.Move, moveContext, GetRemainingTiles(), out metaMove);
+                tilesToRemove = scrabbleBoard.AddWord(potentialMove.Move, moveContext, GetTilesString(), out metaMove);
 
                 if (moveContext.GetRetryMove())
                 {
@@ -947,7 +1199,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
                 // No retry means the move is valid so finish making the move
 
                 // remove lane from list
-                openLanes?.Remove(potentialMove.Lane);
+                openLanes?.Remove(potentialMove.Lane); //will fail silently if move is a superstring of a word already on board
 
                 updateOpenLanes(potentialMove.Move);
 

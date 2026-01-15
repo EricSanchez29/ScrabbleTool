@@ -82,7 +82,10 @@ public class PlayerBase
         return false;
     }
 
-    public string GetRemainingTiles()
+
+    // should I change this to
+    // return new String(tileRack.ToArray())
+    public string GetTilesString()
     {
         StringBuilder sb = new StringBuilder();
 
