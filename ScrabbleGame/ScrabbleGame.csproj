@@ -16,5 +16,12 @@
     <CopyToOutputDirectory>Always</CopyToOutputDirectory>
   </Content>
   </ItemGroup>
+  
+  <ItemGroup>
+  <Content Include="data\rootList.txt">
+    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <Link>%(FileName)%(Extension)</Link>
+  </Content>
+  </ItemGroup>
 
 </Project>

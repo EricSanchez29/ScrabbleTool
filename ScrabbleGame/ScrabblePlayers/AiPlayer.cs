@@ -5,7 +5,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
 {
     public ScrabbleBot(ScrabbleWordGenerator wordGenerator, IBoard board) : base(board, wordGenerator)
     {
-        rootDictionary = Morphemes.GetRootWordDictionary(@"..\..\..\rootList.txt");
+        rootDictionary = Morphemes.GetRootWordDictionary("rootList.txt");
     }
 
     Dictionary<string, List<string>> rootDictionary;
