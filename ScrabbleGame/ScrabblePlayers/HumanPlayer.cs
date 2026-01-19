@@ -1,3 +1,5 @@
+using ScrabbleCommon;
+
 public class HumanPlayer : PlayerBase, IPlayer
 {
     public HumanPlayer(ScrabbleWordGenerator gen, IBoard board) : base(board, gen)
@@ -94,7 +96,7 @@ public class HumanPlayer : PlayerBase, IPlayer
 
             // validate string
             // only alphabet chars
-            if(!isValidWordString(word))
+            if (!isValidWordString(word))
             {
                 Console.WriteLine("Word is not in valid format. Must not contain spaces, numbers or any other characters besides A-Z and a-z");
                 Console.WriteLine("Retry:");
@@ -235,7 +237,7 @@ public class HumanPlayer : PlayerBase, IPlayer
                 return false;
             }
         }
-        
+
         return true;
     }
 }

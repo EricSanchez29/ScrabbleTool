@@ -1,6 +1,6 @@
 using System.Text;
 using System.Xml.Schema;
-
+using ScrabbleCommon;
 public class ScrabbleBoard : IBoard, IDisplay
 {
     public ScrabbleBoard(ScrabbleWordGenerator gen)
@@ -73,7 +73,7 @@ public class ScrabbleBoard : IBoard, IDisplay
         moveContext.SetRetryMove(false);
 
         // calculate main move score
-        playerMove.Score = GetMoveScore(playerMove, playerMove.Word);
+        playerMove.Score = GetMoveScore(metaMove ?? new ScrabbleMetaMove(playerMove), playerMove.Word);
         totalScore += playerMove.Score;
 
         Console.WriteLine();
@@ -154,12 +154,6 @@ public class ScrabbleBoard : IBoard, IDisplay
                 x_offset++;
             }
 
-        }
-
-        // check for bingo (+50 points)
-        if (tilesToRemove.Length == 7)
-        {
-            totalScore += 50;
         }
 
         // only do this when no adjacent words were found
@@ -436,121 +430,30 @@ public class ScrabbleBoard : IBoard, IDisplay
         return new(x_coordinate, y_coordinate);
     }
 
-    public int GetPotentialMoveScore(in ScrabbleBase moveBase, string word)
+    private bool tryGetAdditionalMoveScore(ScrabbleMove adjMove, out int score)
     {
-        int score = 0;
-
-        // DoubleWord or TripleWord, need to consider theses values after everything else 
-
+        score = 0;
         int doubleWord = 0;
         int tripleWord = 0;
 
-        // should I have less duplicate code, 
-        // does it really matter once its converted into CLI?
-        if (moveBase.Direction)
+        // how should I validate this move?
+        // if (!tryIsValidMove(scrabbleMove, playerTiles, out ScrabbleMetaMove? metaMove))
+        // {
+        //     return false;
+        // }
+
+        if (adjMove.Direction)
         {
             // direction ==  true: across
-            for (int i = 0; i < word.Length; i++)
+            for (int i = 0; i < adjMove.Word.Length; i++)
             {
-                // DL('[') , DW('\'), TL(']'), TW('^')
-
-                char character = GetTileChar(moveBase.X_coordinate + i, moveBase.Y_coordinate);
-                // could probably put this switch in a function
-                // if I want to cut down on file size
-                switch (character)
+                if (!tryGetMoveScoreHelper(GetTileChar(adjMove.X_coordinate + i, adjMove.Y_coordinate), adjMove.Word[i], out int dub, out int tri, out bool isLetterTile, out int subScore))
                 {
-                    case '[':
-                        int newCharVal = ScrabbleWordGenerator.GetTilePointValue(word[i]);
-                        newCharVal = newCharVal * 2;
-                        score = score + newCharVal;
-                        break;
-                    case '\\':
-                        doubleWord++;
-                        score = score + ScrabbleWordGenerator.GetTilePointValue(word[i]);
-                        break;
-                    case ']':
-                        int newCharVal3 = ScrabbleWordGenerator.GetTilePointValue(word[i]);
-                        newCharVal3 = newCharVal3 * 3;
-                        score = score + newCharVal3;
-                        break;
-                    case '^':
-                        tripleWord++;
-                        score = score + ScrabbleWordGenerator.GetTilePointValue(word[i]);
-                        break;
-                    default:
-                        score = score + ScrabbleWordGenerator.GetTilePointValue(word[i]);
-                        break;
+                    score = 0;
+                    return false;
                 }
-            }
-        }
-        else
-        {
-            // 
-            // direction ==  false: down
-            for (int i = 0; i < word.Length; i++)
-            {
-                // DL('[') , DW('\'), TL(']'), TW('^')
 
-                char character = GetTileChar(moveBase.X_coordinate, moveBase.Y_coordinate + i);
-
-                switch (character)
-                {
-                    case '[':
-                        int newCharVal = ScrabbleWordGenerator.GetTilePointValue(word[i]);
-                        newCharVal = newCharVal * 2;
-                        score = score + newCharVal;
-                        break;
-                    case '\\':
-                        doubleWord++;
-                        score = score + ScrabbleWordGenerator.GetTilePointValue(word[i]);
-                        break;
-                    case ']':
-                        int newCharVal3 = ScrabbleWordGenerator.GetTilePointValue(word[i]);
-                        newCharVal3 = newCharVal3 * 3;
-                        score = score + newCharVal3;
-                        break;
-                    case '^':
-                        tripleWord++;
-                        score = score + ScrabbleWordGenerator.GetTilePointValue(word[i]);
-                        break;
-                    default:
-                        score = score + ScrabbleWordGenerator.GetTilePointValue(word[i]);
-                        break;
-                }
-            }
-        }
-
-        // multiply (double/triple)
-        for (int i = doubleWord; i > 0; i--)
-        {
-            score = score * 2;
-        }
-
-        for (int i = tripleWord; i > 0; i--)
-        {
-            score = score * 3;
-        }
-
-        return score;
-
-
-    }
-
-    public int GetMoveScore(in ScrabbleBase moveBase, string word)
-    {
-        int score = 0;
-        int doubleWord = 0;
-        int tripleWord = 0;
-
-        if (moveBase.Direction)
-        {
-            // direction ==  true: across
-            for (int i = 0; i < word.Length; i++)
-            {
-                char character = GetTileChar(moveBase.X_coordinate + i, moveBase.Y_coordinate);
-
-                score += getMoveScoreHelper(character, word[i], out int dub, out int tri);
-
+                score += subScore;
                 doubleWord += dub;
                 tripleWord += tri;
             }
@@ -558,14 +461,17 @@ public class ScrabbleBoard : IBoard, IDisplay
         else
         {
             // direction ==  false: down
-            for (int i = 0; i < word.Length; i++)
+            for (int i = 0; i < adjMove.Word.Length; i++)
             {
-                char character = GetTileChar(moveBase.X_coordinate, moveBase.Y_coordinate + i);
+                if(!tryGetMoveScoreHelper(GetTileChar(adjMove.X_coordinate, adjMove.Y_coordinate + i), adjMove.Word[i], out int dub, out int tri, out bool isLetterTile, out int subScore))
+                {
+                    score = 0;
+                    return false;
+                }
 
-                score += getMoveScoreHelper(character, word[i], out int dub, out int tri);
-
+                score += subScore;
                 doubleWord += dub;
-                tripleWord += tri;                
+                tripleWord += tri;
             }
         }
 
@@ -580,14 +486,17 @@ public class ScrabbleBoard : IBoard, IDisplay
             score = score * 3;
         }
 
-        return score;
+        return true;
     }
 
-    private int getMoveScoreHelper(char tileOnBoard, char wordCharacter, out int doubleWord, out int tripleWord)
+    // will do some limited validation of move here
+    // return false if move is invalid
+    private bool tryGetMoveScoreHelper(char tileOnBoard, char wordCharacter, out int doubleWord, out int tripleWord, out bool boardSpaceOccupied, out int score)
     {
-        int score = 0;
+        score = 0;
         doubleWord = 0;
         tripleWord = 0;
+        boardSpaceOccupied = false;
 
         // DL('[') , DW('\'), TL(']'), TW('^')
         switch (tileOnBoard)
@@ -610,12 +519,288 @@ public class ScrabbleBoard : IBoard, IDisplay
                 tripleWord++;
                 score += getTilePointValue(wordCharacter);
                 break;
-            default: // tile on board is blank or occupied by the same tile as character
+            case ' ': // tile on board is blank
                 score += getTilePointValue(wordCharacter);
+                break;
+            default: // if valid move, should be occupied by the same tile as word character
+                if (!IsSameLetter(tileOnBoard, wordCharacter)) { return false; }
+
+                score += getTilePointValue(wordCharacter);
+                boardSpaceOccupied = true;
+                break;
+        }
+
+        return true;
+    }
+
+    public bool TryGetMoveScore(ScrabbleBase mainMove, string word, string playerTiles, out int score)
+    {
+        score = 0;
+        int doubleWord = 0;
+        int tripleWord = 0;
+        var sb = new StringBuilder(7);
+
+        if (!tryIsValidMove(new ScrabbleMove(mainMove) { Word = word }, playerTiles, out ScrabbleMetaMove? metaMove))
+        {
+            return false;
+        }
+
+        if (mainMove.Direction)
+        {
+            // direction ==  true: across
+            for (int i = 0; i < word.Length; i++)
+            {
+                var boardChar = GetTileChar(mainMove.X_coordinate + i, mainMove.Y_coordinate);
+
+                if (!tryGetMoveScoreHelper(boardChar, word[i], out int dub, out int tri, out bool occupied, out int subScore))
+                {
+                    score = 0;
+                    return false;
+                }
+
+                score += subScore;
+                doubleWord += dub;
+                tripleWord += tri;
+
+                // the boardChar is a special or blank open position, so using tile from player rack
+                if (!occupied)
+                {
+                    sb.Append(word[i]);
+                }
+            }
+        }
+        else
+        {
+            // direction ==  false: down
+            for (int i = 0; i < word.Length; i++)
+            {
+                char boardChar = GetTileChar(mainMove.X_coordinate, mainMove.Y_coordinate + i);
+
+                if (!tryGetMoveScoreHelper(boardChar, word[i], out int dub, out int tri, out bool occupied, out int subScore))
+                {
+                    score = 0;
+                    return false;
+                }
+
+                score += subScore;
+                doubleWord += dub;
+                tripleWord += tri;
+
+                // the boardChar is a special or blank open position, so using tile from player rack
+                if (!occupied)
+                {
+                    sb.Append(word[i]);
+                }
+            }
+        }
+
+        // multiply (double/triple)
+        for (int i = doubleWord; i > 0; i--)
+        {
+            score = score * 2;
+        }
+
+        for (int i = tripleWord; i > 0; i--)
+        {
+            score = score * 3;
+        }
+
+        // does this main move have additional moves?
+        if (metaMove is not null)
+        {
+            foreach (var addMove in metaMove.GetAdditionalMoves())
+            {
+                if (!tryGetAdditionalMoveScore(addMove, out int subScore)) { return false; }
+
+                score += subScore;
+            }
+        }
+
+        // check for 50 point at the very end
+        if (sb.Length == 7)
+        {
+            score += 50;
+        }
+
+        return true;
+    }
+
+    // assume that this meta move is already valid
+    // already has possible additional moves as part of metaMove
+    public int GetMoveScore(ScrabbleMetaMove metaMove, string playerTiles)
+    {
+        int score = 0;
+        int doubleWord = 0;
+        int tripleWord = 0;
+        var playerTilesUsed = new StringBuilder(7);
+
+        var mainMove = metaMove.GetMainMove();
+
+        if (mainMove.Direction)
+        {
+            // direction ==  true: across
+            for (int i = 0; i < mainMove.Word.Length; i++)
+            {
+                var boardChar = GetTileChar(mainMove.X_coordinate + i, mainMove.Y_coordinate);
+
+                score += getMoveScoreHelper(boardChar, mainMove.Word[i], out int dub, out int tri, out bool occupied);
+
+                doubleWord += dub;
+                tripleWord += tri;
+
+                // the boardChar is a special or blank open position, so using tile from player rack
+                if (!occupied)
+                {
+                    playerTilesUsed.Append(boardChar);
+                }
+            }
+        }
+        else
+        {
+            // direction ==  false: down
+            for (int i = 0; i < mainMove.Word.Length; i++)
+            {
+                char boardTile = GetTileChar(mainMove.X_coordinate, mainMove.Y_coordinate + i);
+
+                score += getMoveScoreHelper(boardTile, mainMove.Word[i], out int dub, out int tri, out bool occupied);
+
+                doubleWord += dub;
+                tripleWord += tri;
+
+                // the boardChar is a special or blank open position, so using tile from player rack
+                if (!occupied)
+                {
+                    playerTilesUsed.Append(mainMove.Word[i]);
+                }
+            }
+        }
+
+        // multiply (double/triple)
+        for (int i = doubleWord; i > 0; i--)
+        {
+            score = score * 2;
+        }
+
+        for (int i = tripleWord; i > 0; i--)
+        {
+            score = score * 3;
+        }
+
+        // does this move have additional moves?
+        var additionalMove = metaMove.GetAdditionalMoves();
+
+        foreach (var move in additionalMove)
+        {
+            score += getAdditionalMoveScore(move);
+        }
+
+        // check for 50 point at the very end
+        if (playerTilesUsed.Length == 7)
+        {
+            score += 50;
+        }
+
+        return score;
+    }
+
+    private int getMoveScoreHelper(char tileOnBoard, char wordCharacter, out int doubleWord, out int tripleWord, out bool isBoardSpaceOccupied)
+    {
+        int score = 0;
+        doubleWord = 0;
+        tripleWord = 0;
+        isBoardSpaceOccupied = false;
+
+        // DL('[') , DW('\'), TL(']'), TW('^')
+        switch (tileOnBoard)
+        {
+            case '[':
+                int newCharVal = getTilePointValue(wordCharacter);
+                newCharVal *= 2;
+                score += newCharVal;
+                break;
+            case '\\':
+                doubleWord++;
+                score += getTilePointValue(wordCharacter);
+                break;
+            case ']':
+                int newCharVal3 = getTilePointValue(wordCharacter);
+                newCharVal3 *= 3;
+                score += newCharVal3;
+                break;
+            case '^':
+                tripleWord++;
+                score += getTilePointValue(wordCharacter);
+                break;
+            case ' ': // tile on board is blank
+                score += getTilePointValue(wordCharacter);
+                break;
+            default: // occupied by the same tile as word character
+                score += getTilePointValue(wordCharacter);
+                isBoardSpaceOccupied = true;
                 break;
         }
 
         return score;
+    }
+
+    private int getAdditionalMoveScore(ScrabbleMove adjMove)
+    {
+        int score = 0;
+        int doubleWord = 0;
+        int tripleWord = 0;
+        var playerTilesUsed = new StringBuilder(7);
+
+        if (adjMove.Direction)
+        {
+            // direction ==  true: across
+            for (int i = 0; i < adjMove.Word.Length; i++)
+            {
+                var boardChar = GetTileChar(adjMove.X_coordinate + i, adjMove.Y_coordinate);
+
+                score += getMoveScoreHelper(boardChar, adjMove.Word[i], out int dub, out int tri, out bool occupied);
+
+                doubleWord += dub;
+                tripleWord += tri;
+
+                // the boardChar is a special or blank open position, so using tile from player rack
+                if (!occupied)
+                {
+                    playerTilesUsed.Append(boardChar);
+                }
+            }
+        }
+        else
+        {
+            // direction ==  false: down
+            for (int i = 0; i < adjMove.Word.Length; i++)
+            {
+                char boardTile = GetTileChar(adjMove.X_coordinate, adjMove.Y_coordinate + i);
+
+                score += getMoveScoreHelper(boardTile, adjMove.Word[i], out int dub, out int tri, out bool occupied);
+
+                doubleWord += dub;
+                tripleWord += tri;
+
+                // the boardChar is a special or blank open position, so using tile from player rack
+                if (!occupied)
+                {
+                    playerTilesUsed.Append(adjMove.Word[i]);
+                }
+            }
+        }
+
+        // multiply (double/triple)
+        for (int i = doubleWord; i > 0; i--)
+        {
+            score = score * 2;
+        }
+
+        for (int i = tripleWord; i > 0; i--)
+        {
+            score = score * 3;
+        }
+
+        return 0;
     }
 
     private int getTilePointValue(char tile)
@@ -626,7 +811,7 @@ public class ScrabbleBoard : IBoard, IDisplay
         }
         else // should I check that it is indeed a lower case char?
         {
-            return 0;   
+            return 0;
         }
     }
 
@@ -1010,15 +1195,15 @@ public class ScrabbleBoard : IBoard, IDisplay
         // Check adjacent tiles for additional words (are they valid?)
         if (tryGetNewAdjacentWords(move, out ScrabbleMetaMove metaMove))
         {
-            // all additionalMove words should already be validated
-            // if no addtionalMoves found exits normally with true
-            foreach (ScrabbleMove adjMove in metaMove.GetAdditionalMoves())
-            {
-                // calculate adjacent moves scores, add to metaMove
-                adjMove.Score = GetMoveScore(adjMove, adjMove.Word);
+            // // all additionalMove words should already be validated
+            // // if no addtionalMoves found exits normally with true
+            // foreach (ScrabbleMove adjMove in metaMove.GetAdditionalMoves())
+            // {
+            //     // calculate adjacent moves scores, add to metaMove
+            //     adjMove.Score = GetMoveScore(adjMove, adjMove.Word, playerTiles);
 
-                // will calculate the total score outside of this function, probably in AddWord()
-            }
+            //     // will calculate the total score outside of this function, probably in AddWord()
+            // }
 
             scrabbleMetaMove = metaMove;
         }

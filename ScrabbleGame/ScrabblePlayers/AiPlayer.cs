@@ -1,5 +1,6 @@
 using System.Data;
 using System.Text;
+using ScrabbleCommon;
 
 public class ScrabbleBot : PlayerBase, IPlayer
 {
@@ -71,6 +72,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
         return topScoringMoves.ToList();
     }
 
+    // should i rename this function?
     private void tryGetPrefixSuffix(List<ScrabblePotentialMove> potentialMoves)
     {
         foreach (var move in scrabbleBoard.GetAllMoves())
@@ -86,12 +88,12 @@ public class ScrabbleBot : PlayerBase, IPlayer
                     if (tryToSpellWord(ScrabbleWordGenerator.ConvertLowerWordToUpperWord(newWord), boardWord, this.GetTilesString()))
                     {
                         // validate whether new word is possible on board
-                        if (!tryGetNewMove(mainMove, newWord, out ScrabbleMove? newMove))
-                        {
-                            continue;
-                        }
 
-                        newMove!.Score = scrabbleBoard.GetMoveScore(newMove, newMove.Word);
+                        if (!tryGetNewMove(mainMove, newWord, out ScrabbleMove? newMove)) { continue; }
+
+                        if (!scrabbleBoard.TryGetMoveScore(newMove!, newWord, this.GetTilesString(), out int subscore)) { continue; }
+
+                        newMove!.Score = subscore;
 
                         var newPotentialMove = new ScrabblePotentialMove(newMove!, null);
 
@@ -116,7 +118,9 @@ public class ScrabbleBot : PlayerBase, IPlayer
                                 continue;
                             }
 
-                            newMove!.Score = scrabbleBoard.GetMoveScore(newMove, newMove.Word);
+                            if (!scrabbleBoard.TryGetMoveScore(newMove!, newWord, this.GetTilesString(), out int subscore)) { continue; }
+
+                            newMove!.Score += subscore;
 
                             var newPotentialMove = new ScrabblePotentialMove(newMove, null);
 
@@ -958,7 +962,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
 
             if (!scrabbleBoard.IsWordInBounds(word.Length, coordinate.Direction, coordinate.X_coordinate, coordinate.Y_coordinate)) { continue; }
 
-            int wordScore = scrabbleBoard.GetPotentialMoveScore(coordinate, word);
+            if (!scrabbleBoard.TryGetMoveScore(coordinate, word, this.GetTilesString(), out int wordScore)) { continue; }
 
             if (wordScore > topScore)
             {
@@ -1034,7 +1038,10 @@ public class ScrabbleBot : PlayerBase, IPlayer
                     Y_coordinate = postition.y,
                 };
 
-                move.Score = scrabbleBoard.GetPotentialMoveScore(move, word.Word);
+                if (!scrabbleBoard.TryGetMoveScore(move, word.Word, this.GetTilesString(), out int score)) { continue; }
+
+                move.Score = score;
+
                 potentialMoves.Add(new ScrabblePotentialMove(move, new ScrabbleLane()));
             }
             // for shorter words, (n <= 4) default to center square
@@ -1048,7 +1055,10 @@ public class ScrabbleBot : PlayerBase, IPlayer
                     Y_coordinate = centerCoordinate.Y,
                 };
 
-                move.Score = scrabbleBoard.GetPotentialMoveScore(move, word.Word);
+                if (!scrabbleBoard.TryGetMoveScore(move, word.Word, this.GetTilesString(), out int score)) { continue; }
+
+                move.Score = score;
+
                 // don't really need a scrabble lane for the first move
                 potentialMoves.Add(new ScrabblePotentialMove(move, new ScrabbleLane()));
             }
@@ -1199,7 +1209,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
                 // No retry means the move is valid so finish making the move
 
                 // remove lane from list
-                openLanes?.Remove(potentialMove.Lane); //will fail silently if move is a superstring of a word already on board
+                openLanes?.Remove(potentialMove.Lane ?? new ScrabbleLane()); // will fail silently if move is a superstring of a word already on board
 
                 updateOpenLanes(potentialMove.Move);
 

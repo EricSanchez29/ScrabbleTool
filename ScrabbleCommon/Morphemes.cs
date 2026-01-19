@@ -1,5 +1,5 @@
 
-//namespace ScrabbleCommon;
+namespace ScrabbleCommon;
 
 public static class Morphemes // definition: any of the smallest meaningful constituents within (a linguistic expression and particularly within) a word
 {
@@ -29,6 +29,14 @@ public static class Morphemes // definition: any of the smallest meaningful cons
 
             switch (entry[0].Length)
             {
+                case 2:
+                    _5letterWords.Add(entry[0]);
+                    officialScrabbleDictionary.Add(entry[0]);
+                    break;
+                case 3:
+                    _5letterWords.Add(entry[0]);
+                    officialScrabbleDictionary.Add(entry[0]);
+                    break;
                 case 4:
                     _4letterWords.Add(entry[0]);
                     break;
@@ -53,7 +61,7 @@ public static class Morphemes // definition: any of the smallest meaningful cons
         checkForRootWords(_5letterWords);
         checkForRootWords(_6letterWords);
 
-        StreamWriter sw = new StreamWriter(@"..\..\..\rootList.txt");
+        StreamWriter sw = new StreamWriter(GlobalVariables.RootDictionaryFileName);
 
         foreach (var dictionaryItem in root_prefixRootSuffix)
         {

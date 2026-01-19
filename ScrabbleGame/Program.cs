@@ -1,6 +1,13 @@
 ﻿
-
 using ScrabbleCommon;
+
+
+// ScrabbleWordGenerator wordGenerator = new ScrabbleWordGenerator(GlobalVariables.DictionaryRelativePath);
+
+// Morphemes.GenerateMorphemeFile(GlobalVariables.RootDictionaryFileName);
+
+// var test = Morphemes.GetRootWordDictionary(GlobalVariables.RootDictionaryFileName);
+
 
 bool restart = true;
 

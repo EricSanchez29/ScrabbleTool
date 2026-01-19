@@ -1,3 +1,5 @@
+using ScrabbleCommon;
+
 public static class Game
 {
     // should this be static?

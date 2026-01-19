@@ -1,5 +1,7 @@
 using System.Text;
 
+namespace ScrabbleCommon;
+
 public class ScrabbleWordGenerator
 {
     // expect full filePath
@@ -534,7 +536,7 @@ public class ScrabbleWordGenerator
 
         return true;
     }
-    
+
     private bool tryContainsBlankTiles(char[] totalTiles, out int[] indexes)
     {
         indexes = new int[2];
@@ -555,7 +557,7 @@ public class ScrabbleWordGenerator
                 }
             }
         }
-        
+
         if (indexindex >= 3)
         {
             throw new Exception("unexpected number of blank tiles");
