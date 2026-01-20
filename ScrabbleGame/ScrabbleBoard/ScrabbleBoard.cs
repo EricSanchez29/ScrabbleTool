@@ -1276,8 +1276,6 @@ public class ScrabbleBoard : IBoard, IDisplay
 
                 if (!generator.CheckDictionary(potentialWordLoopString))
                 {
-                    Console.WriteLine();
-                    Console.WriteLine("The adjacent word: " + potentialWordLoopString + " is not a valid word");
                     return false;
                 }
 
@@ -1368,8 +1366,6 @@ public class ScrabbleBoard : IBoard, IDisplay
 
             if (!generator.CheckDictionary(potentialWordString))
             {
-                Console.WriteLine();
-                Console.WriteLine("The adjacent word: " + potentialWordString + " is not a valid word");
                 return false;
             }
 
@@ -1441,8 +1437,6 @@ public class ScrabbleBoard : IBoard, IDisplay
 
                 if (!generator.CheckDictionary(potentialWordLoopString))
                 {
-                    Console.WriteLine();
-                    Console.WriteLine("The adjacent word: " + potentialWordLoopString + " is not a valid word");
                     return false;
                 }
 
@@ -1523,8 +1517,6 @@ public class ScrabbleBoard : IBoard, IDisplay
 
             if (!generator.CheckDictionary(potentialWordString))
             {
-                Console.WriteLine();
-                Console.WriteLine("The adjacent word: " + potentialWordString + " is not a valid word");
                 return false;
             }
 

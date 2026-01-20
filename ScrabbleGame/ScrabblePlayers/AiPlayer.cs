@@ -102,9 +102,9 @@ public class ScrabbleBot : PlayerBase, IPlayer
                 }
             }
 
-            foreach (var addtionalWord in move.GetAdditionalMoves())
+            foreach (var addtionalMove in move.GetAdditionalMoves())
             {
-                var boardWord1 = ScrabbleWordGenerator.ConvertLowerWordToUpperWord(addtionalWord.Word);
+                var boardWord1 = ScrabbleWordGenerator.ConvertLowerWordToUpperWord(addtionalMove.Word);
 
                 if (rootDictionary.TryGetValue(boardWord1, out List<string>? list1))
                 {
@@ -113,7 +113,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
                         if (tryToSpellWord(ScrabbleWordGenerator.ConvertLowerWordToUpperWord(newWord), boardWord1, this.GetTilesString()))
                         {
                             // validate whether move is possible on board
-                            if (!tryGetNewMove(mainMove, newWord, out ScrabbleMove? newMove))
+                            if (!tryGetNewMove(addtionalMove, newWord, out ScrabbleMove? newMove))
                             {
                                 continue;
                             }
