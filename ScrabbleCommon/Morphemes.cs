@@ -4,18 +4,14 @@ namespace ScrabbleCommon;
 public static class Morphemes // definition: any of the smallest meaningful constituents within (a linguistic expression and particularly within) a word
 {
     static HashSet<string>? officialScrabbleDictionary;
-    static HashSet<string>? _4letterWords; // not every word here is a root word for other scrabble words
-    static HashSet<string>? _5letterWords;
-    static HashSet<string>? _6letterWords;
+    static HashSet<string>? possibleRootWords;
 
     static Dictionary<string, List<string>> root_prefixRootSuffix = new Dictionary<string, List<string>>();
 
     public static void GenerateMorphemeFile(string filePath)
     {
         officialScrabbleDictionary = new HashSet<string>();
-        _4letterWords = new HashSet<string>();
-        _5letterWords = new HashSet<string>();
-        _6letterWords = new HashSet<string>();
+        possibleRootWords = new HashSet<string>();
 
         // open file
         StreamReader stream = new StreamReader(filePath);
@@ -27,39 +23,18 @@ public static class Morphemes // definition: any of the smallest meaningful cons
             // example line : "WHATCHAMACALLIT a {thingy=n} [n]"
             string[] entry = line.Split(' ');
 
-            switch (entry[0].Length)
+            if (entry[0].Length < 15)
             {
-                case 2:
-                    _5letterWords.Add(entry[0]);
-                    officialScrabbleDictionary.Add(entry[0]);
-                    break;
-                case 3:
-                    _5letterWords.Add(entry[0]);
-                    officialScrabbleDictionary.Add(entry[0]);
-                    break;
-                case 4:
-                    _4letterWords.Add(entry[0]);
-                    break;
-                case 5:
-                    _5letterWords.Add(entry[0]);
-                    officialScrabbleDictionary.Add(entry[0]);
-                    break;
-                case 6:
-                    _6letterWords.Add(entry[0]);
-                    officialScrabbleDictionary.Add(entry[0]);
-                    break;
-                default:
-                    officialScrabbleDictionary.Add(entry[0]);
-                    break;
+                possibleRootWords.Add(entry[0]);
             }
+
+            officialScrabbleDictionary.Add(entry[0]);
         }
 
         // close file
         stream.Close();
 
-        checkForRootWords(_4letterWords);
-        checkForRootWords(_5letterWords);
-        checkForRootWords(_6letterWords);
+        checkForRootWords(possibleRootWords);
 
         StreamWriter sw = new StreamWriter(GlobalVariables.RootDictionaryFileName);
 
@@ -92,8 +67,6 @@ public static class Morphemes // definition: any of the smallest meaningful cons
 
                 if (officialWord.Contains(word))
                 {
-
-
                     list.Add(officialWord);
                 }
             }

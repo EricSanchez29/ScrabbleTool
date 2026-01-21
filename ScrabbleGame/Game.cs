@@ -43,7 +43,7 @@ public static class Game
         {
             // 1st player makes choice
             player1.MakeMove(context);
-            scrabbleBoard.DisplayBoard();
+            // will call scrabbleBoard.DisplayBoard() within MakeMove in case of retry
             scrabbleBoard.DisplayScoreBoard(player1.GetPlayerScore(), player2.GetPlayerScore());
             Console.WriteLine();
 

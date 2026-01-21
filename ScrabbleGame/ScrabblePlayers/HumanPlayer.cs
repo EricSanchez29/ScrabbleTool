@@ -56,6 +56,8 @@ public class HumanPlayer : PlayerBase, IPlayer
 
         while (moveContext.GetRetryMove())
         {
+            scrabbleBoard.DisplayBoard();
+
             moveContext.SetRetryMove(false);
 
             Console.WriteLine();
