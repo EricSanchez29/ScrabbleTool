@@ -2,11 +2,12 @@ using ScrabbleCommon;
 
 public class HumanPlayer : PlayerBase, IPlayer
 {
-    public HumanPlayer(ScrabbleWordGenerator gen, IBoard board) : base(board, gen)
+    public HumanPlayer(ScrabbleWordGenerator gen, IBoard board, IDisplay display) : base(board, gen)
     {
-
+        _display = display;
     }
 
+    IDisplay _display;
 
     // need to handle empty bag as an indicator of end of game
     private void drawTiles()
@@ -54,9 +55,16 @@ public class HumanPlayer : PlayerBase, IPlayer
 
         ScrabbleMetaMove metaMove = new ScrabbleMetaMove(playerMove);
 
+        bool isFirstTry = true;
+
         while (moveContext.GetRetryMove())
         {
-            scrabbleBoard.DisplayBoard();
+            if (!isFirstTry)
+            {
+                _display.DisplayBoard();
+            }
+
+            isFirstTry = false;
 
             moveContext.SetRetryMove(false);
 
@@ -66,7 +74,9 @@ public class HumanPlayer : PlayerBase, IPlayer
 
             Console.WriteLine();
             Console.WriteLine("Enter your next word: ");
-
+            Console.WriteLine(@"or enter '(swap)' to exchange any of your tiles tiles:");
+            Console.WriteLine(@"or enter '(pass)' to give up your turn:");
+            Console.WriteLine();
             word = Console.ReadLine();
 
             if ((word is null) || (word is default(string)))
@@ -115,7 +125,7 @@ public class HumanPlayer : PlayerBase, IPlayer
             }
 
             Console.WriteLine("");
-            Console.WriteLine("Enter coordinate ('A1' - 'O15')");
+            Console.WriteLine("Enter coordinate ('A1' - 'O15'):");
             Console.WriteLine("");
 
 
@@ -138,7 +148,7 @@ public class HumanPlayer : PlayerBase, IPlayer
             }
 
             Console.WriteLine("");
-            Console.WriteLine("Enter direction ('down' or 'across')");
+            Console.WriteLine("Enter direction ('down' or 'across'):");
             Console.WriteLine("");
 
             // read key
@@ -211,7 +221,7 @@ public class HumanPlayer : PlayerBase, IPlayer
 
             displayPlayerTiles();
 
-            score += metaMove.GetTotalScore(); // total score not set
+            score += metaMove.GetTotalScore();
         }
 
         if (base.isFinalMove())

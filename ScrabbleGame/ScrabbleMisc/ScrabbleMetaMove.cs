@@ -11,6 +11,11 @@ public class ScrabbleMetaMove
         _mainMove = mainMove;
     }
 
+    public void SetMainMoveScore(int subScore)
+    {
+        _mainMove.Score = subScore;
+    }
+
     public void AddAddtionalMove(ScrabbleMove move)
     {
         additionalMoves.Add(move);

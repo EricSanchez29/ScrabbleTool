@@ -24,13 +24,13 @@ public static class Game
 
         if ((readkey == "Y") || (readkey == "y"))
         {
-            player1 = new HumanPlayer(wordGenerator, scrabbleBoard);
+            player1 = new HumanPlayer(wordGenerator, scrabbleBoard, scrabbleBoard);
             player2 = new ScrabbleBot(wordGenerator, scrabbleBoard);
         }
         else
         {
             player1 = new ScrabbleBot(wordGenerator, scrabbleBoard);
-            player2 = new HumanPlayer(wordGenerator, scrabbleBoard);
+            player2 = new HumanPlayer(wordGenerator, scrabbleBoard, scrabbleBoard);
         }
 
         player1.DrawInitialTiles(true);
@@ -43,7 +43,7 @@ public static class Game
         {
             // 1st player makes choice
             player1.MakeMove(context);
-            // will call scrabbleBoard.DisplayBoard() within MakeMove in case of retry
+            scrabbleBoard.DisplayBoard(); // will call scrabbleBoard.DisplayBoard() within MakeMove in case of retry
             scrabbleBoard.DisplayScoreBoard(player1.GetPlayerScore(), player2.GetPlayerScore());
             Console.WriteLine();
 

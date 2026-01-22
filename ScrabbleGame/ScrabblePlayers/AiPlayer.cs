@@ -197,8 +197,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
         if (oldMove.Direction) // across
         {
             // find new left bound, x coordinate
-
-            int index = newWord.IndexOf(oldMove.Word);
+            int index = newWord.IndexOf(ScrabbleWordGenerator.ConvertLowerWordToUpperWord(oldMove.Word));
             // note that this only gives the first occurence of the oldWord substring, 
             // what should I do if there are two or more instances of the substring aka I have more options to place my tiles
 

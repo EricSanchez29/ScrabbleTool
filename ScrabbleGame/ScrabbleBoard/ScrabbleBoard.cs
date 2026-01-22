@@ -61,38 +61,32 @@ public class ScrabbleBoard : IBoard, IDisplay
     {
         var tilesToRemove = new StringBuilder();
 
-        int totalScore = 0;
-
-        if (!tryIsValidMove(playerMove, playerTiles, out ScrabbleMetaMove? metaMove))
+        if (!tryIsValidMove(playerMove, playerTiles, out ScrabbleMetaMove metaMove))
         {
             moveContext.SetRetryMove(true);
-            scrabbleMetaMove = new ScrabbleMetaMove(playerMove);
+            scrabbleMetaMove = metaMove;
             return string.Empty;
         }
 
         moveContext.SetRetryMove(false);
 
         // calculate main move score
-        playerMove.Score = GetMoveScore(metaMove ?? new ScrabbleMetaMove(playerMove), playerMove.Word);
-        totalScore += playerMove.Score;
-
+        int totalScore = GetMoveScore(metaMove, playerMove.Word);
+        addWordToHashSet(playerMove);
         Console.WriteLine();
         Console.WriteLine("Main move: " + playerMove.Word + " +" + playerMove.Score + " points");
 
-        if (metaMove is not null) // this move creates additional words besides Move.Word
+        foreach (var additionalMove in metaMove.GetAdditionalMoves())
         {
-            foreach (var additionalMove in metaMove.GetAdditionalMoves())
-            {
-                totalScore += additionalMove.Score;
-
-                addWordToHashSet(additionalMove);
-
-                Console.WriteLine();
-                Console.WriteLine("Adjacent move: " + additionalMove.Word + " +" + additionalMove.Score + " points");
-            }
+            addWordToHashSet(additionalMove);
+            Console.WriteLine();
+            Console.WriteLine("Adjacent move: " + additionalMove.Word + " +" + additionalMove.Score + " points");
         }
 
-        addWordToHashSet(playerMove);
+        metaMove.SetTotalScore(totalScore);
+        Console.WriteLine();
+        Console.WriteLine("+" + totalScore + " points");
+        Console.WriteLine();
 
         // only manipulate tiles (output string) here
         if (!playerMove.Direction)
@@ -106,7 +100,7 @@ public class ScrabbleBoard : IBoard, IDisplay
                 {
                     // if this position is already occupied by the same letter than I am not overwriting
                     // I'm merely using a board letter in my word
-                    if (!IsSameLetter(board[playerMove.X_coordinate, y_offset], playerMove.Word[i]) )
+                    if (!IsSameLetter(board[playerMove.X_coordinate, y_offset], playerMove.Word[i]))
                     {
                         // shouldn't reach this if I am correctly checking this in tryIsValidMove()
                         // this is a game breaking error
@@ -141,7 +135,6 @@ public class ScrabbleBoard : IBoard, IDisplay
                         // this is a game breaking error
                         throw new Exception("Invalid play, board position already occupied. Error occured in tryIsValidMove()");
                     }
-
                 }
                 else
                 {
@@ -156,21 +149,9 @@ public class ScrabbleBoard : IBoard, IDisplay
 
         }
 
-        // only do this when no adjacent words were found
-        if (metaMove is null)
-        {
-            metaMove = new ScrabbleMetaMove(playerMove);
-        }
-
-        metaMove.SetTotalScore(totalScore);
-
         metaMoves.Add(metaMove);
 
         scrabbleMetaMove = metaMove;
-
-        Console.WriteLine();
-        Console.WriteLine("+" + totalScore + " points");
-        Console.WriteLine();
 
         return tilesToRemove.ToString();
     }
@@ -429,110 +410,8 @@ public class ScrabbleBoard : IBoard, IDisplay
 
         return new(x_coordinate, y_coordinate);
     }
-
-    private bool tryGetAdditionalMoveScore(ScrabbleMove adjMove, out int score)
-    {
-        score = 0;
-        int doubleWord = 0;
-        int tripleWord = 0;
-
-        // how should I validate this move?
-        // if (!tryIsValidMove(scrabbleMove, playerTiles, out ScrabbleMetaMove? metaMove))
-        // {
-        //     return false;
-        // }
-
-        if (adjMove.Direction)
-        {
-            // direction ==  true: across
-            for (int i = 0; i < adjMove.Word.Length; i++)
-            {
-                if (!tryGetMoveScoreHelper(GetTileChar(adjMove.X_coordinate + i, adjMove.Y_coordinate), adjMove.Word[i], out int dub, out int tri, out bool isLetterTile, out int subScore))
-                {
-                    score = 0;
-                    return false;
-                }
-
-                score += subScore;
-                doubleWord += dub;
-                tripleWord += tri;
-            }
-        }
-        else
-        {
-            // direction ==  false: down
-            for (int i = 0; i < adjMove.Word.Length; i++)
-            {
-                if(!tryGetMoveScoreHelper(GetTileChar(adjMove.X_coordinate, adjMove.Y_coordinate + i), adjMove.Word[i], out int dub, out int tri, out bool isLetterTile, out int subScore))
-                {
-                    score = 0;
-                    return false;
-                }
-
-                score += subScore;
-                doubleWord += dub;
-                tripleWord += tri;
-            }
-        }
-
-        // multiply (double/triple)
-        for (int i = doubleWord; i > 0; i--)
-        {
-            score = score * 2;
-        }
-
-        for (int i = tripleWord; i > 0; i--)
-        {
-            score = score * 3;
-        }
-
-        return true;
-    }
-
-    // will do some limited validation of move here
-    // return false if move is invalid
-    private bool tryGetMoveScoreHelper(char tileOnBoard, char wordCharacter, out int doubleWord, out int tripleWord, out bool boardSpaceOccupied, out int score)
-    {
-        score = 0;
-        doubleWord = 0;
-        tripleWord = 0;
-        boardSpaceOccupied = false;
-
-        // DL('[') , DW('\'), TL(']'), TW('^')
-        switch (tileOnBoard)
-        {
-            case '[':
-                int newCharVal = getTilePointValue(wordCharacter);
-                newCharVal *= 2;
-                score += newCharVal;
-                break;
-            case '\\':
-                doubleWord++;
-                score += getTilePointValue(wordCharacter);
-                break;
-            case ']':
-                int newCharVal3 = getTilePointValue(wordCharacter);
-                newCharVal3 *= 3;
-                score += newCharVal3;
-                break;
-            case '^':
-                tripleWord++;
-                score += getTilePointValue(wordCharacter);
-                break;
-            case ' ': // tile on board is blank
-                score += getTilePointValue(wordCharacter);
-                break;
-            default: // if valid move, should be occupied by the same tile as word character
-                if (!IsSameLetter(tileOnBoard, wordCharacter)) { return false; }
-
-                score += getTilePointValue(wordCharacter);
-                boardSpaceOccupied = true;
-                break;
-        }
-
-        return true;
-    }
-
+    
+    // Assumes the input main move has not been validated as a legal scrabble move
     public bool TryGetMoveScore(ScrabbleBase mainMove, string word, string playerTiles, out int score)
     {
         score = 0;
@@ -540,7 +419,7 @@ public class ScrabbleBoard : IBoard, IDisplay
         int tripleWord = 0;
         var sb = new StringBuilder(7);
 
-        if (!tryIsValidMove(new ScrabbleMove(mainMove) { Word = word }, playerTiles, out ScrabbleMetaMove? metaMove))
+        if (!tryIsValidMove(new ScrabbleMove(mainMove) { Word = word }, playerTiles, out ScrabbleMetaMove metaMove))
         {
             return false;
         }
@@ -605,15 +484,11 @@ public class ScrabbleBoard : IBoard, IDisplay
             score = score * 3;
         }
 
-        // does this main move have additional moves?
-        if (metaMove is not null)
+        foreach (var addMove in metaMove.GetAdditionalMoves())
         {
-            foreach (var addMove in metaMove.GetAdditionalMoves())
-            {
-                if (!tryGetAdditionalMoveScore(addMove, out int subScore)) { return false; }
+            if (!tryGetAdjacentMoveScore(addMove, out int subScore)) { return false; }
 
-                score += subScore;
-            }
+            score += subScore;
         }
 
         // check for 50 point at the very end
@@ -625,7 +500,113 @@ public class ScrabbleBoard : IBoard, IDisplay
         return true;
     }
 
-    // assume that this meta move is already valid
+    // will do some limited validation of move here
+    // return false if move is invalid
+    private bool tryGetMoveScoreHelper(char tileOnBoard, char wordCharacter, out int doubleWord, out int tripleWord, out bool boardSpaceOccupied, out int score)
+    {
+        score = 0;
+        doubleWord = 0;
+        tripleWord = 0;
+        boardSpaceOccupied = false;
+
+        // DL('[') , DW('\'), TL(']'), TW('^')
+        switch (tileOnBoard)
+        {
+            case '[':
+                int newCharVal = getTilePointValue(wordCharacter);
+                newCharVal *= 2;
+                score += newCharVal;
+                break;
+            case '\\':
+                doubleWord++;
+                score += getTilePointValue(wordCharacter);
+                break;
+            case ']':
+                int newCharVal3 = getTilePointValue(wordCharacter);
+                newCharVal3 *= 3;
+                score += newCharVal3;
+                break;
+            case '^':
+                tripleWord++;
+                score += getTilePointValue(wordCharacter);
+                break;
+            case ' ': // tile on board is blank
+                score += getTilePointValue(wordCharacter);
+                break;
+            default: // if valid move, should be occupied by the same tile as word character
+                if (!IsSameLetter(tileOnBoard, wordCharacter)) { return false; }
+
+                score += getTilePointValue(wordCharacter);
+                boardSpaceOccupied = true;
+                break;
+        }
+
+        return true;
+    }
+
+    private bool tryGetAdjacentMoveScore(ScrabbleMove adjMove, out int score)
+    {
+        score = 0;
+        int doubleWord = 0;
+        int tripleWord = 0;
+
+        // how should I validate this move?
+        // if (!tryIsValidMove(scrabbleMove, playerTiles, out ScrabbleMetaMove? metaMove))
+        // {
+        //     return false;
+        // }
+
+        if (adjMove.Direction)
+        {
+            // direction ==  true: across
+            for (int i = 0; i < adjMove.Word.Length; i++)
+            {
+                if (!tryGetMoveScoreHelper(GetTileChar(adjMove.X_coordinate + i, adjMove.Y_coordinate), adjMove.Word[i], out int dub, out int tri, out bool isLetterTile, out int subScore))
+                {
+                    score = 0;
+                    return false;
+                }
+
+                score += subScore;
+                doubleWord += dub;
+                tripleWord += tri;
+            }
+        }
+        else
+        {
+            // direction ==  false: down
+            for (int i = 0; i < adjMove.Word.Length; i++)
+            {
+                if(!tryGetMoveScoreHelper(GetTileChar(adjMove.X_coordinate, adjMove.Y_coordinate + i), adjMove.Word[i], out int dub, out int tri, out bool isLetterTile, out int subScore))
+                {
+                    score = 0;
+                    return false;
+                }
+
+                score += subScore;
+                doubleWord += dub;
+                tripleWord += tri;
+            }
+        }
+
+        // multiply (double/triple)
+        for (int i = doubleWord; i > 0; i--)
+        {
+            score = score * 2;
+        }
+
+        for (int i = tripleWord; i > 0; i--)
+        {
+            score = score * 3;
+        }
+
+        adjMove.Score = score;
+
+        return true;
+    }
+
+
+    // assume that this meta move is already a legal scrabble move
     // already has possible additional moves as part of metaMove
     public int GetMoveScore(ScrabbleMetaMove metaMove, string playerTiles)
     {
@@ -686,12 +667,14 @@ public class ScrabbleBoard : IBoard, IDisplay
             score = score * 3;
         }
 
+        metaMove.SetMainMoveScore(score);
+
         // does this move have additional moves?
         var additionalMove = metaMove.GetAdditionalMoves();
 
         foreach (var move in additionalMove)
         {
-            score += getAdditionalMoveScore(move);
+            score += getAdjacentMoveScore(move);
         }
 
         // check for 50 point at the very end
@@ -743,7 +726,7 @@ public class ScrabbleBoard : IBoard, IDisplay
         return score;
     }
 
-    private int getAdditionalMoveScore(ScrabbleMove adjMove)
+    private int getAdjacentMoveScore(ScrabbleMove adjMove)
     {
         int score = 0;
         int doubleWord = 0;
@@ -800,7 +783,9 @@ public class ScrabbleBoard : IBoard, IDisplay
             score = score * 3;
         }
 
-        return 0;
+        adjMove.Score = score;
+
+        return score;
     }
 
     private int getTilePointValue(char tile)
@@ -1041,19 +1026,19 @@ public class ScrabbleBoard : IBoard, IDisplay
         return true;
     }
 
-    private bool tryIsValidMove(ScrabbleMove move, string playerTiles, out ScrabbleMetaMove? scrabbleMetaMove)
+    private bool tryIsValidMove(ScrabbleMove move, string playerTiles, out ScrabbleMetaMove scrabbleMetaMove)
     {
+        scrabbleMetaMove = new ScrabbleMetaMove(move);
+
         // Is the starting coordinate out of bounds?
         if (!IsValidCoordinate(move.X_coordinate, move.Y_coordinate))
         {
-            scrabbleMetaMove = null;
             return false;
         }
 
         // Does the word go out of bounds?
         if (!IsWordInBounds(move.Word.Length, move.Direction, move.X_coordinate, move.Y_coordinate))
         {
-            scrabbleMetaMove = null;
             return false;
         }
 
@@ -1062,7 +1047,6 @@ public class ScrabbleBoard : IBoard, IDisplay
         {
             Console.WriteLine();
             Console.WriteLine("First move does not contain center square");
-            scrabbleMetaMove = null;
             return false;
         }
 
@@ -1073,7 +1057,6 @@ public class ScrabbleBoard : IBoard, IDisplay
             {
                 Console.WriteLine();
                 Console.WriteLine("Invalid char: " + move.Word[i]);
-                scrabbleMetaMove = null;
                 return false;
             }
         }
@@ -1095,7 +1078,6 @@ public class ScrabbleBoard : IBoard, IDisplay
                     if (!IsSameLetter(board[move.X_coordinate, y_offset], move.Word[i]))
                     {
                         // can't overwrite a letter
-                        scrabbleMetaMove = null;
                         return false;
                     }
                     else
@@ -1121,7 +1103,6 @@ public class ScrabbleBoard : IBoard, IDisplay
                     if (!IsSameLetter(board[x_offset, move.Y_coordinate], move.Word[i]))
                     {
                         // can't overwrite a letter
-                        scrabbleMetaMove = null;
                         return false;
                     }
                     else
@@ -1158,9 +1139,8 @@ public class ScrabbleBoard : IBoard, IDisplay
             }
             else
             {
-                Console.WriteLine();
-                Console.WriteLine("Move is not valid. Could not find the tile " + move.Word[i] + " on player rack or on the board");
-                scrabbleMetaMove = null;
+                // Console.WriteLine();
+                // Console.WriteLine("Move is not valid. Could not find the tile " + move.Word[i] + " on player rack or on the board");
                 return false;
             }
         }
@@ -1188,7 +1168,6 @@ public class ScrabbleBoard : IBoard, IDisplay
         {
             Console.WriteLine();
             Console.WriteLine(move.Word + " is not a valid word");
-            scrabbleMetaMove = null;
             return false;
         }
 
@@ -1210,7 +1189,6 @@ public class ScrabbleBoard : IBoard, IDisplay
         // at least one invalid adjacent word was found
         else
         {
-            scrabbleMetaMove = null;
             return false;
         }
 

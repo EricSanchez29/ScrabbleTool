@@ -1,5 +1,4 @@
 
-// this interface doesn't really serve a purpose anymore, 
 public interface IBoard
 {
     public int GetBagCount();
@@ -19,5 +18,4 @@ public interface IBoard
     // or should this function be part of addword (return string instead of void)
     public string DrawTiles(int numberOfTiles);
     public List<ScrabbleMetaMove> GetAllMoves();
-    public void DisplayBoard();
 }
