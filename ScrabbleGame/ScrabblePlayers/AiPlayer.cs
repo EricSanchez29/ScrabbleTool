@@ -75,21 +75,21 @@ public class ScrabbleBot : PlayerBase, IPlayer
     // should i rename this function?
     private void tryGetPrefixSuffix(List<ScrabblePotentialMove> potentialMoves)
     {
-        foreach (var move in scrabbleBoard.GetAllMoves())
+        foreach (var oldMove in scrabbleBoard.GetAllMoves())
         {
-            var mainMove = move.GetMainMove();
+            var oldMainMove = oldMove.GetMainMove();
 
-            var boardWord = ScrabbleWordGenerator.ConvertLowerWordToUpperWord(mainMove.Word);
+            var boardWord = ScrabbleWordGenerator.ConvertLowerWordToUpperWord(oldMainMove.Word);
 
             if (rootDictionary.TryGetValue(boardWord, out List<string>? list))
             {
                 foreach (var newWord in list)
                 {
-                    if (tryToSpellWord(ScrabbleWordGenerator.ConvertLowerWordToUpperWord(newWord), boardWord, this.GetTilesString()))
+                    if (tryToSpellWord(newWord, boardWord, this.GetTilesString()))
                     {
                         // validate whether new word is possible on board
 
-                        if (!tryGetNewMove(mainMove, newWord, out ScrabbleMove? newMove)) { continue; }
+                        if (!tryGetNewMove(oldMainMove, newWord, out ScrabbleMove? newMove)) { continue; }
 
                         if (!scrabbleBoard.TryGetMoveScore(newMove!, newWord, this.GetTilesString(), out int subscore)) { continue; }
 
@@ -102,18 +102,18 @@ public class ScrabbleBot : PlayerBase, IPlayer
                 }
             }
 
-            foreach (var addtionalMove in move.GetAdditionalMoves())
+            foreach (var additionalOldMove in oldMove.GetAdditionalMoves())
             {
-                var boardWord1 = ScrabbleWordGenerator.ConvertLowerWordToUpperWord(addtionalMove.Word);
+                var boardWord1 = ScrabbleWordGenerator.ConvertLowerWordToUpperWord(additionalOldMove.Word);
 
                 if (rootDictionary.TryGetValue(boardWord1, out List<string>? list1))
                 {
                     foreach (var newWord in list1)
                     {
-                        if (tryToSpellWord(ScrabbleWordGenerator.ConvertLowerWordToUpperWord(newWord), boardWord1, this.GetTilesString()))
+                        if (tryToSpellWord(newWord, boardWord1, this.GetTilesString()))
                         {
                             // validate whether move is possible on board
-                            if (!tryGetNewMove(addtionalMove, newWord, out ScrabbleMove? newMove))
+                            if (!tryGetNewMove(additionalOldMove, newWord, out ScrabbleMove? newMove))
                             {
                                 continue;
                             }

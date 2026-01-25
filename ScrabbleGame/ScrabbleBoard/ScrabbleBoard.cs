@@ -71,10 +71,13 @@ public class ScrabbleBoard : IBoard, IDisplay
         moveContext.SetRetryMove(false);
 
         // calculate main move score
-        int totalScore = GetMoveScore(metaMove, playerMove.Word);
-        addWordToHashSet(playerMove);
+        int totalScore = GetMoveScore(metaMove);
+
+        var mainMove = metaMove.GetMainMove();
+
+        addWordToHashSet(mainMove);
         Console.WriteLine();
-        Console.WriteLine("Main move: " + playerMove.Word + " +" + playerMove.Score + " points");
+        Console.WriteLine("Main move: " + mainMove.Word + " +" + mainMove.Score + " points");
 
         foreach (var additionalMove in metaMove.GetAdditionalMoves())
         {
@@ -608,7 +611,7 @@ public class ScrabbleBoard : IBoard, IDisplay
 
     // assume that this meta move is already a legal scrabble move
     // already has possible additional moves as part of metaMove
-    public int GetMoveScore(ScrabbleMetaMove metaMove, string playerTiles)
+    public int GetMoveScore(ScrabbleMetaMove metaMove)
     {
         int score = 0;
         int doubleWord = 0;
@@ -1201,6 +1204,8 @@ public class ScrabbleBoard : IBoard, IDisplay
     {
         metaMove = new ScrabbleMetaMove(playerMove);
 
+        ScrabbleMove? extendedPlayerMove = null;
+
         // look for additional words coming from playerMove
         // - only create a lane if adjacent square is not a blank space
 
@@ -1257,7 +1262,7 @@ public class ScrabbleBoard : IBoard, IDisplay
                     return false;
                 }
 
-                var potentialAdditionalMove = new ScrabbleMove
+                var perpendicularMove = new ScrabbleMove
                 {
                     Word = potentialWordLoopString,
                     Direction = false,
@@ -1265,13 +1270,13 @@ public class ScrabbleBoard : IBoard, IDisplay
                     Y_coordinate = potentialWordLoopYCoord,
                 };
 
-                if (isWordOnBoard(potentialAdditionalMove))
+                if (isWordOnBoard(perpendicularMove))
                 {
                     // adjacent word is not a new word, its already on the board
                     continue;
                 }
 
-                metaMove.AddAddtionalMove(potentialAdditionalMove);
+                metaMove.AddAddtionalMove(perpendicularMove);
             }
 
             var potentialWord = new StringBuilder();
@@ -1305,9 +1310,7 @@ public class ScrabbleBoard : IBoard, IDisplay
             }
 
 
-            // word should be in the middle when there are tiles to the left and right
-            // word should be on the right (end) if there are only tiles on the left
-            // word should be on the left (begining) if there are only tiles on the right
+
             potentialWord.Append(playerMove.Word);
 
             // question: is it worth inserting a character into stringbuilder, compared to building a char array backwards and reversing it
@@ -1349,18 +1352,13 @@ public class ScrabbleBoard : IBoard, IDisplay
 
             if (potentialWordString != playerMove.Word)
             {
-                var potentialMove = new ScrabbleMove
+                extendedPlayerMove = new ScrabbleMove
                 {
                     Word = potentialWordString,
                     Direction = true,
                     Y_coordinate = playerMove.Y_coordinate,
                     X_coordinate = potentialWordXCoord,
                 };
-
-                if (!isWordOnBoard(potentialMove))
-                {
-                    metaMove.AddAddtionalMove(potentialMove);
-                }
             }
         }
         else // playerMove direction is down
@@ -1418,7 +1416,7 @@ public class ScrabbleBoard : IBoard, IDisplay
                     return false;
                 }
 
-                var potentialAdditionalMove = new ScrabbleMove
+                var perpendicularMove = new ScrabbleMove
                 {
                     Word = potentialWordLoopString,
                     Direction = true,
@@ -1426,13 +1424,13 @@ public class ScrabbleBoard : IBoard, IDisplay
                     Y_coordinate = playerMove.Y_coordinate + i,
                 };
 
-                if (isWordOnBoard(potentialAdditionalMove))
+                if (isWordOnBoard(perpendicularMove))
                 {
                     // adjacent word is not a new word, its already on the board
                     continue;
                 }
 
-                metaMove.AddAddtionalMove(potentialAdditionalMove);
+                metaMove.AddAddtionalMove(perpendicularMove);
             }
 
             var potentialWord = new StringBuilder();
@@ -1461,9 +1459,6 @@ public class ScrabbleBoard : IBoard, IDisplay
                 }
             }
 
-            // word should be in the middle when there are tiles to the left and right
-            // word should be on the right (end) if there are only tiles on the left
-            // word should be on the left (begining) if there are only tiles on the right
             potentialWord.Append(playerMove.Word);
 
             int endOfPlayerMoveY = playerMove.Y_coordinate + playerMove.Word.Length - 1; // does this math make sense?
@@ -1500,19 +1495,21 @@ public class ScrabbleBoard : IBoard, IDisplay
 
             if (potentialWordString != playerMove.Word)
             {
-                var potentialMove = new ScrabbleMove
+                // parallel word is an extension of playerMove
+                // this word should be longer than the original playerMove, so it should be considered the new main move
+                extendedPlayerMove = new ScrabbleMove
                 {
                     Word = potentialWord.ToString(),
                     Direction = false,
                     X_coordinate = playerMove.X_coordinate,
                     Y_coordinate = potentialWordYCoord,
                 };
-
-                if (!isWordOnBoard(potentialMove))
-                {
-                    metaMove.AddAddtionalMove(potentialMove);
-                }
             }
+        }
+        
+        if (extendedPlayerMove is not null)
+        {
+            metaMove.SetMainMove(extendedPlayerMove);
         }
 
         return true;
