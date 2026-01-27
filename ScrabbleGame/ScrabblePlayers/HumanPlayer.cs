@@ -37,7 +37,7 @@ public class HumanPlayer : PlayerBase, IPlayer
         }
     }
 
-    public void MakeMove(GameContext gameContext)
+    public void MakeMove(GameContext gameContext, out bool isScorelessMove)
     {
         MoveContext moveContext = new MoveContext(true);
 
@@ -47,6 +47,7 @@ public class HumanPlayer : PlayerBase, IPlayer
         int y_coordinate = int.MaxValue;
         bool direction = true;
         string playerLettersUsed = string.Empty;
+        isScorelessMove = false;
 
         var playerMove = new ScrabbleMove()
         {
@@ -193,6 +194,8 @@ public class HumanPlayer : PlayerBase, IPlayer
             Console.WriteLine();
             Console.WriteLine("Passing Move");
             Console.WriteLine();
+
+            isScorelessMove = true;
         }
         else if (moveContext.GetSwapTiles())
         {
@@ -212,6 +215,8 @@ public class HumanPlayer : PlayerBase, IPlayer
             drawTiles();
 
             displayPlayerTiles();
+
+            isScorelessMove = true;
         }
         else
         {

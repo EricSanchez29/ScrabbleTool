@@ -38,14 +38,26 @@ public static class Game
         var context = new GameContext();
 
         bool? finalMoveMaker = null; // false if player 1, true if player 2
+        int scoreLessMoveCounter = 0;
 
         while (context.GetContinue())
         {
             // 1st player makes choice
-            player1.MakeMove(context);
+            player1.MakeMove(context, out bool isScorelessMove1);
             scrabbleBoard.DisplayBoard(); // will call scrabbleBoard.DisplayBoard() within MakeMove in case of retry
             scrabbleBoard.DisplayScoreBoard(player1.GetPlayerScore(), player2.GetPlayerScore());
             Console.WriteLine();
+
+            if (isScorelessMove1)
+            {
+                scoreLessMoveCounter++;
+
+                if (scoreLessMoveCounter == 6)
+                {
+                    Console.WriteLine("6 Scoreless moves in a row!");
+                    break;
+                }
+            }
 
             if (context.GetIsFinalMove())
             {
@@ -54,10 +66,21 @@ public static class Game
             }
 
             // 2nd player makes choice
-            player2.MakeMove(context);
+            player2.MakeMove(context, out bool isScorelessMove2);
             scrabbleBoard.DisplayBoard();
             scrabbleBoard.DisplayScoreBoard(player1.GetPlayerScore(), player2.GetPlayerScore());
             Console.WriteLine();
+
+            if (isScorelessMove2)
+            {
+                scoreLessMoveCounter++;
+
+                if (scoreLessMoveCounter == 6)
+                {
+                    Console.WriteLine("6 Scoreless moves in a row!");
+                    break;
+                }
+            }
 
             if (context.GetIsFinalMove())
             {

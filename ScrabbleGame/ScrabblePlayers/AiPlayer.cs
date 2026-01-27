@@ -1171,7 +1171,7 @@ public class ScrabbleBot : PlayerBase, IPlayer
         }
     }
 
-    public void MakeMove(GameContext context)
+    public void MakeMove(GameContext context, out bool isScorelessMove)
     {
         var moveContext = new MoveContext(false);
 
@@ -1180,6 +1180,8 @@ public class ScrabbleBot : PlayerBase, IPlayer
         var metaMove = new ScrabbleMetaMove(new ScrabbleMove() { Word = string.Empty });
 
         string tilesToRemove = string.Empty;
+
+        isScorelessMove = false;
 
         // is there a cleaner way to convert from char array to a string
         foreach (char tile in tileRack)
@@ -1233,6 +1235,8 @@ public class ScrabbleBot : PlayerBase, IPlayer
             Console.WriteLine();
             Console.WriteLine("ScrabbleBot is passing move");
             Console.WriteLine();
+
+            isScorelessMove = true;
         }
         else if (moveContext.GetSwapTiles())
         {
@@ -1242,6 +1246,8 @@ public class ScrabbleBot : PlayerBase, IPlayer
             updateTileRack(tilesToRemove);
 
             drawTiles();
+
+            isScorelessMove = true;
         }
 
         if (isFinalMove())
