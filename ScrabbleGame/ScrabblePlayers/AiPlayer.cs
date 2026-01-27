@@ -194,17 +194,25 @@ public class ScrabbleBot : PlayerBase, IPlayer
     {
         newMove = null;
 
+        int index = newWord.IndexOf(ScrabbleWordGenerator.ConvertLowerWordToUpperWord(oldMove.Word));
+        // note that this only gives the first occurence of the oldWord substring, 
+        // what should I do if there are two or more instances of the substring aka I have more options to place my tiles
+
+        if (index == -1)
+        {
+            var sb = new StringBuilder(string.Format("Something went wrong", Environment.NewLine));
+
+            sb.Append("Old Move: ");
+            sb.Append(oldMove.Word);
+            sb.Append(" New Word: ");
+            sb.Append(newWord);
+
+            throw new Exception(sb.ToString());
+        }
+
         if (oldMove.Direction) // across
         {
             // find new left bound, x coordinate
-            int index = newWord.IndexOf(ScrabbleWordGenerator.ConvertLowerWordToUpperWord(oldMove.Word));
-            // note that this only gives the first occurence of the oldWord substring, 
-            // what should I do if there are two or more instances of the substring aka I have more options to place my tiles
-
-            if (index == -1)
-            {
-                throw new Exception("Something went wrong");
-            }
 
             /*
                 XXXROOTXXX (across)
@@ -272,15 +280,6 @@ public class ScrabbleBot : PlayerBase, IPlayer
         else // down
         {
             // find new upper bound, y coordinate
-
-            int index = newWord.IndexOf(oldMove.Word);
-            // note that this only gives the first occurence of the oldWord substring, 
-            // what should I do if there are two or more instances of the substring aka I have more options to place my tiles
-
-            if (index == -1)
-            {
-                throw new Exception("Something went wrong");
-            }
 
             int newY_coordinate = oldMove.X_coordinate - index;
 

@@ -29,29 +29,6 @@ public class ScrabbleBoard : IBoard, IDisplay
 
     private HashSet<string> boardWords = new HashSet<string>();
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="word"> valid scrabble word </param>
-    /// <param name="coordinate"> A1 - O15 </param>
-    /// <param name="direction"> across (true) or down (false) </param>
-    /// <returns></returns>
-    public void AddWord(string word, string coordinate, bool direction = true)
-    {
-        // convert from Scrabble coordinate system to array coordinates
-        var startingPosition = GetXYCoordinate(coordinate);
-
-        ScrabbleMove move = new ScrabbleMove()
-        {
-            Direction = direction,
-            Word = word,
-            X_coordinate = startingPosition.x,
-            Y_coordinate = startingPosition.y,
-        };
-
-        //AddWord(move);
-    }
-
     // should another param with player letters, or maybe could track players letters?
     // also need to add better checks for occupied board space, need to take into account using letter already on board
     // and also add a bingo check +50 points
@@ -264,7 +241,6 @@ public class ScrabbleBoard : IBoard, IDisplay
         Console.Write(" ");
 
     }
-    
     
     private void displayNumberString(int playerScore)
     {
