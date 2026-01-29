@@ -210,7 +210,7 @@ public class HumanPlayer : PlayerBase, IPlayer
                 throw new Exception("FATAL ERROR");
             }
 
-            updateTileRack(unwantedTiles);
+            updateTileRack(ScrabbleWordGenerator.ConvertLowerWordToUpperWord(unwantedTiles));
 
             drawTiles();
 
